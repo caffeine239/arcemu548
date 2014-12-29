@@ -310,7 +310,7 @@ void Player::SendLoot(uint64 guid, uint8 loot_type, uint32 mapid)
 	{
 		GameObject* pGO = GetMapMgr()->GetGameObject(GET_LOWGUID_PART(guid));
 		if(!pGO)return;
-		pGO->SetByte(GAMEOBJECT_BYTES_1, 0, 0);
+		pGO->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 0);
 		pLoot = &pGO->loot;
 		m_currentLoot = pGO->GetGUID();
 	}
@@ -643,12 +643,12 @@ void Player::SendLootUpdate(Object* o)
 	// Build the actual update.
 	ByteBuffer buf(500);
 
-	uint32 Flags = o->GetUInt32Value(UNIT_DYNAMIC_FLAGS);
+	uint32 Flags = o->GetUInt32Value(OBJECT_FIELD_DYNAMIC_FLAGS);
 
 	Flags |= U_DYN_FLAG_LOOTABLE;
 	Flags |= U_DYN_FLAG_TAPPED_BY_PLAYER;
 
-	o->BuildFieldUpdatePacket(&buf, UNIT_DYNAMIC_FLAGS, Flags);
+	o->BuildFieldUpdatePacket(&buf, OBJECT_FIELD_DYNAMIC_FLAGS, Flags);
 
 	PushUpdateData(&buf, 1);
 }
@@ -713,15 +713,15 @@ void Player::TagUnit(Object* o)
 {
 
 	// For new players who get a create object
-	uint32 Flags = o->GetUInt32Value(UNIT_DYNAMIC_FLAGS);
+	uint32 Flags = o->GetUInt32Value(OBJECT_FIELD_DYNAMIC_FLAGS);
 	Flags |= U_DYN_FLAG_TAPPED_BY_PLAYER;
 
 	// Update existing players.
 	ByteBuffer buf(500);
 	ByteBuffer buf1(500);
 
-	o->BuildFieldUpdatePacket(&buf1, UNIT_DYNAMIC_FLAGS, Flags);
-	o->BuildFieldUpdatePacket(&buf, UNIT_DYNAMIC_FLAGS, o->GetUInt32Value(UNIT_DYNAMIC_FLAGS));
+	o->BuildFieldUpdatePacket(&buf1, OBJECT_FIELD_DYNAMIC_FLAGS, Flags);
+	o->BuildFieldUpdatePacket(&buf, OBJECT_FIELD_DYNAMIC_FLAGS, o->GetUInt32Value(OBJECT_FIELD_DYNAMIC_FLAGS));
 
 	SendUpdateDataToSet(&buf1, &buf, true);
 }

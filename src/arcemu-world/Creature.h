@@ -488,23 +488,23 @@ class SERVER_DECL Creature : public Unit
 		list<QuestRelation*>::iterator QuestsEnd() { return m_quests->end(); };
 		void SetQuestList(std::list<QuestRelation*>* qst_lst) { m_quests = qst_lst; };
 
-		ARCEMU_INLINE uint32 isVendor()		const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_VENDOR); }
-		ARCEMU_INLINE uint32 isTrainer()		const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_TRAINER); }
-		ARCEMU_INLINE uint32 isClass()		const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_TRAINER_CLASS); }
-		ARCEMU_INLINE uint32 isProf()			const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_TRAINER_PROF); }
-		ARCEMU_INLINE uint32 isQuestGiver()	const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER); }
-		ARCEMU_INLINE uint32 isGossip()		const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP); }
-		ARCEMU_INLINE uint32 isTaxi()			const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_TAXIVENDOR); }
-		ARCEMU_INLINE uint32 isCharterGiver()	const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_ARENACHARTER); }
-		ARCEMU_INLINE uint32 isGuildBank()	const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GUILD_BANK); }
-		ARCEMU_INLINE uint32 isBattleMaster()	const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_BATTLEFIELDPERSON); }
-		ARCEMU_INLINE uint32 isBanker()		const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_BANKER); }
-		ARCEMU_INLINE uint32 isInnkeeper()	const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_INNKEEPER); }
-		ARCEMU_INLINE uint32 isSpiritHealer()	const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPIRITHEALER); }
-		ARCEMU_INLINE uint32 isTabardDesigner() const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_TABARDCHANGER); }
-		ARCEMU_INLINE uint32 isAuctioner()	const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_AUCTIONEER); }
-		ARCEMU_INLINE uint32 isStableMaster()	const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_STABLEMASTER); }
-		ARCEMU_INLINE uint32 isArmorer()		const { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_ARMORER); }
+        ARCEMU_INLINE uint32 isVendor()		const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_VENDOR); }
+        ARCEMU_INLINE uint32 isTrainer()		const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_TRAINER); }
+        ARCEMU_INLINE uint32 isClass()		const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_TRAINER_CLASS); }
+        ARCEMU_INLINE uint32 isProf()			const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_TRAINER_PROF); }
+        ARCEMU_INLINE uint32 isQuestGiver()	const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER); }
+        ARCEMU_INLINE uint32 isGossip()		const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP); }
+        ARCEMU_INLINE uint32 isTaxi()			const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_TAXIVENDOR); }
+        ARCEMU_INLINE uint32 isCharterGiver()	const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_ARENACHARTER); }
+        ARCEMU_INLINE uint32 isGuildBank()	const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_GUILD_BANK); }
+        ARCEMU_INLINE uint32 isBattleMaster()	const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_BATTLEFIELDPERSON); }
+        ARCEMU_INLINE uint32 isBanker()		const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_BANKER); }
+        ARCEMU_INLINE uint32 isInnkeeper()	const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_INNKEEPER); }
+        ARCEMU_INLINE uint32 isSpiritHealer()	const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_SPIRITHEALER); }
+        ARCEMU_INLINE uint32 isTabardDesigner() const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_TABARDCHANGER); }
+        ARCEMU_INLINE uint32 isAuctioner()	const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_AUCTIONEER); }
+        ARCEMU_INLINE uint32 isStableMaster()	const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_STABLEMASTER); }
+        ARCEMU_INLINE uint32 isArmorer()		const { return HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_ARMORER); }
 
 		ARCEMU_INLINE uint32 GetHealthFromSpell() { return m_healthfromspell; }
 		void SetHealthFromSpell(uint32 value) { m_healthfromspell = value;}

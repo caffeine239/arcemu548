@@ -366,13 +366,13 @@ void MoonScriptCreatureAI::SetDisplayId(uint32 pDisplayId)
 
 void MoonScriptCreatureAI::SetWieldWeapon(bool pValue)
 {
-	if(pValue && _unit->GetUInt32Value(UNIT_FIELD_BYTES_2) != 1)
+	if(pValue && _unit->GetUInt32Value(UNIT_FIELD_SHAPESHIFT_FORM) != 1)
 	{
-		_unit->SetUInt32Value(UNIT_FIELD_BYTES_2, 1);
+		_unit->SetUInt32Value(UNIT_FIELD_SHAPESHIFT_FORM, 1);
 	}
-	else if(!pValue && _unit->GetUInt32Value(UNIT_FIELD_BYTES_2) != 0)
+	else if(!pValue && _unit->GetUInt32Value(UNIT_FIELD_SHAPESHIFT_FORM) != 0)
 	{
-		_unit->SetUInt32Value(UNIT_FIELD_BYTES_2, 0);
+		_unit->SetUInt32Value(UNIT_FIELD_SHAPESHIFT_FORM, 0);
 	}
 }
 

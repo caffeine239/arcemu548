@@ -1808,7 +1808,7 @@ GameObject* MapMgr::CreateAndSpawnGameObject(uint32 entryID, float x, float y, f
 	gs->entry = go->GetEntry();
 	gs->facing = go->GetOrientation();
 	gs->faction = go->GetFaction();
-	gs->flags = go->GetUInt32Value(GAMEOBJECT_FLAGS);
+	gs->flags = go->GetUInt32Value(GAMEOBJECT_FIELD_FLAGS);
 	gs->id = objmgr.GenerateGameObjectSpawnID();
 	gs->o = 0.0f;
 	gs->o1 = go->GetParentRotation(0);
@@ -1818,7 +1818,7 @@ GameObject* MapMgr::CreateAndSpawnGameObject(uint32 entryID, float x, float y, f
 	gs->x = go->GetPositionX();
 	gs->y = go->GetPositionY();
 	gs->z = go->GetPositionZ();
-	gs->state = go->GetByte(GAMEOBJECT_BYTES_1, 0);
+	gs->state = go->GetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0);
 	//gs->stateNpcLink = 0;
 	gs->overrides = go->GetOverrides();
 

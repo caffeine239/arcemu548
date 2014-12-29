@@ -311,11 +311,11 @@ void WorldSession::HandleInspectHonorStatsOpcode(WorldPacket & recv_data)
 	WorldPacket data(MSG_INSPECT_HONOR_STATS, 13);
 
 	//data << player->GetGUID() << (uint8)player->GetHonorCurrency();
-	data << player->GetUInt32Value(PLAYER_FIELD_KILLS);
+    data << player->GetUInt32Value(PLAYER_FIELD_YESTERDAY_HONORABLE_KILLS);
 	//replace this with PLAYER_FIELD_BATTLEGROUND_RATING? 
 	//data << player->GetUInt32Value(PLAYER_FIELD_TODAY_CONTRIBUTION);
 	//data << player->GetUInt32Value(PLAYER_FIELD_YESTERDAY_CONTRIBUTION);
-	data << player->GetUInt32Value(PLAYER_FIELD_LIFETIME_HONORBALE_KILLS);
+    data << player->GetUInt32Value(PLAYER_FIELD_LIFETIME_HONORABLE_KILLS);
 
 	SendPacket(&data);
 }
@@ -337,27 +337,27 @@ void WorldSession::HandleInspectArenaStatsOpcode(WorldPacket & recv_data)
 
 	uint32 id;
 
-	for(uint8 i = 0; i < 3; i++)
-	{
-		id = player->GetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (i * 7));
-		if(id > 0)
-		{
-			ArenaTeam* team = objmgr.GetArenaTeamById(id);
-			if(team != NULL)
-			{
-				WorldPacket data(MSG_INSPECT_ARENA_TEAMS, 8 + 1 + 4 * 5);
-				data << player->GetGUID();
-				data << team->m_type;
-				data << team->m_id;
-				data << team->m_stat_rating;
-				data << team->m_stat_gamesplayedweek;
-				data << team->m_stat_gameswonweek;
-				data << team->m_stat_gamesplayedseason;
-				SendPacket(&data);
-
-			}
-		}
-	}
+// 	for(uint8 i = 0; i < 3; i++)
+// 	{
+// 		id = player->GetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (i * 7));
+// 		if(id > 0)
+// 		{
+// 			ArenaTeam* team = objmgr.GetArenaTeamById(id);
+// 			if(team != NULL)
+// 			{
+// 				WorldPacket data(MSG_INSPECT_ARENA_TEAMS, 8 + 1 + 4 * 5);
+// 				data << player->GetGUID();
+// 				data << team->m_type;
+// 				data << team->m_id;
+// 				data << team->m_stat_rating;
+// 				data << team->m_stat_gamesplayedweek;
+// 				data << team->m_stat_gameswonweek;
+// 				data << team->m_stat_gamesplayedseason;
+// 				SendPacket(&data);
+// 
+// 			}
+// 		}
+// 	}
 }
 
 

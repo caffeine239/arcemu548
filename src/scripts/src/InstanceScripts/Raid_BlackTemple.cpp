@@ -1006,7 +1006,7 @@ class EnslavedServantAI : public MoonScriptCreatureAI
 		{
 			if(IsTimerFinished(mHealthResetTimer))
 			{
-				_unit->SetHealth(_unit->GetUInt32Value(UNIT_FIELD_MAXHEALTH));	// Found such note about this mob
+				_unit->SetHealth(_unit->GetUInt32Value(UNIT_FIELD_MAX_HEALTH));	// Found such note about this mob
 				ResetTimer(mHealthResetTimer, 45000);
 			}
 
@@ -1239,7 +1239,7 @@ class ShadowmoonDeathshaperAI : public MoonScriptCreatureAI
 			AddSpellFunc(&SpellFunc_RaiseDead, Target_RandomCorpse, 12, 1.5, 30);
 			AddSpell(SHADOWMOON_DEATHSHAPER_SHADOW_BOLT, Target_Current, 75, 3, 0, 0, 40);	// Typical caster? Slap me if not...
 
-			_unit->SetUInt32Value(UNIT_FIELD_POWER1, 100000);	// temporary way to set up mana of this unit
+			_unit->SetUInt32Value(UNIT_FIELD_POWER, 100000);	// temporary way to set up mana of this unit
 		}
 
 		void OnCombatStart(Unit* pTarget)
@@ -4615,11 +4615,11 @@ class SCRIPT_DECL AkamaGossip : public GossipScript
 					GossipHello(pObject, pPlayer);
 					break;
 				case 1:
-					pAIOwner->SetUInt32Value(UNIT_NPC_FLAGS, 0);
+					pAIOwner->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, 0);
 					pAI->ForceWaypointMove(1);
 					break;
 				case 2:
-					pAIOwner->SetUInt32Value(UNIT_NPC_FLAGS, 0);
+					pAIOwner->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, 0);
 					pAI->ForceWaypointMove(17);
 					pAI->SetWieldWeapon(false);
 					break;
@@ -4668,7 +4668,7 @@ class AkamaAI : public MoonScriptBossAI
 				AddWaypoint(CreateWaypoint(i, 0, Flag_Run, ToIllidan[i]));
 			}
 
-			_unit->SetUInt32Value(UNIT_NPC_FLAGS, 1);
+			_unit->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, 1);
 			_unit->SetDualWield(true);
 
 			mUdaloAI = mOlumAI = NULL;
@@ -4832,7 +4832,7 @@ class AkamaAI : public MoonScriptBossAI
 					_unit->SetFacing(2.113512f);
 					break;
 				case 17:
-					_unit->SetUInt32Value(UNIT_NPC_FLAGS, 1);
+					_unit->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, 1);
 					RemoveAIUpdateEvent();
 
 					mScenePart = 0;
@@ -5231,7 +5231,7 @@ class MaievAI : public MoonScriptBossAI
 
 			// HACK!
 			_unit->SetUInt64Value(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
-			_unit->SetUInt32Value(UNIT_FIELD_MAXHEALTH, 1000000);
+			_unit->SetUInt32Value(UNIT_FIELD_MAX_HEALTH, 1000000);
 			_unit->SetHealth(1000000);
 			_unit->GetAIInterface()->SetAllowedToEnterCombat(false);
 
@@ -5276,7 +5276,7 @@ class MaievAI : public MoonScriptBossAI
 
 		void OnDamageTaken(Unit* mAttacker, uint32 fAmount)
 		{
-			_unit->SetHealth(_unit->GetUInt32Value(UNIT_FIELD_MAXHEALTH));
+			_unit->SetHealth(_unit->GetUInt32Value(UNIT_FIELD_MAX_HEALTH));
 		}
 
 		void AIUpdate()
@@ -6986,7 +6986,7 @@ class CageTrapGO : public GameObjectAIScript
 
 		void OnActivate(Player* pPlayer)
 		{
-			_gameobject->SetUInt32Value(GAMEOBJECT_FLAGS, 1);
+			_gameobject->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 1);
 			Creature* pTrigger = _gameobject->GetMapMgr()->GetInterface()->GetCreatureNearestCoords(_gameobject->GetPositionX(), _gameobject->GetPositionY(), _gameobject->GetPositionZ(), CN_CAGE_TRAP_DISTURB_TRIGGER);
 			if(pTrigger != NULL && pTrigger->GetScript() != NULL)
 			{

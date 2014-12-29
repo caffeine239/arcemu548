@@ -268,8 +268,8 @@ void Arena::OnStart()
 	/* open gates */
 	for(set<GameObject*>::iterator itr = m_gates.begin(); itr != m_gates.end(); ++itr)
 	{
-		(*itr)->SetUInt32Value(GAMEOBJECT_FLAGS, 64);
-		(*itr)->SetByte(GAMEOBJECT_BYTES_1, 0, 0);
+		(*itr)->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 64);
+		(*itr)->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 0);
 	}
 
 	m_started = true;

@@ -251,11 +251,11 @@ class SERVER_DECL Object : public EventableObject
 		void SetHighGUID(uint32 val) { m_uint32Values[ HIGHGUID ] = val; }
 
 		const WoWGuid & GetNewGUID() const { return m_wowGuid; }
-		uint32 GetEntry() { return m_uint32Values[ OBJECT_FIELD_ENTRY ]; }
-		void SetEntry(uint32 value) { SetUInt32Value(OBJECT_FIELD_ENTRY, value); }
+		uint32 GetEntry() { return m_uint32Values[ OBJECT_FIELD_ENTRY_ID ]; }
+        void SetEntry(uint32 value) { SetUInt32Value(OBJECT_FIELD_ENTRY_ID, value); }
 
-		float GetScale() { return m_floatValues[ OBJECT_FIELD_SCALE_X ]; }
-		void SetScale(float scale) { SetFloatValue(OBJECT_FIELD_SCALE_X, scale); };
+		float GetScale() { return m_floatValues[ OBJECT_FIELD_SCALE ]; }
+		void SetScale(float scale) { SetFloatValue(OBJECT_FIELD_SCALE, scale); };
 
 		const uint32 GetTypeFromGUID() const { return (m_uint32Values[ HIGHGUID ] & HIGHGUID_TYPE_MASK); }
 		const uint32 GetUIdFromGUID() const { return (m_uint32Values[ LOWGUID ] & LOWGUID_ENTRY_MASK); }

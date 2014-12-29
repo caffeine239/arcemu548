@@ -1142,7 +1142,7 @@ class ARTHAS_AI : public CreatureAIScript
 						_unit->GetAIInterface()->setMoveType(MOVEMENTTYPE_DONTMOVEWP);
 						_unit->GetAIInterface()->SetAIState(STATE_SCRIPTIDLE);
 						_unit->GetAIInterface()->m_canMove = false;
-						_unit->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+						_unit->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 					}
 					break;
 				case 1000://haxxed ;)
@@ -1294,7 +1294,7 @@ class ArthasGossip : public GossipScript
 					break;
 				case 1:
 					{
-						TO_CREATURE(pObject)->SetUInt32Value(UNIT_NPC_FLAGS, 0);
+						TO_CREATURE(pObject)->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, 0);
 						TO_CREATURE(pObject)->GetScript()->OnReachWP(1000, 0);
 					}
 					break;

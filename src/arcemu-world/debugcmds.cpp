@@ -505,13 +505,13 @@ bool ChatHandler::HandleGetBytesCommand(const char* args, WorldSession* m_sessio
 	switch (Bytes)
 	{
 	case 0:
-	theBytes = obj->GetUInt32Value(UNIT_FIELD_BYTES_0);
+	theBytes = obj->GetUInt32Value(UNIT_FIELD_SEX);
 	break;
 	case 1:
-	theBytes = obj->GetUInt32Value(UNIT_FIELD_BYTES_1);
+	theBytes = obj->GetUInt32Value(UNIT_FIELD_ANIM_TIER);
 	break;
 	case 2:
-	theBytes = obj->GetUInt32Value(UNIT_FIELD_BYTES_2);
+	theBytes = obj->GetUInt32Value(UNIT_FIELD_SHAPESHIFT_FORM);
 	break;
 	}
 	*/
@@ -1077,7 +1077,7 @@ bool ChatHandler::HandleDebugSpawnWarCommand(const char* args, WorldSession* m_s
 		c->Load(cp, bx + x, by + y, z, 0.0f);
 		if(health != 0)
 		{
-			c->SetUInt32Value(UNIT_FIELD_MAXHEALTH, health);
+			c->SetUInt32Value(UNIT_FIELD_MAX_HEALTH, health);
 			c->SetUInt32Value(UNIT_FIELD_HEALTH, health);
 		}
 		c->SetUInt32Value(UNIT_FIELD_FACTIONTEMPLATE, (count % 2) ? 1 : 2);

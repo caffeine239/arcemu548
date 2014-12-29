@@ -39,7 +39,7 @@ class ProtectingtheShipment : public QuestScript
 			creat->GetAIInterface()->StopMovement(3000);
 			creat->GetAIInterface()->SetAllowedToEnterCombat(false);
 			creat->SendChatMessage(CHAT_MSG_MONSTER_SAY, LANG_UNIVERSAL, "Okay let's do!");
-			creat->SetUInt32Value(UNIT_NPC_FLAGS, 0);
+			creat->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, 0);
 
 			sEAS.CreateCustomWaypointMap(creat);
 			sEAS.WaypointCreate(creat, -5753.780762f, -3433.290039f, 301.628387f, 4.834769f, 0, 256, 1417);

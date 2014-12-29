@@ -2273,7 +2273,7 @@ int8 ItemInterface::CanEquipItemInSlot(int8 DstInvSlot, int8 slot, ItemPrototype
 				if(!GetInventoryItem(INVENTORY_SLOT_NOT_SET, slot))
 				{
 					//check if player got that slot.
-					bytes = m_pOwner->GetUInt32Value(PLAYER_BYTES_2);
+					bytes = m_pOwner->GetUInt32Value(PLAYER_FIELD_REST_STATE);
 					slots = (uint8)(bytes >> 16);
 					islot = GetInternalBankSlotFromPlayer(slot);
 					if(slots < islot)
@@ -2878,9 +2878,9 @@ void ItemInterface::EmptyBuyBack()
 				m_pBuyBack[j] = NULL;
 			}
 
-			m_pOwner->SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + (2 * j), 0);
-			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE_1 + j, 0);
-			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP_1 + j, 0);
+			m_pOwner->SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + (2 * j), 0);
+			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE + j, 0);
+			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP + j, 0);
 			m_pBuyBack[j] = NULL;
 		}
 		else
@@ -2891,7 +2891,7 @@ void ItemInterface::EmptyBuyBack()
 void ItemInterface::AddBuyBackItem(Item* it, uint32 price)
 {
 	int i;
-	if((m_pBuyBack[MAX_BUYBACK_SLOT - 1] != NULL) && (m_pOwner->GetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + (MAX_BUYBACK_SLOT - 1) * 2) != 0))
+	if((m_pBuyBack[MAX_BUYBACK_SLOT - 1] != NULL) && (m_pOwner->GetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + (MAX_BUYBACK_SLOT - 1) * 2) != 0))
 	{
 		if(m_pBuyBack[0] != NULL)
 		{
@@ -2917,31 +2917,31 @@ void ItemInterface::AddBuyBackItem(Item* it, uint32 price)
 
 		for(int j = 0; j < MAX_BUYBACK_SLOT - 1; j++)
 		{
-			//SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + (2*j),buyback[j+1]->GetGUID());
-			m_pOwner->SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + (2 * j), m_pOwner->GetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + ((j + 1) * 2)));
-			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE_1 + j, m_pOwner->GetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE_1 + j + 1));
-			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP_1 + j, m_pOwner->GetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP_1 + j + 1));
+			//SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + (2*j),buyback[j+1]->GetGUID());
+			m_pOwner->SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + (2 * j), m_pOwner->GetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + ((j + 1) * 2)));
+			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE + j, m_pOwner->GetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE + j + 1));
+			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP + j, m_pOwner->GetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP + j + 1));
 			m_pBuyBack[j] = m_pBuyBack[j + 1];
 		}
 		m_pBuyBack[MAX_BUYBACK_SLOT - 1] = it;
 
-		m_pOwner->SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + (2 * (MAX_BUYBACK_SLOT - 1)), m_pBuyBack[MAX_BUYBACK_SLOT - 1]->GetGUID());
-		m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE_1 + MAX_BUYBACK_SLOT - 1, price);
-		m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP_1 + MAX_BUYBACK_SLOT - 1, (uint32)UNIXTIME);
+		m_pOwner->SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + (2 * (MAX_BUYBACK_SLOT - 1)), m_pBuyBack[MAX_BUYBACK_SLOT - 1]->GetGUID());
+		m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE + MAX_BUYBACK_SLOT - 1, price);
+		m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP + MAX_BUYBACK_SLOT - 1, (uint32)UNIXTIME);
 		return;
 	}
 
 	for(i = 0; i <= (MAX_BUYBACK_SLOT - 1) * 2; i += 2) //at least 1 slot is empty
 	{
-		if((m_pOwner->GetUInt32Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + i) == 0) || (m_pBuyBack[i / 2] == NULL))
+		if((m_pOwner->GetUInt32Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + i) == 0) || (m_pBuyBack[i / 2] == NULL))
 		{
 			LOG_DETAIL("setting buybackslot %u", i / 2);
 			m_pBuyBack[i >> 1] = it;
 
-			m_pOwner->SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + i, m_pBuyBack[i >> 1]->GetGUID());
-			//SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + i,it->GetGUID());
-			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE_1 + (i >> 1), price);
-			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP_1 + (i >> 1), (uint32)UNIXTIME);
+			m_pOwner->SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + i, m_pBuyBack[i >> 1]->GetGUID());
+			//SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + i,it->GetGUID());
+			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE + (i >> 1), price);
+			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP + (i >> 1), (uint32)UNIXTIME);
 			return;
 		}
 	}
@@ -2952,13 +2952,13 @@ void ItemInterface::RemoveBuyBackItem(uint32 index)
 	int32 j = 0;
 	for(j = index; j < MAX_BUYBACK_SLOT - 1; j++)
 	{
-		if(m_pOwner->GetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + (j * 2)) != 0)
+		if(m_pOwner->GetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + (j * 2)) != 0)
 		{
-			m_pOwner->SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + (2 * j), m_pOwner->GetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + ((j + 1) * 2)));
-			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE_1 + j, m_pOwner->GetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE_1 + j + 1));
-			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP_1 + j, m_pOwner->GetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP_1 + j + 1));
+			m_pOwner->SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + (2 * j), m_pOwner->GetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + ((j + 1) * 2)));
+			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE + j, m_pOwner->GetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE + j + 1));
+			m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP + j, m_pOwner->GetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP + j + 1));
 
-			if(m_pBuyBack[j + 1] != NULL && (m_pOwner->GetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + ((j + 1) * 2)) != 0))
+			if(m_pBuyBack[j + 1] != NULL && (m_pOwner->GetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + ((j + 1) * 2)) != 0))
 			{
 				m_pBuyBack[j] = m_pBuyBack[j + 1];
 			}
@@ -2973,9 +2973,9 @@ void ItemInterface::RemoveBuyBackItem(uint32 index)
 			return;
 	}
 	j = 11;
-	m_pOwner->SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + (2 * j), m_pOwner->GetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1 + ((j + 1) * 2)));
-	m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE_1 + j, m_pOwner->GetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE_1 + j + 1));
-	m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP_1 + j, m_pOwner->GetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP_1 + j + 1));
+	m_pOwner->SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + (2 * j), m_pOwner->GetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOTS + ((j + 1) * 2)));
+	m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE + j, m_pOwner->GetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE + j + 1));
+	m_pOwner->SetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP + j, m_pOwner->GetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP + j + 1));
 	if(m_pBuyBack[MAX_BUYBACK_SLOT - 1])
 	{
 		m_pBuyBack[MAX_BUYBACK_SLOT - 1] = NULL;
@@ -3174,7 +3174,7 @@ void ItemInterface::SwapItemSlots(int8 srcslot, int8 dstslot)
 			// Bags aren't considered "visible".
 			if(srcslot < EQUIPMENT_SLOT_END)
 			{
-				int VisibleBase = PLAYER_VISIBLE_ITEM_1_ENTRYID + (srcslot * PLAYER_VISIBLE_ITEM_LENGTH);
+				int VisibleBase = PLAYER_FIELD_VISIBLE_ITEMS + (srcslot * PLAYER_VISIBLE_ITEM_LENGTH);
 				m_pOwner->SetUInt32Value(VisibleBase, m_pItems[(int)srcslot]->GetEntry());
 				m_pOwner->SetUInt32Value(VisibleBase + 1, m_pItems[(int)srcslot]->GetEnchantmentId(0));
 			}
@@ -3188,7 +3188,7 @@ void ItemInterface::SwapItemSlots(int8 srcslot, int8 dstslot)
 			// Bags aren't considered "visible".
 			if(srcslot < EQUIPMENT_SLOT_END)
 			{
-				int VisibleBase = PLAYER_VISIBLE_ITEM_1_ENTRYID + (srcslot * PLAYER_VISIBLE_ITEM_LENGTH);
+				int VisibleBase = PLAYER_FIELD_VISIBLE_ITEMS + (srcslot * PLAYER_VISIBLE_ITEM_LENGTH);
 				m_pOwner->SetUInt32Value(VisibleBase, 0);
 				m_pOwner->SetUInt32Value(VisibleBase + 1, 0);
 				/*				m_pOwner->SetUInt32Value( VisibleBase + 2, 0 );
@@ -3209,7 +3209,7 @@ void ItemInterface::SwapItemSlots(int8 srcslot, int8 dstslot)
 			// Bags aren't considered "visible".
 			if(dstslot < EQUIPMENT_SLOT_END)
 			{
-				int VisibleBase = PLAYER_VISIBLE_ITEM_1_ENTRYID + (dstslot * PLAYER_VISIBLE_ITEM_LENGTH);
+				int VisibleBase = PLAYER_FIELD_VISIBLE_ITEMS + (dstslot * PLAYER_VISIBLE_ITEM_LENGTH);
 				m_pOwner->SetUInt32Value(VisibleBase, m_pItems[(int)dstslot]->GetEntry());
 				m_pOwner->SetUInt32Value(VisibleBase + 1, m_pItems[(int)dstslot]->GetEnchantmentId(0));
 			}
@@ -3225,7 +3225,7 @@ void ItemInterface::SwapItemSlots(int8 srcslot, int8 dstslot)
 			// bags aren't considered visible
 			if(dstslot < EQUIPMENT_SLOT_END)
 			{
-				int VisibleBase = PLAYER_VISIBLE_ITEM_1_ENTRYID + (dstslot * PLAYER_VISIBLE_ITEM_LENGTH);
+				int VisibleBase = PLAYER_FIELD_VISIBLE_ITEMS + (dstslot * PLAYER_VISIBLE_ITEM_LENGTH);
 				m_pOwner->SetUInt32Value(VisibleBase, 0);
 				m_pOwner->SetUInt32Value(VisibleBase + 1, 0);
 				/*				m_pOwner->SetUInt32Value( VisibleBase + 2, 0 );

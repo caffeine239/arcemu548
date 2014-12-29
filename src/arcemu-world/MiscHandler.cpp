@@ -458,7 +458,7 @@ void WorldSession::HandleLootReleaseOpcode(WorldPacket & recv_data)
 					if(_player->HasQuestForItem(i->item.itemproto->ItemId))
 						return;
 				}
-			pCreature->BuildFieldUpdatePacket(_player, UNIT_DYNAMIC_FLAGS, 0);
+			pCreature->BuildFieldUpdatePacket(_player, OBJECT_FIELD_DYNAMIC_FLAGS, 0);
 
 			if(!pCreature->Skinned)
 			{
@@ -508,7 +508,7 @@ void WorldSession::HandleLootReleaseOpcode(WorldPacket & recv_data)
 									if( despawn )
 										pGO->Despawn(0, (sQuestMgr.GetGameObjectLootQuest(pGO->GetEntry()) ? 180000 + (RandomUInt(180000)) : 900000 + (RandomUInt(600000))));
 									else
-										pGO->SetByte( GAMEOBJECT_BYTES_1, 0, 1 );
+										pGO->SetByte( GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 1 );
 
 									return;
 								}
@@ -520,7 +520,7 @@ void WorldSession::HandleLootReleaseOpcode(WorldPacket & recv_data)
 										//we still have loot inside.
 										if(pGO->HasLoot()  || !despawn )
 										{
-											pGO->SetByte(GAMEOBJECT_BYTES_1, 0, 1);
+											pGO->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 1);
 											// TODO : redo this temporary fix, because for some reason hasloot is true even when we loot everything
 											// my guess is we need to set up some even that rechecks the GO in 10 seconds or something
 											//pGO->Despawn( 600000 + ( RandomUInt( 300000 ) ) );
@@ -544,7 +544,7 @@ void WorldSession::HandleLootReleaseOpcode(WorldPacket & recv_data)
 									{
 										if(pGO->HasLoot()  || !despawn )
 										{
-											pGO->SetByte(GAMEOBJECT_BYTES_1, 0, 1);
+											pGO->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 1);
 											return;
 										}
 										pGO->Despawn(0, sQuestMgr.GetGameObjectLootQuest(pGO->GetEntry()) ? 180000 + (RandomUInt(180000)) : (IS_INSTANCE(pGO->GetMapId()) ? 0 : 900000 + (RandomUInt(600000))));
@@ -555,7 +555,7 @@ void WorldSession::HandleLootReleaseOpcode(WorldPacket & recv_data)
 								{
 									if(pGO->HasLoot()  || !despawn )
 									{
-										pGO->SetByte(GAMEOBJECT_BYTES_1, 0, 1);
+										pGO->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 1);
 										return;
 									}
 									pGO->Despawn(0, sQuestMgr.GetGameObjectLootQuest(pGO->GetEntry()) ? 180000 + (RandomUInt(180000)) : (IS_INSTANCE(pGO->GetMapId()) ? 0 : 900000 + (RandomUInt(600000))));
@@ -568,7 +568,7 @@ void WorldSession::HandleLootReleaseOpcode(WorldPacket & recv_data)
 					{
 						if(pGO->HasLoot()  || !despawn )
 						{
-							pGO->SetByte(GAMEOBJECT_BYTES_1, 0, 1);
+							pGO->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 1);
 							return;
 						}
 						pGO->Despawn(0, sQuestMgr.GetGameObjectLootQuest(pGO->GetEntry()) ? 180000 + (RandomUInt(180000)) : (IS_INSTANCE(pGO->GetMapId()) ? 0 : 900000 + (RandomUInt(600000))));
@@ -594,7 +594,7 @@ void WorldSession::HandleLootReleaseOpcode(WorldPacket & recv_data)
 		{
 			plr->bShouldHaveLootableOnCorpse = false;
 			plr->loot.items.clear();
-			plr->RemoveFlag(UNIT_DYNAMIC_FLAGS, U_DYN_FLAG_LOOTABLE);
+			plr->RemoveFlag(OBJECT_FIELD_DYNAMIC_FLAGS, U_DYN_FLAG_LOOTABLE);
 		}
 	}
 	else if(GET_TYPE_FROM_GUID(guid) == HIGHGUID_TYPE_ITEM)     // Loot from items, eg. sacks, milling, prospecting...
@@ -1354,9 +1354,9 @@ void WorldSession::HandleBarberShopResult(WorldPacket & recv_data)
 
 	uint32 hair, haircolor, facialhairorpiercing;
 	recv_data >> hair >> haircolor >> facialhairorpiercing;
-	uint32 oldhair = _player->GetByte(PLAYER_BYTES, 2);
-	uint32 oldhaircolor = _player->GetByte(PLAYER_BYTES, 3);
-	uint32 oldfacial = _player->GetByte(PLAYER_BYTES_2, 0);
+	uint32 oldhair = _player->GetByte(PLAYER_FIELD_HAIR_COLOR_ID, 2);
+	uint32 oldhaircolor = _player->GetByte(PLAYER_FIELD_HAIR_COLOR_ID, 3);
+	uint32 oldfacial = _player->GetByte(PLAYER_FIELD_REST_STATE, 0);
 	uint32 newhair, newhaircolor, newfacial;
 	uint32 cost = 0;
 	BarberShopStyleEntry* bbse;
@@ -1405,9 +1405,9 @@ void WorldSession::HandleBarberShopResult(WorldPacket & recv_data)
 	data << uint32(0);                                  // ok
 	SendPacket(&data);
 
-	_player->SetByte(PLAYER_BYTES, 2, static_cast<uint8>(newhair));
-	_player->SetByte(PLAYER_BYTES, 3, static_cast<uint8>(newhaircolor));
-	_player->SetByte(PLAYER_BYTES_2, 0, static_cast<uint8>(newfacial));
+	_player->SetByte(PLAYER_FIELD_HAIR_COLOR_ID, 2, static_cast<uint8>(newhair));
+	_player->SetByte(PLAYER_FIELD_HAIR_COLOR_ID, 3, static_cast<uint8>(newhaircolor));
+	_player->SetByte(PLAYER_FIELD_REST_STATE, 0, static_cast<uint8>(newfacial));
 	_player->ModGold(-(int32)cost);
 
 	_player->SetStandState(0);                              // stand up
@@ -1493,12 +1493,12 @@ void WorldSession::HandleGameObjectUse(WorldPacket & recv_data)
 		case GAMEOBJECT_TYPE_DOOR:
 			{
 				// cebernic modified this state = 0 org =1
-				if((obj->GetByte(GAMEOBJECT_BYTES_1, 0) == 0))  //&& (obj->GetUInt32Value(GAMEOBJECT_FLAGS) == 33) )
+				if((obj->GetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0) == 0))  //&& (obj->GetUInt32Value(GAMEOBJECT_FIELD_FLAGS) == 33) )
 					obj->EventCloseDoor();
 				else
 				{
-					obj->SetFlag(GAMEOBJECT_FLAGS, 1);   // lock door
-					obj->SetByte(GAMEOBJECT_BYTES_1, 0, 0);
+					obj->SetFlag(GAMEOBJECT_FIELD_FLAGS, 1);   // lock door
+					obj->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 0);
 					sEventMgr.AddEvent(obj, &GameObject::EventCloseDoor, EVENT_GAMEOBJECT_DOOR_CLOSE, 20000, 1, EVENT_FLAG_DO_NOT_EXECUTE_IN_WORLD_CONTEXT);
 				}
 			}
@@ -1762,7 +1762,7 @@ void WorldSession::HandleSetSheathedOpcode(WorldPacket & recv_data)
 
 	uint32 active;
 	recv_data >> active;
-	_player->SetByte(UNIT_FIELD_BYTES_2, 0, (uint8)active);
+	_player->SetByte(UNIT_FIELD_SHAPESHIFT_FORM, 0, (uint8)active);
 }
 
 void WorldSession::HandlePlayedTimeOpcode(WorldPacket & recv_data)
@@ -2099,7 +2099,7 @@ void WorldSession::HandleLootMasterGiveOpcode(WorldPacket & recv_data)
 	{
 		pGameObject = _player->GetMapMgr()->GetGameObject(GET_LOWGUID_PART(creatureguid));
 		if(!pGameObject)return;
-		pGameObject->SetByte(GAMEOBJECT_BYTES_1, 0, 0);
+		pGameObject->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 0);
 		pLoot = &pGameObject->loot;
 	}
 
@@ -2373,16 +2373,16 @@ void WorldSession::HandleToggleCloakOpcode(WorldPacket & recv_data)
 	CHECK_INWORLD_RETURN
 
 	//////////////////////////
-	//	PLAYER_FLAGS									   = 3104 / 0x00C20 / 0000000000000000000110000100000
+	//	PLAYER_FIELD_PLAYER_FLAGS									   = 3104 / 0x00C20 / 0000000000000000000110000100000
 	//																							 ^
 	// This bit, on = toggled OFF, off = toggled ON.. :S
 
 	//uint32 SetBit = 0 | (1 << 11);
 
-	if(_player->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_NOCLOAK))
-		_player->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAG_NOCLOAK);
+	if(_player->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_NOCLOAK))
+		_player->RemoveFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_NOCLOAK);
 	else
-		_player->SetFlag(PLAYER_FLAGS, PLAYER_FLAG_NOCLOAK);
+		_player->SetFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_NOCLOAK);
 }
 
 void WorldSession::HandleToggleHelmOpcode(WorldPacket & recv_data)
@@ -2390,16 +2390,16 @@ void WorldSession::HandleToggleHelmOpcode(WorldPacket & recv_data)
 	CHECK_INWORLD_RETURN
 
 	//////////////////////////
-	//	PLAYER_FLAGS									   = 3104 / 0x00C20 / 0000000000000000000110000100000
+	//	PLAYER_FIELD_PLAYER_FLAGS									   = 3104 / 0x00C20 / 0000000000000000000110000100000
 	//																							  ^
 	// This bit, on = toggled OFF, off = toggled ON.. :S
 
 	//uint32 SetBit = 0 | (1 << 10);
 
-	if(_player->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_NOHELM))
-		_player->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAG_NOHELM);
+	if(_player->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_NOHELM))
+		_player->RemoveFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_NOHELM);
 	else
-		_player->SetFlag(PLAYER_FLAGS, PLAYER_FLAG_NOHELM);
+		_player->SetFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_NOHELM);
 }
 
 void WorldSession::HandleDungeonDifficultyOpcode(WorldPacket & recv_data)

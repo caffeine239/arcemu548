@@ -92,7 +92,7 @@ class JainaProudmooreAI : public CreatureAIScript
 
 		JainaProudmooreAI(Creature* pCreature) : CreatureAIScript(pCreature)
 		{
-			_unit->SetUInt32Value(UNIT_NPC_FLAGS, 1);
+			_unit->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, 1);
 		}
 };
 
@@ -138,7 +138,7 @@ class JainaProudmooreGS : public GossipScript
 					break;
 			}
 
-			creature->SetUInt32Value(UNIT_NPC_FLAGS, 0);
+			creature->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, 0);
 		}
 
 		void GossipEnd(Object* pObject, Player* Plr) { GossipScript::GossipEnd(pObject, Plr); }
@@ -154,7 +154,7 @@ class ThrallAI : public CreatureAIScript
 
 		ThrallAI(Creature* pCreature) : CreatureAIScript(pCreature)
 		{
-			_unit->SetUInt32Value(UNIT_NPC_FLAGS, 1);
+			_unit->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, 1);
 		}
 };
 
@@ -195,7 +195,7 @@ class ThrallGS : public GossipScript
 					break;
 			}
 
-			creature->SetUInt32Value(UNIT_NPC_FLAGS, 0);
+			creature->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, 0);
 		}
 
 		void GossipEnd(Object* pObject, Player* Plr) { GossipScript::GossipEnd(pObject, Plr); }

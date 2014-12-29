@@ -1050,15 +1050,15 @@ void Group::HandleUpdateFieldChange(uint32 Index, Player* pPlayer)
 			Flags = GROUP_UPDATE_FLAG_HEALTH;
 			break;
 
-		case UNIT_FIELD_MAXHEALTH:
+		case UNIT_FIELD_MAX_HEALTH:
 			Flags = GROUP_UPDATE_FLAG_MAXHEALTH;
 			break;
 
-		case UNIT_FIELD_POWER1:
-		case UNIT_FIELD_POWER2:
-		case UNIT_FIELD_POWER3:
-		case UNIT_FIELD_POWER4:
-		case UNIT_FIELD_POWER5: //runicpower in cata?
+		case UNIT_FIELD_POWER:
+		case UNIT_FIELD_POWER + 1:
+		case UNIT_FIELD_POWER + 2:
+		case UNIT_FIELD_POWER + 3:
+		case UNIT_FIELD_POWER + 4: //runicpower in cata?
 			Flags = GROUP_UPDATE_FLAG_POWER;
 			break;
 
@@ -1189,12 +1189,12 @@ void Group::SendLootUpdates(Object* o)
 	// Build the actual update.
 	ByteBuffer buf(500);
 
-	uint32 Flags = o->GetUInt32Value(UNIT_DYNAMIC_FLAGS);
+	uint32 Flags = o->GetUInt32Value(OBJECT_FIELD_DYNAMIC_FLAGS);
 
 	Flags |= U_DYN_FLAG_LOOTABLE;
 	Flags |= U_DYN_FLAG_TAPPED_BY_PLAYER;
 
-	o->BuildFieldUpdatePacket(&buf, UNIT_DYNAMIC_FLAGS, Flags);
+	o->BuildFieldUpdatePacket(&buf, OBJECT_FIELD_DYNAMIC_FLAGS, Flags);
 
 	Lock();
 

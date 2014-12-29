@@ -64,7 +64,7 @@ void Container::LoadFromDB(Field* fields)
 	SetCreatorGUID(fields[5].GetUInt32());
 	SetStackCount(1);
 
-	SetUInt32Value(ITEM_FIELD_FLAGS, fields[8].GetUInt32());
+	SetUInt32Value(ITEM_FIELD_DYNAMIC_FLAGS, fields[8].GetUInt32());
 	SetItemRandomPropertyId(fields[9].GetUInt32());
 
 	SetDurabilityMax(m_itemProto->MaxDurability);

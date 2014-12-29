@@ -910,7 +910,7 @@ void Aura::Remove()
 	if(m_spellProto->BGR_one_buff_on_target & SPELL_TYPE_SEAL && !--m_target->asc_seal)
 		flag |= AURASTATE_FLAG_JUDGEMENT;
 	if(flag != 0)
-		m_target->RemoveFlag(UNIT_FIELD_AURASTATE, flag);
+		m_target->RemoveFlag(UNIT_FIELD_AURA_STATE, flag);
 
 	// We will delete this on the next update, eluding some spell crashes :|
 	m_target->AddGarbageAura(this);
@@ -1765,22 +1765,22 @@ void Aura::SpellAuraPeriodicDamage(bool apply)
 		SetNegative();
 		if(m_spellProto->BGR_one_buff_on_target & SPELL_TYPE_WARLOCK_IMMOLATE)
 		{
-			m_target->SetFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_IMMOLATE);
+			m_target->SetFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_IMMOLATE);
 		}
 		//maybe poison aurastate should get triggered on other spells too ?
 		else if(m_spellProto->c_is_flags & SPELL_FLAG_IS_POISON)  //deadly poison
 		{
-			m_target->SetFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_POISON);
+			m_target->SetFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_POISON);
 		}
 	}
 	else if((m_flags & (1 << mod->i)) == 0)   //add these checks to mods where immunity can cancel only 1 mod and not whole spell
 	{
 		if(m_spellProto->BGR_one_buff_on_target & SPELL_TYPE_WARLOCK_IMMOLATE)
-			m_target->RemoveFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_IMMOLATE);
+			m_target->RemoveFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_IMMOLATE);
 		//maybe poison aurastate should get triggered on other spells too ?
 		else if(m_spellProto->c_is_flags & SPELL_FLAG_IS_POISON)  //deadly poison
 		{
-			m_target->RemoveFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_POISON);
+			m_target->RemoveFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_POISON);
 		}
 	}
 }
@@ -2158,7 +2158,7 @@ void Aura::SpellAuraPeriodicHeal(bool apply)
 
 			if(GetSpellProto()->NameHash == SPELL_HASH_REJUVENATION || GetSpellProto()->NameHash == SPELL_HASH_REGROWTH)
 			{
-				m_target->SetFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_REJUVENATE);
+				m_target->SetFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_REJUVENATE);
 				if(!sEventMgr.HasEvent(m_target, EVENT_REJUVENATION_FLAG_EXPIRE))
 				{
 					sEventMgr.AddEvent(m_target, &Unit::EventAurastateExpire, (uint32)AURASTATE_FLAG_REJUVENATE, EVENT_REJUVENATION_FLAG_EXPIRE, GetDuration(), 1, EVENT_FLAG_DO_NOT_EXECUTE_IN_WORLD_CONTEXT);
@@ -2375,9 +2375,9 @@ void Aura::SpellAuraModAttackSpeed(bool apply)
 	{
 		if(apply)
 		{
-			mod->fixed_amount[0] = m_target->GetModPUInt32Value(UNIT_FIELD_BASEATTACKTIME, mod->m_amount);
-			mod->fixed_amount[1] = m_target->GetModPUInt32Value(UNIT_FIELD_BASEATTACKTIME + 1, mod->m_amount);
-			mod->fixed_amount[2] = m_target->GetModPUInt32Value(UNIT_FIELD_RANGEDATTACKTIME, mod->m_amount);
+			mod->fixed_amount[0] = m_target->GetModPUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME, mod->m_amount);
+			mod->fixed_amount[1] = m_target->GetModPUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME + 1, mod->m_amount);
+			mod->fixed_amount[2] = m_target->GetModPUInt32Value(UNIT_FIELD_RANGED_ATTACK_ROUND_BASE_TIME, mod->m_amount);
 			m_target->ModBaseAttackTime(MELEE, -mod->fixed_amount[0]);
 			m_target->ModBaseAttackTime(OFFHAND, -mod->fixed_amount[1]);
 			m_target->ModBaseAttackTime(RANGED, -mod->fixed_amount[2]);
@@ -2714,9 +2714,9 @@ void Aura::SpellAuraModStealth(bool apply)
 			m_target->SetStealth(GetSpellId());
 
 		if(m_spellProto->NameHash == SPELL_HASH_STEALTH)
-			m_target->SetFlag(UNIT_FIELD_BYTES_2, 0x1E000000); //sneak anim
+			m_target->SetFlag(UNIT_FIELD_SHAPESHIFT_FORM, 0x1E000000); //sneak anim
 
-		m_target->SetFlag(UNIT_FIELD_BYTES_1, 0x020000);
+		m_target->SetFlag(UNIT_FIELD_ANIM_TIER, 0x020000);
 		if(m_target->IsPlayer())
 			m_target->SetFlag(PLAYER_FIELD_BYTES2, 0x2000);
 
@@ -2795,9 +2795,9 @@ void Aura::SpellAuraModStealth(bool apply)
 		if(m_spellProto->NameHash != SPELL_HASH_VANISH)
 		{
 			m_target->SetStealth(0);
-			m_target->RemoveFlag(UNIT_FIELD_BYTES_2, 0x1E000000);
+			m_target->RemoveFlag(UNIT_FIELD_SHAPESHIFT_FORM, 0x1E000000);
 
-			m_target->RemoveFlag(UNIT_FIELD_BYTES_1, 0x020000);
+			m_target->RemoveFlag(UNIT_FIELD_ANIM_TIER, 0x020000);
 
 			if(p_target != NULL)
 			{
@@ -3137,9 +3137,9 @@ void Aura::SpellAuraPeriodicEnergize(bool apply)
 
 void Aura::EventPeriodicEnergize(uint32 amount, uint32 type)
 {
-	uint32 POWER_TYPE = UNIT_FIELD_POWER1 + type;
+	uint32 POWER_TYPE = UNIT_FIELD_POWER + type;
 
-	ARCEMU_ASSERT(POWER_TYPE <= UNIT_FIELD_POWER5);
+	ARCEMU_ASSERT(POWER_TYPE <= UNIT_FIELD_POWER + 4);
 
 	Unit* ucaster = GetUnitCaster();
 	if(ucaster == NULL)
@@ -3206,7 +3206,7 @@ void Aura::SpellAuraModRoot(bool apply)
 		}
 
 		if(GetSpellProto()->School == SCHOOL_FROST && !m_target->asc_frozen++)
-			m_target->SetFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_FROZEN);
+			m_target->SetFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_FROZEN);
 
 		/* -Supalosa- TODO: Mobs will attack nearest enemy in range on aggro list when rooted. */
 	}
@@ -3221,7 +3221,7 @@ void Aura::SpellAuraModRoot(bool apply)
 			m_target->GetAIInterface()->AttackReaction(GetUnitCaster(), 1, 0);
 
 		if(GetSpellProto()->School == SCHOOL_FROST && !--m_target->asc_frozen)
-			m_target->RemoveFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_FROZEN);
+			m_target->RemoveFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_FROZEN);
 	}
 }
 
@@ -3530,17 +3530,17 @@ void Aura::SpellAuraModIncreaseEnergy(bool apply)
 
 	/*if(powerType == POWER_TYPE_MANA) // Mana
 	{
-		powerField = UNIT_FIELD_POWER1;
+		powerField = UNIT_FIELD_POWER;
 		maxField = UNIT_FIELD_MAXPOWER1;
 	}
 	else if(powerType == POWER_TYPE_RAGE) // Rage
 	{
-		powerField = UNIT_FIELD_POWER2;
+		powerField = UNIT_FIELD_POWER + 1;
 		maxField = UNIT_FIELD_MAXPOWER2;
 	}
 	else if(powerType == POWER_TYPE_ENERGY) // Energy
 	{
-		powerField = UNIT_FIELD_POWER4;
+		powerField = UNIT_FIELD_POWER + 3;
 		maxField = UNIT_FIELD_MAXPOWER4;
 	}
 	else // Capt: if we can not use identify the type: do nothing
@@ -4650,11 +4650,11 @@ void Aura::SpellAuraTransform(bool apply)
 					// dwarf = 7819
 					// Halfling = 7818
 					// maybe 7842 as its from a lesser npc
-					m_target->SetUInt32Value(UNIT_FIELD_DISPLAYID, 7842);
+					m_target->SetUInt32Value(UNIT_FIELD_DISPLAY_ID, 7842);
 				}
 				else
 				{
-					m_target->SetUInt32Value(UNIT_FIELD_DISPLAYID, m_target->GetNativeDisplayId());
+					m_target->SetUInt32Value(UNIT_FIELD_DISPLAY_ID, m_target->GetNativeDisplayId());
 				}
 			}
 			break;
@@ -4665,11 +4665,11 @@ void Aura::SpellAuraTransform(bool apply)
 
 				if(apply)
 				{
-					m_target->SetUInt32Value(UNIT_FIELD_DISPLAYID, displayId);
+					m_target->SetUInt32Value(UNIT_FIELD_DISPLAY_ID, displayId);
 				}
 				else
 				{
-					m_target->SetUInt32Value(UNIT_FIELD_DISPLAYID, m_target->GetNativeDisplayId());
+					m_target->SetUInt32Value(UNIT_FIELD_DISPLAY_ID, m_target->GetNativeDisplayId());
 				}
 			}
 			break;
@@ -4911,7 +4911,7 @@ void Aura::SpellAuraFeignDeath(bool apply)
 
 			p_target->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
 			p_target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_FEIGN_DEATH);
-			p_target->SetFlag(UNIT_DYNAMIC_FLAGS, U_DYN_FLAG_DEAD);
+			p_target->SetFlag(OBJECT_FIELD_DYNAMIC_FLAGS, U_DYN_FLAG_DEAD);
 
 			//now get rid of mobs agro. pTarget->CombatStatus.AttackersForgetHate() - this works only for already attacking mobs
 			for(std::set<Object*>::iterator itr = p_target->GetInRangeSetBegin(); itr != p_target->GetInRangeSetEnd(); itr++)
@@ -4968,7 +4968,7 @@ void Aura::SpellAuraFeignDeath(bool apply)
 		{
 			p_target->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
 			p_target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_FEIGN_DEATH);
-			p_target->RemoveFlag(UNIT_DYNAMIC_FLAGS, U_DYN_FLAG_DEAD);
+			p_target->RemoveFlag(OBJECT_FIELD_DYNAMIC_FLAGS, U_DYN_FLAG_DEAD);
 			data.SetOpcode(SMSG_STOP_MIRROR_TIMER);
 			data << uint32(TIMER_FEIGNDEATH);
 			p_target->GetSession()->SendPacket(&data);
@@ -5266,7 +5266,7 @@ void Aura::SpellAuraMounted(bool apply)
 			p_target->SendPacket( &data );
 
 			p_target->SetFlag( UNIT_FIELD_FLAGS, UNIT_FLAG_MOUNT );
-			p_target->SetFlag( UNIT_NPC_FLAGS, UNIT_NPC_FLAG_PLAYER_VEHICLE );
+			p_target->SetFlag( UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_PLAYER_VEHICLE );
 
 			p_target->GetVehicleComponent()->InstallAccessories();
 		}
@@ -5275,7 +5275,7 @@ void Aura::SpellAuraMounted(bool apply)
 	else
 	{
 		if( p_target->GetVehicleComponent() != NULL ){
-			p_target->RemoveFlag( UNIT_NPC_FLAGS, UNIT_NPC_FLAG_PLAYER_VEHICLE );
+			p_target->RemoveFlag( UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_PLAYER_VEHICLE );
 			p_target->RemoveFlag( UNIT_FIELD_FLAGS, UNIT_FLAG_MOUNT );
 
 			p_target->GetVehicleComponent()->RemoveAccessories();
@@ -5512,9 +5512,9 @@ void Aura::EventPeriodicTrigger(uint32 amount, uint32 type)
 
 void Aura::EventPeriodicEnergizeVariable(uint32 amount, uint32 type)
 {
-	uint32 POWER_TYPE = UNIT_FIELD_POWER1 + type;
+	uint32 POWER_TYPE = UNIT_FIELD_POWER + type;
 
-	ARCEMU_ASSERT(POWER_TYPE <= UNIT_FIELD_POWER5);
+	ARCEMU_ASSERT(POWER_TYPE <= UNIT_FIELD_POWER + 4);
 
 	Unit* ucaster = GetUnitCaster();
 	if(ucaster != NULL)
@@ -6496,9 +6496,9 @@ void Aura::SpellAuraModHealingPCT(bool apply)
 void Aura::SpellAuraUntrackable(bool apply)
 {
 	if(apply)
-		m_target->SetFlag(UNIT_FIELD_BYTES_1, STANDSTATE_FLAG_UNTRACKABLE);
+		m_target->SetFlag(UNIT_FIELD_ANIM_TIER, STANDSTATE_FLAG_UNTRACKABLE);
 	else
-		m_target->RemoveFlag(UNIT_FIELD_BYTES_1, STANDSTATE_FLAG_UNTRACKABLE);
+		m_target->RemoveFlag(UNIT_FIELD_ANIM_TIER, STANDSTATE_FLAG_UNTRACKABLE);
 }
 
 void Aura::SpellAuraModRangedAttackPower(bool apply)
@@ -6591,7 +6591,7 @@ void Aura::SpellAuraModIncreaseHealthPerc(bool apply)
 	SetPositive();
 	if(apply)
 	{
-		mod->fixed_amount[mod->i] = m_target->GetModPUInt32Value(UNIT_FIELD_MAXHEALTH, mod->m_amount);
+		mod->fixed_amount[mod->i] = m_target->GetModPUInt32Value(UNIT_FIELD_MAX_HEALTH, mod->m_amount);
 		m_target->ModMaxHealth(mod->fixed_amount[mod->i]);
 		if(p_target != NULL)
 			p_target->SetHealthFromSpell(p_target->GetHealthFromSpell() + mod->fixed_amount[mod->i]);
@@ -6601,8 +6601,8 @@ void Aura::SpellAuraModIncreaseHealthPerc(bool apply)
 	else
 	{
 		m_target->ModMaxHealth(-mod->fixed_amount[mod->i]);
-		if(m_target->GetUInt32Value(UNIT_FIELD_HEALTH) > m_target->GetUInt32Value(UNIT_FIELD_MAXHEALTH))
-			m_target->SetHealth(m_target->GetUInt32Value(UNIT_FIELD_MAXHEALTH));
+		if(m_target->GetUInt32Value(UNIT_FIELD_HEALTH) > m_target->GetUInt32Value(UNIT_FIELD_MAX_HEALTH))
+			m_target->SetHealth(m_target->GetUInt32Value(UNIT_FIELD_MAX_HEALTH));
 		if(p_target != NULL)
 			p_target->SetHealthFromSpell(TO_PLAYER(m_target)->GetHealthFromSpell() - mod->fixed_amount[mod->i]);
 //		else if( m_target->IsPet() )
@@ -6727,13 +6727,13 @@ void Aura::SpellAuraModHaste(bool apply)
 	{
 		if(apply)
 		{
-			mod->fixed_amount[mod->i] = m_target->GetModPUInt32Value(UNIT_FIELD_BASEATTACKTIME, mod->m_amount);
-			mod->fixed_amount[mod->i * 2] = m_target->GetModPUInt32Value(UNIT_FIELD_BASEATTACKTIME + 1, mod->m_amount);
+			mod->fixed_amount[mod->i] = m_target->GetModPUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME, mod->m_amount);
+			mod->fixed_amount[mod->i * 2] = m_target->GetModPUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME + 1, mod->m_amount);
 
-			if((int32)m_target->GetUInt32Value(UNIT_FIELD_BASEATTACKTIME) <= mod->fixed_amount[mod->i])
-				mod->fixed_amount[mod->i] = m_target->GetUInt32Value(UNIT_FIELD_BASEATTACKTIME);    //watch it, a negative timer might be bad ;)
-			if((int32)m_target->GetUInt32Value(UNIT_FIELD_BASEATTACKTIME + 1) <= mod->fixed_amount[mod->i * 2])
-				mod->fixed_amount[mod->i * 2] = m_target->GetUInt32Value(UNIT_FIELD_BASEATTACKTIME + 1); //watch it, a negative timer might be bad ;)
+			if((int32)m_target->GetUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME) <= mod->fixed_amount[mod->i])
+				mod->fixed_amount[mod->i] = m_target->GetUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME);    //watch it, a negative timer might be bad ;)
+			if((int32)m_target->GetUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME + 1) <= mod->fixed_amount[mod->i * 2])
+				mod->fixed_amount[mod->i * 2] = m_target->GetUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME + 1); //watch it, a negative timer might be bad ;)
 
 			m_target->ModBaseAttackTime(MELEE, -mod->fixed_amount[mod->i]);
 			m_target->ModBaseAttackTime(OFFHAND, -mod->fixed_amount[mod->i * 2]);
@@ -6808,7 +6808,7 @@ void Aura::SpellAuraModRangedHaste(bool apply)
 	{
 		if(apply)
 		{
-			mod->fixed_amount[mod->i] = m_target->GetModPUInt32Value(UNIT_FIELD_RANGEDATTACKTIME, mod->m_amount);
+			mod->fixed_amount[mod->i] = m_target->GetModPUInt32Value(UNIT_FIELD_RANGED_ATTACK_ROUND_BASE_TIME, mod->m_amount);
 			m_target->ModBaseAttackTime(RANGED, -mod->fixed_amount[mod->i]);
 		}
 		else m_target->ModBaseAttackTime(RANGED, mod->fixed_amount[mod->i]);
@@ -7573,11 +7573,11 @@ void Aura::SpellAuraEmphaty(bool apply)
 		return;
 
 	// Show extra info about beast
-	uint32 dynflags = m_target->GetUInt32Value(UNIT_DYNAMIC_FLAGS);
+	uint32 dynflags = m_target->GetUInt32Value(OBJECT_FIELD_DYNAMIC_FLAGS);
 	if(apply)
 		dynflags |= U_DYN_FLAG_PLAYER_INFO;
 
-	m_target->BuildFieldUpdatePacket(caster, UNIT_DYNAMIC_FLAGS, dynflags);
+	m_target->BuildFieldUpdatePacket(caster, OBJECT_FIELD_DYNAMIC_FLAGS, dynflags);
 }
 
 void Aura::SpellAuraModOffhandDamagePCT(bool apply)
@@ -7787,13 +7787,13 @@ void Aura::SpellAuraMeleeHaste(bool apply)
 	{
 		if(apply)
 		{
-			mod->fixed_amount[0] = m_target->GetModPUInt32Value(UNIT_FIELD_BASEATTACKTIME, mod->m_amount);
-			mod->fixed_amount[1] = m_target->GetModPUInt32Value(UNIT_FIELD_BASEATTACKTIME + 1, mod->m_amount);
+			mod->fixed_amount[0] = m_target->GetModPUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME, mod->m_amount);
+			mod->fixed_amount[1] = m_target->GetModPUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME + 1, mod->m_amount);
 
-			if((int32)m_target->GetUInt32Value(UNIT_FIELD_BASEATTACKTIME) <= mod->fixed_amount[0])
-				mod->fixed_amount[0] = m_target->GetUInt32Value(UNIT_FIELD_BASEATTACKTIME);
-			if((int32)m_target->GetUInt32Value(UNIT_FIELD_BASEATTACKTIME + 1) <= mod->fixed_amount[1])
-				mod->fixed_amount[1] = m_target->GetUInt32Value(UNIT_FIELD_BASEATTACKTIME + 1);
+			if((int32)m_target->GetUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME) <= mod->fixed_amount[0])
+				mod->fixed_amount[0] = m_target->GetUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME);
+			if((int32)m_target->GetUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME + 1) <= mod->fixed_amount[1])
+				mod->fixed_amount[1] = m_target->GetUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME + 1);
 
 			m_target->ModBaseAttackTime(MELEE, -mod->fixed_amount[0]);
 			m_target->ModBaseAttackTime(OFFHAND, -mod->fixed_amount[1]);
@@ -8465,9 +8465,9 @@ void Aura::SpellAuraAddHealth(bool apply)
 	else
 	{
 		m_target->ModMaxHealth(-mod->m_amount);
-		uint32 maxHealth = m_target->GetUInt32Value(UNIT_FIELD_MAXHEALTH);
+		uint32 maxHealth = m_target->GetUInt32Value(UNIT_FIELD_MAX_HEALTH);
 		if(m_target->GetUInt32Value(UNIT_FIELD_HEALTH) > maxHealth)
-			m_target->SetUInt32Value(UNIT_FIELD_MAXHEALTH, maxHealth);
+			m_target->SetUInt32Value(UNIT_FIELD_MAX_HEALTH, maxHealth);
 	}
 }
 

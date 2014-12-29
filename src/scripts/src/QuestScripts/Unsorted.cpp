@@ -73,13 +73,13 @@ class Chicken : public CreatureAIScript
 		void OnLoad()
 		{
 			_unit->SetFaction(12);
-			_unit->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+			_unit->RemoveFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
 			RegisterAIUpdateEvent(120000);
 		}
 
 		void AIUpdate()
 		{
-			if(_unit->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER))
+			if(_unit->HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER))
 				OnLoad();
 		}
 };

@@ -120,8 +120,8 @@ void Corpse::SpawnBones()
 	//remove item association
 	for(int i = 0; i < EQUIPMENT_SLOT_END; i++)
 	{
-		if(GetUInt32Value(CORPSE_FIELD_ITEM + i))
-			SetUInt32Value(CORPSE_FIELD_ITEM + i, 0);
+		if(GetUInt32Value(CORPSE_FIELD_ITEMS + i))
+            SetUInt32Value(CORPSE_FIELD_ITEMS + i, 0);
 	}
 	DeleteFromDB();
 	objmgr.CorpseAddEventDespawn(this);

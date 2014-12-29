@@ -337,7 +337,7 @@ GameObject* CBattleground::SpawnGameObject(uint32 entry, uint32 MapId , float x,
 
 	go->SetFaction(faction);
 	go->SetScale(scale);
-	go->SetUInt32Value(GAMEOBJECT_FLAGS, flags);
+	go->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, flags);
 	go->SetPosition(x, y, z, o);
 	go->SetInstanceID(m_mapMgr->GetInstanceID());
 
@@ -720,8 +720,8 @@ Creature* CBattleground::SpawnSpiritGuide(float x, float y, float z, float o, ui
 	pCreature->SetChannelSpellId(22011);
 	pCreature->SetCastSpeedMod(1.0f);
 
-	pCreature->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPIRITGUIDE);
-	pCreature->SetUInt32Value(UNIT_FIELD_BYTES_2, 1 | (0x10 << 8));
+	pCreature->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_SPIRITGUIDE);
+	pCreature->SetUInt32Value(UNIT_FIELD_SHAPESHIFT_FORM, 1 | (0x10 << 8));
 
 	pCreature->DisableAI();
 

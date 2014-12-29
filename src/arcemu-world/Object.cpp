@@ -139,8 +139,8 @@ uint32 Object::BuildCreateUpdateBlockForPlayer(ByteBuffer* data, Player* target)
 
 	/*if(IsGameObject())
 	{
-//		switch( GetByte(GAMEOBJECT_BYTES_1,GAMEOBJECT_BYTES_TYPEID) )
-		switch(m_uint32Values[GAMEOBJECT_BYTES_1])
+//		switch( GetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID,GAMEOBJECT_BYTES_TYPEID) )
+		switch(m_uint32Values[GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID])
 		{
 			/*case GAMEOBJECT_TYPE_MO_TRANSPORT:
 				{
@@ -262,8 +262,8 @@ uint32 Object::BuildCreateUpdateBlockForPlayer(ByteBuffer* data, Player* target)
 	// gameobject stuff
 	if(IsGameObject())
 	{
-//		switch( GetByte(GAMEOBJECT_BYTES_1,GAMEOBJECT_BYTES_TYPEID) )
-		switch(m_uint32Values[GAMEOBJECT_BYTES_1])
+//		switch( GetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID,GAMEOBJECT_BYTES_TYPEID) )
+		switch(m_uint32Values[GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID])
 		{
 			case GAMEOBJECT_TYPE_MO_TRANSPORT:
 				{
@@ -1231,8 +1231,8 @@ void Object::_BuildValuesUpdate(ByteBuffer* data, UpdateMask* updateMask, Player
 			if(pThis->IsTagged() && (pThis->loot.gold || pThis->loot.items.size()))
 			{
 				// Let's see if we're the tagger or not.
-				oldflags = m_uint32Values[UNIT_DYNAMIC_FLAGS];
-				uint32 Flags = m_uint32Values[UNIT_DYNAMIC_FLAGS];
+				oldflags = m_uint32Values[OBJECT_FIELD_DYNAMIC_FLAGS];
+				uint32 Flags = m_uint32Values[OBJECT_FIELD_DYNAMIC_FLAGS];
 				uint32 oldFlags = 0;
 
 				if(pThis->GetTaggerGUID() == target->GetGUID())
@@ -1258,9 +1258,9 @@ void Object::_BuildValuesUpdate(ByteBuffer* data, UpdateMask* updateMask, Player
 						Flags &= ~oldFlags;
 				}
 
-				m_uint32Values[UNIT_DYNAMIC_FLAGS] = Flags;
+				m_uint32Values[OBJECT_FIELD_DYNAMIC_FLAGS] = Flags;
 
-				updateMask->SetBit(UNIT_DYNAMIC_FLAGS);
+				updateMask->SetBit(OBJECT_FIELD_DYNAMIC_FLAGS);
 
 				reset = true;
 			}
@@ -1387,7 +1387,7 @@ void Object::_BuildValuesUpdate(ByteBuffer* data, UpdateMask* updateMask, Player
 		switch(GetTypeId())
 		{
 			case TYPEID_UNIT:
-				m_uint32Values[UNIT_DYNAMIC_FLAGS] = oldflags;
+				m_uint32Values[OBJECT_FIELD_DYNAMIC_FLAGS] = oldflags;
 				break;
 			case TYPEID_GAMEOBJECT:
 				m_uint32Values[GAMEOBJECT_DYNAMIC] = oldflags;
@@ -1531,7 +1531,7 @@ void Object::AddToWorld()
 	if(IsPlayer())
 	{
 		Player* plr = TO< Player* >(this);
-		if(mapMgr->pInstance != NULL && !plr->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_GM))
+		if(mapMgr->pInstance != NULL && !plr->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_GM))
 		{
 			// Player limit?
 			if(mapMgr->GetMapInfo()->playerlimit && mapMgr->GetPlayerCount() >= mapMgr->GetMapInfo()->playerlimit)
@@ -1698,10 +1698,10 @@ void Object::SetUInt32Value(const uint32 index, const uint32 value)
 
 		switch(index)
 		{
-			case UNIT_FIELD_POWER1:
-			case UNIT_FIELD_POWER2:
-			case UNIT_FIELD_POWER4:
-			case UNIT_FIELD_POWER5:
+			case UNIT_FIELD_POWER:
+			case UNIT_FIELD_POWER + 1:
+			case UNIT_FIELD_POWER + 3:
+			case UNIT_FIELD_POWER + 4:
 				TO< Unit* >(this)->SendPowerUpdate(true);
 				break;
 			default:
@@ -1712,11 +1712,11 @@ void Object::SetUInt32Value(const uint32 index, const uint32 value)
 	{
 		switch(index)
 		{
-			case UNIT_FIELD_POWER1:
-			case UNIT_FIELD_POWER2:
-			case UNIT_FIELD_POWER3:
-			case UNIT_FIELD_POWER4:
-			case UNIT_FIELD_POWER5:
+			case UNIT_FIELD_POWER:
+			case UNIT_FIELD_POWER + 1:
+			case UNIT_FIELD_POWER + 2:
+			case UNIT_FIELD_POWER + 3:
+			case UNIT_FIELD_POWER + 4:
 				TO_CREATURE(this)->SendPowerUpdate(false);
 				break;
 			default:
@@ -1757,10 +1757,10 @@ void Object::ModUnsigned32Value(uint32 index, int32 mod)
 	{
 		switch(index)
 		{
-			case UNIT_FIELD_POWER1:
-			case UNIT_FIELD_POWER2:
-			case UNIT_FIELD_POWER4:
-			case UNIT_FIELD_POWER5:
+			case UNIT_FIELD_POWER:
+			case UNIT_FIELD_POWER + 1:
+			case UNIT_FIELD_POWER + 3:
+			case UNIT_FIELD_POWER + 4:
 				TO< Unit* >(this)->SendPowerUpdate(true);
 				break;
 			default:
@@ -1771,11 +1771,11 @@ void Object::ModUnsigned32Value(uint32 index, int32 mod)
 	{
 		switch(index)
 		{
-			case UNIT_FIELD_POWER1:
-			case UNIT_FIELD_POWER2:
-			case UNIT_FIELD_POWER3:
-			case UNIT_FIELD_POWER4:
-			case UNIT_FIELD_POWER5:
+			case UNIT_FIELD_POWER:
+			case UNIT_FIELD_POWER + 1:
+			case UNIT_FIELD_POWER + 2:
+			case UNIT_FIELD_POWER + 3:
+			case UNIT_FIELD_POWER + 4:
 				TO_CREATURE(this)->SendPowerUpdate(false);
 				break;
 			default:
@@ -2384,7 +2384,7 @@ void Object::SpellNonMeleeDamageLog(Unit* pVictim, uint32 spellID, uint32 damage
 		else if(pl->HasAura(44396))
 			pctmod = 0.15f;
 
-		uint32 hp = static_cast< uint32 >( 0.05f * pl->GetUInt32Value(UNIT_FIELD_MAXHEALTH) );
+		uint32 hp = static_cast< uint32 >( 0.05f * pl->GetUInt32Value(UNIT_FIELD_MAX_HEALTH) );
 		uint32 spellpower = static_cast< uint32 >( pctmod * pl->GetPosDamageDoneMod(SCHOOL_NORMAL) );
 
 		if(spellpower > hp)
@@ -2567,7 +2567,7 @@ void Object::SendAttackerStateUpdate(Object* Caster, Object* Target, dealdamage*
 
 	uint32 Overkill = 0;
 
-	if(Damage > Target->GetUInt32Value(UNIT_FIELD_MAXHEALTH))
+	if(Damage > Target->GetUInt32Value(UNIT_FIELD_MAX_HEALTH))
 		Overkill = Damage - Target->GetUInt32Value(UNIT_FIELD_HEALTH);
 
 	data << uint32(HitStatus);

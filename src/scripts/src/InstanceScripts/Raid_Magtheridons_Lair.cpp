@@ -1334,7 +1334,7 @@ class MagtheridonAI : public CreatureAIScript
 
 			_unit->CastSpell(_unit, dbcSpell.LookupEntry(BANISH), true);
 			_unit->GetAIInterface()->SetAllowedToEnterCombat(false);
-			_unit->SetUInt32Value(UNIT_FIELD_BYTES_2, 1);
+			_unit->SetUInt32Value(UNIT_FIELD_SHAPESHIFT_FORM, 1);
 
 			timer_quake = timer_enrage = timer_blastNova = timer_caveIn = 0;
 			PhaseSwitch = false;

@@ -605,15 +605,15 @@ uint32 CalculateDamage(Unit* pAttacker, Unit* pVictim, uint32 weapon_damage_type
 
 	if(pAttacker->disarmed && pAttacker->IsPlayer())
 	{
-		offset = UNIT_FIELD_MINDAMAGE;
+		offset = UNIT_FIELD_MIN_DAMAGE;
 		it = TO< Player* >(pAttacker)->GetItemInterface()->GetInventoryItem(EQUIPMENT_SLOT_MAINHAND);
 	}
 	else if(weapon_damage_type == MELEE)
-		offset = UNIT_FIELD_MINDAMAGE;
+		offset = UNIT_FIELD_MIN_DAMAGE;
 	else if(weapon_damage_type == OFFHAND)
-		offset = UNIT_FIELD_MINOFFHANDDAMAGE;
+		offset = UNIT_FIELD_MIN_OFF_HAND_DAMAGE;
 	else  // weapon_damage_type == RANGED
-		offset = UNIT_FIELD_MINRANGEDDAMAGE;
+		offset = UNIT_FIELD_MIN_RANGED_DAMAGE;
 
 	float min_damage = pAttacker->GetFloatValue(offset);
 	float max_damage = pAttacker->GetFloatValue(offset + 1);
@@ -627,7 +627,7 @@ uint32 CalculateDamage(Unit* pAttacker, Unit* pVictim, uint32 weapon_damage_type
 	float bonus;
 	float wspeed;
 
-	if(offset == UNIT_FIELD_MINRANGEDDAMAGE)
+	if(offset == UNIT_FIELD_MIN_RANGED_DAMAGE)
 	{
 		//starting from base attack power then we apply mods on it
 		//ap += pAttacker->GetRAP();
@@ -761,7 +761,7 @@ uint32 CalculateDamage(Unit* pAttacker, Unit* pVictim, uint32 weapon_damage_type
 			}
 		}
 
-		if(offset == UNIT_FIELD_MINDAMAGE)
+		if(offset == UNIT_FIELD_MIN_DAMAGE)
 			bonus = (wspeed - pAttacker->GetBaseAttackTime(MELEE)) / 14000.0f * ap;
 		else
 			bonus = (wspeed - pAttacker->GetBaseAttackTime(OFFHAND)) / 14000.0f * ap;

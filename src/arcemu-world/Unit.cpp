@@ -954,7 +954,7 @@ void Unit::GiveGroupXP(Unit* pVictim, Player* PlayerInGroup)
 			Player* plr = active_player_list[i];
 			plr->GiveXP(float2int32(((xp * plr->getLevel()) / total_level) * xp_mod), pVictim->GetGUID(), true);
 
-			active_player_list[i]->SetFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_LASTKILLWITHHONOR);
+			active_player_list[i]->SetFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_LASTKILLWITHHONOR);
 			if(!sEventMgr.HasEvent(active_player_list[i], EVENT_LASTKILLWITHHONOR_FLAG_EXPIRE))
 			{
 				sEventMgr.AddEvent(TO_UNIT(active_player_list[i]), &Unit::EventAurastateExpire, (uint32)AURASTATE_FLAG_LASTKILLWITHHONOR, EVENT_LASTKILLWITHHONOR_FLAG_EXPIRE, 20000, 1, EVENT_FLAG_DO_NOT_EXECUTE_IN_WORLD_CONTEXT);
@@ -2728,7 +2728,7 @@ void Unit::RegeneratePower(bool isinterrupted)
 				{
 					if(!CombatStatus.IsInCombat())
 					{
-						uint32 cur = GetUInt32Value(UNIT_FIELD_POWER5);
+						uint32 cur = GetUInt32Value(UNIT_FIELD_POWER + 4);
 						SetPower(POWER_TYPE_RUNIC_POWER, cur - 20);
 					}
 				}
@@ -3514,7 +3514,7 @@ void Unit::Strike(Unit* pVictim, uint32 weapon_damage_type, SpellEntry* ability,
 			if(pVictim->IsPlayer() && pVictim->getClass() == DEATHKNIGHT)   // omg! dirty hack!
 				pVictim->CastSpell(pVictim, 56817, true);
 
-			pVictim->SetFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_DODGE_BLOCK);
+			pVictim->SetFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_DODGE_BLOCK);
 			if(!sEventMgr.HasEvent(pVictim, EVENT_DODGE_BLOCK_FLAG_EXPIRE))
 				sEventMgr.AddEvent(pVictim, &Unit::EventAurastateExpire, (uint32)AURASTATE_FLAG_DODGE_BLOCK, EVENT_DODGE_BLOCK_FLAG_EXPIRE, 5000, 1, 0);
 			else sEventMgr.ModifyEventTimeLeft(pVictim, EVENT_DODGE_BLOCK_FLAG_EXPIRE, 5000, 0);
@@ -3536,14 +3536,14 @@ void Unit::Strike(Unit* pVictim, uint32 weapon_damage_type, SpellEntry* ability,
 				if(pVictim->getClass() == DEATHKNIGHT)   // omg! dirty hack!
 					pVictim->CastSpell(pVictim, 56817, true);
 
-				pVictim->SetFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_PARRY);	//SB@L: Enables spells requiring parry
+				pVictim->SetFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_PARRY);	//SB@L: Enables spells requiring parry
 				if(!sEventMgr.HasEvent(pVictim, EVENT_PARRY_FLAG_EXPIRE))
 					sEventMgr.AddEvent(pVictim, &Unit::EventAurastateExpire, (uint32)AURASTATE_FLAG_PARRY, EVENT_PARRY_FLAG_EXPIRE, 5000, 1, 0);
 				else
 					sEventMgr.ModifyEventTimeLeft(pVictim, EVENT_PARRY_FLAG_EXPIRE, 5000);
 				if(TO< Player* >(pVictim)->getClass() == 1 || TO< Player* >(pVictim)->getClass() == 4)      //warriors for 'revenge' and rogues for 'riposte'
 				{
-					pVictim->SetFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_DODGE_BLOCK);	//SB@L: Enables spells requiring dodge
+					pVictim->SetFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_DODGE_BLOCK);	//SB@L: Enables spells requiring dodge
 					if(!sEventMgr.HasEvent(pVictim, EVENT_DODGE_BLOCK_FLAG_EXPIRE))
 						sEventMgr.AddEvent(pVictim, &Unit::EventAurastateExpire, (uint32)AURASTATE_FLAG_DODGE_BLOCK, EVENT_DODGE_BLOCK_FLAG_EXPIRE, 5000, 1, 0);
 					else
@@ -3685,7 +3685,7 @@ void Unit::Strike(Unit* pVictim, uint32 weapon_damage_type, SpellEntry* ability,
 								}
 								if(pVictim->IsPlayer())  //not necessary now but we'll have blocking mobs in future
 								{
-									pVictim->SetFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_DODGE_BLOCK);	//SB@L: Enables spells requiring dodge
+									pVictim->SetFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_DODGE_BLOCK);	//SB@L: Enables spells requiring dodge
 									if(!sEventMgr.HasEvent(pVictim, EVENT_DODGE_BLOCK_FLAG_EXPIRE))
 										sEventMgr.AddEvent(pVictim, &Unit::EventAurastateExpire, (uint32)AURASTATE_FLAG_DODGE_BLOCK, EVENT_DODGE_BLOCK_FLAG_EXPIRE, 5000, 1, 0);
 									else
@@ -3750,7 +3750,7 @@ void Unit::Strike(Unit* pVictim, uint32 weapon_damage_type, SpellEntry* ability,
 
 							if(IsPlayer())
 							{
-								this->SetFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_CRITICAL);
+								this->SetFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_CRITICAL);
 								if(!sEventMgr.HasEvent(this, EVENT_CRIT_FLAG_EXPIRE))
 									sEventMgr.AddEvent(this, &Unit::EventAurastateExpire, uint32(AURASTATE_FLAG_CRITICAL) , EVENT_CRIT_FLAG_EXPIRE, 5000, 1, 0);
 								else sEventMgr.ModifyEventTimeLeft(this, EVENT_CRIT_FLAG_EXPIRE, 5000);
@@ -4069,7 +4069,7 @@ void Unit::Strike(Unit* pVictim, uint32 weapon_damage_type, SpellEntry* ability,
 		if(weapon == NULL)
 		{
 			if(weapon_damage_type == OFFHAND)
-				s = GetUInt32Value(UNIT_FIELD_BASEATTACKTIME + 1) / 1000.0f;
+				s = GetUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME + 1) / 1000.0f;
 			else
 				s = GetBaseAttackTime(MELEE) / 1000.0f;
 		}
@@ -4676,7 +4676,7 @@ void Unit::AddAura(Aura* aur)
 	if(aur->GetSpellProto()->BGR_one_buff_on_target & SPELL_TYPE_SEAL && !asc_seal++)
 		flag |= AURASTATE_FLAG_JUDGEMENT;
 
-	SetFlag(UNIT_FIELD_AURASTATE, flag);
+	SetFlag(UNIT_FIELD_AURA_STATE, flag);
 }
 
 bool Unit::RemoveAura(Aura* aur)
@@ -4747,7 +4747,7 @@ bool Unit::RemoveAurasByHeal()
 				case 38801:
 				case 43093:
 					{
-						if(GetUInt32Value(UNIT_FIELD_HEALTH) == GetUInt32Value(UNIT_FIELD_MAXHEALTH))
+						if(GetUInt32Value(UNIT_FIELD_HEALTH) == GetUInt32Value(UNIT_FIELD_MAX_HEALTH))
 						{
 							m_auras[x]->Remove();
 							res = true;
@@ -4758,7 +4758,7 @@ bool Unit::RemoveAurasByHeal()
 				case 38772:
 					{
 						uint32 p = m_auras[x]->GetSpellProto()->eff[1].EffectBasePoints;
-						if(GetUInt32Value(UNIT_FIELD_MAXHEALTH) * p <= GetUInt32Value(UNIT_FIELD_HEALTH) * 100)
+						if(GetUInt32Value(UNIT_FIELD_MAX_HEALTH) * p <= GetUInt32Value(UNIT_FIELD_HEALTH) * 100)
 						{
 							m_auras[x]->Remove();
 							res = true;
@@ -5414,7 +5414,7 @@ uint32 Unit::ManaShieldAbsorb(uint32 dmg)
 
 	uint32 cost = (potential * (100 + effectbonus)) / 50;
 
-	SetUInt32Value(UNIT_FIELD_POWER1, mana - cost);
+	SetUInt32Value(UNIT_FIELD_POWER, mana - cost);
 	m_manashieldamt -= potential;
 	if(!m_manashieldamt)
 		RemoveAura(m_manaShieldId);
@@ -5505,7 +5505,7 @@ void Unit::SetStandState(uint8 standstate) //!!! 15595 should work
 	if(bef == standstate)
 		return;
 
-	SetByte(UNIT_FIELD_BYTES_1, 0, standstate);
+	SetByte(UNIT_FIELD_ANIM_TIER, 0, standstate);
 	if(standstate == STANDSTATE_STAND)  //standup
 		RemoveAurasByInterruptFlag(AURA_INTERRUPT_ON_STAND_UP);
 
@@ -6443,16 +6443,16 @@ void Unit::EventHealthChangeSinceLastUpdate()
 		if(pct < 20)
 			toset |= AURASTATE_FLAG_HEALTH20;
 		else
-			RemoveFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_HEALTH20);
-		SetFlag(UNIT_FIELD_AURASTATE, toset);
+			RemoveFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_HEALTH20);
+		SetFlag(UNIT_FIELD_AURA_STATE, toset);
 	}
 	else
-		RemoveFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_HEALTH35 | AURASTATE_FLAG_HEALTH20);
+		RemoveFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_HEALTH35 | AURASTATE_FLAG_HEALTH20);
 
 	if(pct < 75)
-		RemoveFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_HEALTH75);
+		RemoveFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_HEALTH75);
 	else
-		SetFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_HEALTH75);
+		SetFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_HEALTH75);
 }
 
 int32 Unit::GetAP()
@@ -7218,7 +7218,7 @@ void CombatStatusHandler::TryToClearAttackTargets()
 	Unit* pt;
 
 	if(m_Unit->IsPlayer())
-		TO< Player* >(m_Unit)->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAG_UNKNOWN2);
+		TO< Player* >(m_Unit)->RemoveFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_UNKNOWN2);
 
 
 	for(i = m_attackTargets.begin(); i != m_attackTargets.end();)
@@ -7368,11 +7368,11 @@ void Unit::RemoveAllMovementImpairing()
 void Unit::setAttackTimer(int32 time, bool offhand)
 {
 	if(!time)
-		time = offhand ? m_uint32Values[UNIT_FIELD_BASEATTACKTIME + 1] : m_uint32Values[UNIT_FIELD_BASEATTACKTIME];
+		time = offhand ? m_uint32Values[UNIT_FIELD_ATTACK_ROUND_BASE_TIME + 1] : m_uint32Values[UNIT_FIELD_ATTACK_ROUND_BASE_TIME];
 
 	time = std::max(1000, float2int32(time * GetCastSpeedMod()));
 	if(time > 300000)		// just in case.. shouldn't happen though
-		time = offhand ? m_uint32Values[UNIT_FIELD_BASEATTACKTIME + 1] : m_uint32Values[UNIT_FIELD_BASEATTACKTIME];
+		time = offhand ? m_uint32Values[UNIT_FIELD_ATTACK_ROUND_BASE_TIME + 1] : m_uint32Values[UNIT_FIELD_ATTACK_ROUND_BASE_TIME];
 
 	if(offhand)
 		m_attackTimer_1 = getMSTime() + time;
@@ -7401,7 +7401,7 @@ void Unit::EventUpdateFlag()
 
 void Unit::EventModelChange()
 {
-	DisplayBounding* entry = DisplayBoundingStorage.LookupEntry(GetUInt32Value(UNIT_FIELD_DISPLAYID));
+	DisplayBounding* entry = DisplayBoundingStorage.LookupEntry(GetUInt32Value(UNIT_FIELD_DISPLAY_ID));
 
 	//TODO: if has mount, grab mount model and add the z value of attachment 0
 	if(entry)
@@ -7685,13 +7685,13 @@ void Unit::SetPower(uint32 type, int32 value)
 	else if(value > (int32)maxpower)
 		value = maxpower;
 
-	SetUInt32Value(UNIT_FIELD_POWER1 + type, value);
+	SetUInt32Value(UNIT_FIELD_POWER + type, value);
 }
 
 // DISABLED - NOT UPDATED
 void Unit::SendPowerUpdate(bool self)
 {
-	/*uint32 amount = GetUInt32Value(UNIT_FIELD_POWER1 + GetPowerType()); //save the amount, so we send the same to the player and everyone else
+	/*uint32 amount = GetUInt32Value(UNIT_FIELD_POWER + GetPowerType()); //save the amount, so we send the same to the player and everyone else
 
 	WorldPacket data(SMSG_POWER_UPDATE, 14);
 	FastGUIDPack(data, GetGUID());
@@ -7703,7 +7703,7 @@ void Unit::SendPowerUpdate(bool self)
 	SendMessageToSet(&data, self);
 
 	//VLack: On 3.1.3, create and send a field update packet to everyone else, as this is the only way to update their GUI with the power values.
-	WorldPacket* pkt = BuildFieldUpdatePacket(UNIT_FIELD_POWER1 + GetPowerType(), amount);
+	WorldPacket* pkt = BuildFieldUpdatePacket(UNIT_FIELD_POWER + GetPowerType(), amount);
 	SendMessageToSet(pkt, false);
 	delete pkt;*/
 }
@@ -7716,7 +7716,7 @@ void Unit::UpdatePowerAmm()
 	WorldPacket data(SMSG_POWER_UPDATE, 14);
 	FastGUIDPack(data, GetGUID());
 	data << uint8(GetPowerType());
-	data << GetUInt32Value(UNIT_FIELD_POWER1 + GetPowerType());
+	data << GetUInt32Value(UNIT_FIELD_POWER + GetPowerType());
 	SendMessageToSet(&data, true);*/
 }
 
@@ -7785,7 +7785,7 @@ void Unit::Tag(uint64 TaggerGUID)
 {
 	Tagged = true;
 	this->TaggerGuid = TaggerGUID;
-	m_uint32Values[ UNIT_DYNAMIC_FLAGS ] |= U_DYN_FLAG_TAGGED_BY_OTHER;
+	m_uint32Values[ OBJECT_FIELD_DYNAMIC_FLAGS ] |= U_DYN_FLAG_TAGGED_BY_OTHER;
 
 }
 
@@ -7793,7 +7793,7 @@ void Unit::UnTag()
 {
 	Tagged = false;
 	TaggerGuid = 0;
-	m_uint32Values[ UNIT_DYNAMIC_FLAGS ] &= ~U_DYN_FLAG_TAGGED_BY_OTHER;
+	m_uint32Values[ OBJECT_FIELD_DYNAMIC_FLAGS ] &= ~U_DYN_FLAG_TAGGED_BY_OTHER;
 }
 
 bool Unit::IsTagged()

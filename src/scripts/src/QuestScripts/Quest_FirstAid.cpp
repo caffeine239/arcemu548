@@ -58,10 +58,10 @@ class InjuredSoldier : public CreatureAIScript
 
 		void OnLoad()
 		{
-			_unit->SetUInt32Value(UNIT_FIELD_BYTES_0, 16777472);
+			_unit->SetUInt32Value(UNIT_FIELD_SEX, 16777472);
 			_unit->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 			_unit->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_COMBAT);
-			_unit->SetUInt32Value(UNIT_FIELD_BYTES_1, 7);
+			_unit->SetUInt32Value(UNIT_FIELD_ANIM_TIER, 7);
 
 			uint32 sid = _unit->GetEntry();
 

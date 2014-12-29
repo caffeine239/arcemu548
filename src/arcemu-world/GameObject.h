@@ -64,7 +64,7 @@ enum GAMEOBJECT_OVERRIDES //by VLack
     GAMEOBJECT_AREAWIDE = 0x04,		//UNIMPLEMENTED, but will work like this: the Map will get marked that it contains an object like this, and on player movement these objects will get distance-checked to spawn them from a greater distance than normal if needed - for few objects on smaller maps, like on battlegrounds; maybe they'll get area-triggered, haven't decided yet.
     GAMEOBJECT_ONMOVEWIDE = 0x08,		//When this gameobject moves and sends updates about it's position, do so in the second range - MapMgr::ChangeObjectLocation, +/- 6 units wide instead of +/- 1.
     GAMEOBJECT_OVERRIDE_FLAGS = 0x10,	//UNIMPLEMENTED, Let the core decide about the flags sent in the A9 - example: 252 instead of 352 for Deeprun Tram.
-    GAMEOBJECT_OVERRIDE_BYTES1 = 0x20,	//UNIMPLEMENTED, Let the core use the full field instead an uint8 in GAMEOBJECT_BYTES_1, if the database creator knows what to do with it.
+    GAMEOBJECT_OVERRIDE_BYTES1 = 0x20,	//UNIMPLEMENTED, Let the core use the full field instead an uint8 in GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, if the database creator knows what to do with it.
     GAMEOBJECT_OVERRIDE_PARENTROT = 0x40,	//Makes it possible for the core to skip calculating these fields and use whatever was specified in the spawn.
     //Later other types might folow, or the upper bytes might get used for the AREAWIDE option in the overrides variable...
 };
@@ -294,40 +294,40 @@ class SERVER_DECL GameObject : public Object
 		uint32 GetOverrides() { return m_overrides; }
 
 		//Easy Functions
-		void SetDisplayId(uint32 id) { SetUInt32Value(GAMEOBJECT_DISPLAYID, id); }
-		uint32 GetDisplayId() { return GetUInt32Value(GAMEOBJECT_DISPLAYID); }
+		void SetDisplayId(uint32 id) { SetUInt32Value(GAMEOBJECT_FIELD_DISPLAY_ID, id); }
+        uint32 GetDisplayId() { return GetUInt32Value(GAMEOBJECT_FIELD_DISPLAY_ID); }
 
-		void SetParentRotation(uint8 rot, float value) { SetFloatValue(GAMEOBJECT_PARENTROTATION + rot, value); }
-		float GetParentRotation(uint8 rot) { return GetFloatValue(GAMEOBJECT_PARENTROTATION + rot); }
+        void SetParentRotation(uint8 rot, float value) { SetFloatValue(GAMEOBJECT_FIELD_PARENT_ROTATION + rot, value); }
+        float GetParentRotation(uint8 rot) { return GetFloatValue(GAMEOBJECT_FIELD_PARENT_ROTATION + rot); }
 
 		void SetFaction(uint32 id)
 		{
-			SetUInt32Value(GAMEOBJECT_FACTION, id);
+            SetUInt32Value(GAMEOBJECT_FIELD_FACTION_TEMPLATE, id);
 			_setFaction();
 		}
-		uint32 GetFaction() { return GetUInt32Value(GAMEOBJECT_FACTION); }
+        uint32 GetFaction() { return GetUInt32Value(GAMEOBJECT_FIELD_FACTION_TEMPLATE); }
 
-		void SetLevel(uint32 level) { SetUInt32Value(GAMEOBJECT_LEVEL, level); }
-		uint32 GetLevel() { return GetUInt32Value(GAMEOBJECT_LEVEL); }
+		void SetLevel(uint32 level) { SetUInt32Value(GAMEOBJECT_FIELD_LEVEL, level); }
+        uint32 GetLevel() { return GetUInt32Value(GAMEOBJECT_FIELD_LEVEL); }
 
-		void SetType(uint8 type) { SetByte(GAMEOBJECT_BYTES_1, 1, type); }
-		uint8 GetType() { return GetByte(GAMEOBJECT_BYTES_1, 1); }
+        void SetType(uint8 type) { SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 1, type); }
+        uint8 GetType() { return GetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 1); }
 		
-		void SetFlags( uint32 flags ){ SetUInt32Value( GAMEOBJECT_FLAGS, flags ); }		
-		uint32 GetFlags(){ return GetUInt32Value( GAMEOBJECT_FLAGS ); }
-		void RemoveFlags( uint32 flags ){ RemoveFlag( GAMEOBJECT_FLAGS, flags ); }
+		void SetFlags( uint32 flags ){ SetUInt32Value( GAMEOBJECT_FIELD_FLAGS, flags ); }		
+        uint32 GetFlags(){ return GetUInt32Value(GAMEOBJECT_FIELD_FLAGS); }
+        void RemoveFlags(uint32 flags){ RemoveFlag(GAMEOBJECT_FIELD_FLAGS, flags); }
 		
 		bool HasFlags( uint32 flags ){
-			if( HasFlag( GAMEOBJECT_FLAGS, flags ) != 0 )
+            if (HasFlag(GAMEOBJECT_FIELD_FLAGS, flags) != 0)
 				return true;
 			else
 				return false;
 		}
 		
-		void SetArtKit( uint8 artkit ){ SetByte( GAMEOBJECT_BYTES_1, 2, artkit ); }
-		uint8 GetArtkKit(){ return GetByte( GAMEOBJECT_BYTES_1, 2 ); }
-		void SetAnimProgress( uint8 progress ){ SetByte( GAMEOBJECT_BYTES_1, 3, progress ); }
-		uint8 GetAnimProgress(){ return GetByte( GAMEOBJECT_BYTES_1, 3 ); }
+        void SetArtKit(uint8 artkit){ SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 1, artkit); }
+        uint8 GetArtkKit(){ return GetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 1); }
+        void SetAnimProgress(uint8 progress){ SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 3, progress); }
+        uint8 GetAnimProgress(){ return GetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 3); }
 		
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//void Damage( uint32 damage, uint64 AttackerGUID, uint64 ControllerGUID,  uint32 SpellID )

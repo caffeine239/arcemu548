@@ -171,21 +171,21 @@ class SERVER_DECL Item : public Object
 		void SetOwnerGUID(uint64 GUID) { SetUInt64Value(ITEM_FIELD_OWNER, GUID);   }
 		uint64 GetOwnerGUID() { return GetUInt64Value(ITEM_FIELD_OWNER);  }
 
-		void SetContainerGUID(uint64 GUID) { SetUInt64Value(ITEM_FIELD_CONTAINED, GUID);   }
-		uint64 GetContainerGUID() { return GetUInt64Value(ITEM_FIELD_CONTAINED);   }
+        void SetContainerGUID(uint64 GUID) { SetUInt64Value(ITEM_FIELD_CONTAINED_IN, GUID); }
+		uint64 GetContainerGUID() { return GetUInt64Value(ITEM_FIELD_CONTAINED_IN);   }
 
 		void SetCreatorGUID(uint64 GUID) { SetUInt64Value(ITEM_FIELD_CREATOR, GUID); }
-		void SetGiftCreatorGUID(uint64 GUID) { SetUInt64Value(ITEM_FIELD_GIFTCREATOR, GUID); }
+        void SetGiftCreatorGUID(uint64 GUID) { SetUInt64Value(ITEM_FIELD_GIFT_CREATOR, GUID); }
 
 		uint64 GetCreatorGUID() { return GetUInt64Value(ITEM_FIELD_CREATOR); }
-		uint64 GetGiftCreatorGUID() { return GetUInt64Value(ITEM_FIELD_GIFTCREATOR); }
+        uint64 GetGiftCreatorGUID() { return GetUInt64Value(ITEM_FIELD_GIFT_CREATOR); }
 
 		void SetStackCount(uint32 amt) { SetUInt32Value(ITEM_FIELD_STACK_COUNT,  amt); }
 		uint32 GetStackCount() { return GetUInt32Value(ITEM_FIELD_STACK_COUNT); }
 		void ModStackCount(int32 val) { ModUnsigned32Value(ITEM_FIELD_STACK_COUNT, val); }
 
-		void SetDuration(uint32 durationseconds) { SetUInt32Value(ITEM_FIELD_DURATION, durationseconds); }
-		uint32 GetDuration() { return GetUInt32Value(ITEM_FIELD_DURATION); }
+		void SetDuration(uint32 durationseconds) { SetUInt32Value(ITEM_FIELD_DURABILITY, durationseconds); }
+        uint32 GetDuration() { return GetUInt32Value(ITEM_FIELD_DURABILITY); }
 
 		void SetCharges(uint32 index, uint32 charges) { SetUInt32Value(ITEM_FIELD_SPELL_CHARGES + index, charges); }
 		void ModCharges(uint32 index, int32 val) { ModSignedInt32Value(ITEM_FIELD_SPELL_CHARGES + index, val); }
@@ -193,22 +193,22 @@ class SERVER_DECL Item : public Object
 
 		/////////////////////////////////////////////////// FLAGS ////////////////////////////////////////////////////////////
 
-		void SoulBind() { SetFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_SOULBOUND); }
-		uint32 IsSoulbound() { return HasFlag( ITEM_FIELD_FLAGS, ITEM_FLAG_SOULBOUND ); }
+        void SoulBind() { SetFlag(ITEM_FIELD_DYNAMIC_FLAGS, ITEM_FLAG_SOULBOUND); }
+        uint32 IsSoulbound() { return HasFlag(ITEM_FIELD_DYNAMIC_FLAGS, ITEM_FLAG_SOULBOUND); }
 
-		void AccountBind() { SetFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_ACCOUNTBOUND); }
-		uint32 IsAccountbound() { return HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_ACCOUNTBOUND);  }
+        void AccountBind() { SetFlag(ITEM_FIELD_DYNAMIC_FLAGS, ITEM_FLAG_ACCOUNTBOUND); }
+        uint32 IsAccountbound() { return HasFlag(ITEM_FIELD_DYNAMIC_FLAGS, ITEM_FLAG_ACCOUNTBOUND); }
 
-		void MakeConjured() { SetFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_CONJURED); }
-		uint32 IsConjured() { return HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_CONJURED); }
+        void MakeConjured() { SetFlag(ITEM_FIELD_DYNAMIC_FLAGS, ITEM_FLAG_CONJURED); }
+        uint32 IsConjured() { return HasFlag(ITEM_FIELD_DYNAMIC_FLAGS, ITEM_FLAG_CONJURED); }
 
-		void Lock() { RemoveFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_LOOTABLE); }
-		void UnLock() { SetFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_LOOTABLE); }
+        void Lock() { RemoveFlag(ITEM_FIELD_DYNAMIC_FLAGS, ITEM_FLAG_LOOTABLE); }
+        void UnLock() { SetFlag(ITEM_FIELD_DYNAMIC_FLAGS, ITEM_FLAG_LOOTABLE); }
 
-		void Wrap() { SetFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_WRAPPED); }
-		void UnWrap() { RemoveFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_WRAPPED); }
+        void Wrap() { SetFlag(ITEM_FIELD_DYNAMIC_FLAGS, ITEM_FLAG_WRAPPED); }
+        void UnWrap() { RemoveFlag(ITEM_FIELD_DYNAMIC_FLAGS, ITEM_FLAG_WRAPPED); }
 
-		void ClearFlags() { SetFlag(ITEM_FIELD_FLAGS, 0); }
+        void ClearFlags() { SetFlag(ITEM_FIELD_DYNAMIC_FLAGS, 0); }
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -239,21 +239,21 @@ class SERVER_DECL Item : public Object
 		}
 
 		void SetDurability(uint32 Value) { SetUInt32Value(ITEM_FIELD_DURABILITY, Value); };
-		void SetDurabilityMax(uint32 Value) { SetUInt32Value(ITEM_FIELD_MAXDURABILITY, Value); };
+        void SetDurabilityMax(uint32 Value) { SetUInt32Value(ITEM_FIELD_MAX_DURABILITY, Value); };
 
 		uint32 GetDurability() { return GetUInt32Value(ITEM_FIELD_DURABILITY); }
-		uint32 GetDurabilityMax() { return GetUInt32Value(ITEM_FIELD_MAXDURABILITY); }
+        uint32 GetDurabilityMax() { return GetUInt32Value(ITEM_FIELD_MAX_DURABILITY); }
 
-		void SetDurabilityToMax() { SetUInt32Value(ITEM_FIELD_DURABILITY, GetUInt32Value(ITEM_FIELD_MAXDURABILITY)); }
+		void SetDurabilityToMax() { SetUInt32Value(ITEM_FIELD_DURABILITY, GetUInt32Value(ITEM_FIELD_MAX_DURABILITY)); }
 
-		uint32 GetEnchantmentId(uint32 index) { return GetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + 3 * index); }
-		void SetEnchantmentId(uint32 index, uint32 value) { SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + 3 * index, value); }
+		uint32 GetEnchantmentId(uint32 index) { return GetUInt32Value(ITEM_FIELD_ENCHANTMENT + 3 * index); }
+        void SetEnchantmentId(uint32 index, uint32 value) { SetUInt32Value(ITEM_FIELD_ENCHANTMENT + 3 * index, value); }
 
-		uint32 GetEnchantmentDuration(uint32 index) { return GetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + 1 + 3 * index); }
-		void SetEnchantmentDuration(uint32 index, uint32 value) { SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + 1 + 3 * index, value); }
+        uint32 GetEnchantmentDuration(uint32 index) { return GetUInt32Value(ITEM_FIELD_ENCHANTMENT + 1 + 3 * index); }
+        void SetEnchantmentDuration(uint32 index, uint32 value) { SetUInt32Value(ITEM_FIELD_ENCHANTMENT + 1 + 3 * index, value); }
 
-		uint32 GetEnchantmentCharges(uint32 index) { return GetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + 2 + 3 * index); }
-		void SetEnchantmentCharges(uint32 index, uint32 value) { SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + 2 + 3 * index, value); }
+        uint32 GetEnchantmentCharges(uint32 index) { return GetUInt32Value(ITEM_FIELD_ENCHANTMENT + 2 + 3 * index); }
+        void SetEnchantmentCharges(uint32 index, uint32 value) { SetUInt32Value(ITEM_FIELD_ENCHANTMENT + 2 + 3 * index, value); }
 
 		//////////////////////////////////////////////////////////
 		// Creation time in terms of played time

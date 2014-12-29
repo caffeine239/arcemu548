@@ -72,7 +72,7 @@ class Bartleby : public CreatureAIScript
 
 		void OnDamageTaken(Unit* mAttacker, uint32 fAmount)
 		{
-			if(_unit->GetUInt32Value(UNIT_FIELD_HEALTH) - fAmount <= _unit->GetUInt32Value(UNIT_FIELD_MAXHEALTH) * 0.37f)
+			if(_unit->GetUInt32Value(UNIT_FIELD_HEALTH) - fAmount <= _unit->GetUInt32Value(UNIT_FIELD_MAX_HEALTH) * 0.37f)
 			{
 				if(mAttacker->IsPlayer())
 				{

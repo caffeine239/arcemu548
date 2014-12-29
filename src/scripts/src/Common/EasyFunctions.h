@@ -66,7 +66,7 @@ class SCRIPT_DECL EasyFunctions
 				pCreature->m_custom_waypoint_map = new WayPointMap;
 
 			if(!modelid)
-				modelid = pCreature->GetUInt32Value(UNIT_FIELD_DISPLAYID);
+				modelid = pCreature->GetUInt32Value(UNIT_FIELD_DISPLAY_ID);
 
 			WayPoint* wp = new WayPoint;
 			wp->id = pCreature->m_custom_waypoint_map->size() ? pCreature->m_custom_waypoint_map->size() : 1;

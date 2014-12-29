@@ -443,7 +443,7 @@ void WorldSession::HandlePetRename(WorldPacket & recv_data)
 	pet->Rename(name);
 
 	// Disable pet rename.
-	pet->SetUInt32Value(UNIT_FIELD_BYTES_2, 1 | /* (0x28 << 8) | */ (PET_RENAME_NOT_ALLOWED << 16));
+	pet->SetUInt32Value(UNIT_FIELD_SHAPESHIFT_FORM, 1 | /* (0x28 << 8) | */ (PET_RENAME_NOT_ALLOWED << 16));
 
 	ARCEMU_ASSERT(pet->GetPetOwner() != NULL);
 

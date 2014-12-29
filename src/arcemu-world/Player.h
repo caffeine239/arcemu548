@@ -727,31 +727,31 @@ enum SPELL_INDEX2
     SPELL_TYPE3_DEATH_KNIGHT_AURA		= 1,
 };
 
-#define PLAYER_RATING_MODIFIER_RANGED_SKILL						PLAYER_FIELD_COMBAT_RATING_1
-#define PLAYER_RATING_MODIFIER_DEFENCE							PLAYER_FIELD_COMBAT_RATING_1+1
-#define PLAYER_RATING_MODIFIER_DODGE							PLAYER_FIELD_COMBAT_RATING_1+2
-#define PLAYER_RATING_MODIFIER_PARRY							PLAYER_FIELD_COMBAT_RATING_1+3
-#define PLAYER_RATING_MODIFIER_BLOCK							PLAYER_FIELD_COMBAT_RATING_1+4
-#define PLAYER_RATING_MODIFIER_MELEE_HIT						PLAYER_FIELD_COMBAT_RATING_1+5
-#define PLAYER_RATING_MODIFIER_RANGED_HIT						PLAYER_FIELD_COMBAT_RATING_1+6
-#define PLAYER_RATING_MODIFIER_SPELL_HIT						PLAYER_FIELD_COMBAT_RATING_1+7
-#define PLAYER_RATING_MODIFIER_MELEE_CRIT						PLAYER_FIELD_COMBAT_RATING_1+8
-#define PLAYER_RATING_MODIFIER_RANGED_CRIT						PLAYER_FIELD_COMBAT_RATING_1+9
-#define PLAYER_RATING_MODIFIER_SPELL_CRIT						PLAYER_FIELD_COMBAT_RATING_1+10
-#define PLAYER_RATING_MODIFIER_MELEE_HIT_AVOIDANCE				PLAYER_FIELD_COMBAT_RATING_1+11 // Not 100% sure but the numbers line up
-#define PLAYER_RATING_MODIFIER_RANGED_HIT_AVOIDANCE				PLAYER_FIELD_COMBAT_RATING_1+12 // GUESSED
-#define PLAYER_RATING_MODIFIER_SPELL_HIT_AVOIDANCE				PLAYER_FIELD_COMBAT_RATING_1+13 // GUESSED
-#define PLAYER_RATING_MODIFIER_MELEE_CRIT_RESILIENCE			PLAYER_FIELD_COMBAT_RATING_1+14
-#define PLAYER_RATING_MODIFIER_RANGED_CRIT_RESILIENCE			PLAYER_FIELD_COMBAT_RATING_1+15
-#define PLAYER_RATING_MODIFIER_SPELL_CRIT_RESILIENCE			PLAYER_FIELD_COMBAT_RATING_1+16
-#define PLAYER_RATING_MODIFIER_MELEE_HASTE						PLAYER_FIELD_COMBAT_RATING_1+17
-#define PLAYER_RATING_MODIFIER_RANGED_HASTE						PLAYER_FIELD_COMBAT_RATING_1+18
-#define PLAYER_RATING_MODIFIER_SPELL_HASTE						PLAYER_FIELD_COMBAT_RATING_1+19
-#define PLAYER_RATING_MODIFIER_MELEE_MAIN_HAND_SKILL			PLAYER_FIELD_COMBAT_RATING_1+20
-#define PLAYER_RATING_MODIFIER_MELEE_OFF_HAND_SKILL				PLAYER_FIELD_COMBAT_RATING_1+21
-#define PLAYER_RATING_MODIFIER_MELEE_RANGED_SKILL				PLAYER_FIELD_COMBAT_RATING_1+22
-#define PLAYER_RATING_MODIFIER_EXPERTISE						PLAYER_FIELD_COMBAT_RATING_1+23
-#define PLAYER_RATING_MODIFIER_ARMOR_PENETRATION_RATING			PLAYER_FIELD_COMBAT_RATING_1+24
+#define PLAYER_RATING_MODIFIER_RANGED_SKILL						PLAYER_FIELD_COMBAT_RATINGS
+#define PLAYER_RATING_MODIFIER_DEFENCE							PLAYER_FIELD_COMBAT_RATINGS+1
+#define PLAYER_RATING_MODIFIER_DODGE							PLAYER_FIELD_COMBAT_RATINGS+2
+#define PLAYER_RATING_MODIFIER_PARRY							PLAYER_FIELD_COMBAT_RATINGS+3
+#define PLAYER_RATING_MODIFIER_BLOCK							PLAYER_FIELD_COMBAT_RATINGS+4
+#define PLAYER_RATING_MODIFIER_MELEE_HIT						PLAYER_FIELD_COMBAT_RATINGS+5
+#define PLAYER_RATING_MODIFIER_RANGED_HIT						PLAYER_FIELD_COMBAT_RATINGS+6
+#define PLAYER_RATING_MODIFIER_SPELL_HIT						PLAYER_FIELD_COMBAT_RATINGS+7
+#define PLAYER_RATING_MODIFIER_MELEE_CRIT						PLAYER_FIELD_COMBAT_RATINGS+8
+#define PLAYER_RATING_MODIFIER_RANGED_CRIT						PLAYER_FIELD_COMBAT_RATINGS+9
+#define PLAYER_RATING_MODIFIER_SPELL_CRIT						PLAYER_FIELD_COMBAT_RATINGS+10
+#define PLAYER_RATING_MODIFIER_MELEE_HIT_AVOIDANCE				PLAYER_FIELD_COMBAT_RATINGS+11 // Not 100% sure but the numbers line up
+#define PLAYER_RATING_MODIFIER_RANGED_HIT_AVOIDANCE				PLAYER_FIELD_COMBAT_RATINGS+12 // GUESSED
+#define PLAYER_RATING_MODIFIER_SPELL_HIT_AVOIDANCE				PLAYER_FIELD_COMBAT_RATINGS+13 // GUESSED
+#define PLAYER_RATING_MODIFIER_MELEE_CRIT_RESILIENCE			PLAYER_FIELD_COMBAT_RATINGS+14
+#define PLAYER_RATING_MODIFIER_RANGED_CRIT_RESILIENCE			PLAYER_FIELD_COMBAT_RATINGS+15
+#define PLAYER_RATING_MODIFIER_SPELL_CRIT_RESILIENCE			PLAYER_FIELD_COMBAT_RATINGS+16
+#define PLAYER_RATING_MODIFIER_MELEE_HASTE						PLAYER_FIELD_COMBAT_RATINGS+17
+#define PLAYER_RATING_MODIFIER_RANGED_HASTE						PLAYER_FIELD_COMBAT_RATINGS+18
+#define PLAYER_RATING_MODIFIER_SPELL_HASTE						PLAYER_FIELD_COMBAT_RATINGS+19
+#define PLAYER_RATING_MODIFIER_MELEE_MAIN_HAND_SKILL			PLAYER_FIELD_COMBAT_RATINGS+20
+#define PLAYER_RATING_MODIFIER_MELEE_OFF_HAND_SKILL				PLAYER_FIELD_COMBAT_RATINGS+21
+#define PLAYER_RATING_MODIFIER_MELEE_RANGED_SKILL				PLAYER_FIELD_COMBAT_RATINGS+22
+#define PLAYER_RATING_MODIFIER_EXPERTISE						PLAYER_FIELD_COMBAT_RATINGS+23
+#define PLAYER_RATING_MODIFIER_ARMOR_PENETRATION_RATING			PLAYER_FIELD_COMBAT_RATINGS+24
 
 class ArenaTeam;
 struct PlayerCooldown
@@ -832,8 +832,8 @@ class SERVER_DECL Player : public Unit
 
 		void HandleUpdateFieldChanged(uint32 index)
 		{
-			if(index == PLAYER_FLAGS)
-				m_cache->SetUInt32Value(CACHE_PLAYER_FLAGS, GetUInt32Value(PLAYER_FLAGS));
+			if(index == PLAYER_FIELD_PLAYER_FLAGS)
+                m_cache->SetUInt32Value(CACHE_PLAYER_FIELD_PLAYER_FLAGS, GetUInt32Value(PLAYER_FIELD_PLAYER_FLAGS));
 		}
 
 		void EventGroupFullUpdate();
@@ -1144,7 +1144,7 @@ class SERVER_DECL Player : public Unit
 			if(school >= SCHOOL_COUNT)
 				return 0;
 
-			return m_floatValues[ PLAYER_FIELD_MOD_DAMAGE_DONE_PCT + school ];
+			return m_floatValues[ PLAYER_FIELD_MOD_DAMAGE_DONE_PERCENT + school ];
 		}
 
 		uint32 GetMainMeleeDamage(uint32 AP_owerride); // I need this for windfury
@@ -1240,19 +1240,19 @@ class SERVER_DECL Player : public Unit
 		/************************************************************************/
 		/* PVP                                                                  */
 		/************************************************************************/
-		uint8 GetPVPRank()
-		{
-			return (uint8)((GetUInt32Value(PLAYER_BYTES_3) >> 24) & 0xFF);
-		}
-		void SetPVPRank(int newrank)
-		{
-			SetUInt32Value(PLAYER_BYTES_3, ((GetUInt32Value(PLAYER_BYTES_3) & 0x00FFFFFF) | (uint8(newrank) << 24)));
-		}
+// 		uint8 GetPVPRank()
+// 		{
+// 			return (uint8)((GetUInt32Value(PLAYER_FIELD_HAIR_COLOR_ID_3) >> 24) & 0xFF);
+// 		}
+// 		void SetPVPRank(int newrank)
+// 		{
+// 			SetUInt32Value(PLAYER_FIELD_HAIR_COLOR_ID_3, ((GetUInt32Value(PLAYER_FIELD_HAIR_COLOR_ID_3) & 0x00FFFFFF) | (uint8(newrank) << 24)));
+// 		}
 		uint32 GetMaxPersonalRating();
 
 		bool HasTitle(RankTitles title)
 		{
-			return (GetUInt64Value(PLAYER__FIELD_KNOWN_TITLES + ((title >> 6) << 1)) & (uint64(1) << (title % 64))) != 0;
+			return (GetUInt64Value(PLAYER_FIELD_KNOWN_TITLES + ((title >> 6) << 1)) & (uint64(1) << (title % 64))) != 0;
 		}
 		void SetKnownTitle(RankTitles title, bool set);
 		void SendAvailSpells(SpellShapeshiftFormEntry* ssf, bool active);
@@ -1298,7 +1298,7 @@ class SERVER_DECL Player : public Unit
 		uint32			IsInGuild() const {return (m_uint32Values[OBJECT_FIELD_DATA] != 0) ? true : false;}
 		uint32		GetGuildId() { return m_uint32Values[OBJECT_FIELD_DATA]; }
 		void						SetGuildId(uint32 guildId);
-		uint32		GetGuildRank() { return m_uint32Values[PLAYER_GUILDRANK]; }
+		uint32		GetGuildRank() { return m_uint32Values[PLAYER_FIELD_GUILD_RANK_ID]; }
 		GuildRank*	GetGuildRankS() { return m_playerInfo->guildRank; }
 		void						SetGuildRank(uint32 guildRank);
 		uint32						GetGuildInvitersGuid() { return m_invitersGuid; }
@@ -1319,10 +1319,10 @@ class SERVER_DECL Player : public Unit
 		uint8        GetDuelState() { return m_duelState; }
 		// duel variables
 		Player*             DuelingWith;
-		void				SetDuelArbiter(uint64 guid) { SetUInt64Value(PLAYER_DUEL_ARBITER, guid); }
-		uint64				GetDuelArbiter() { return GetUInt64Value(PLAYER_DUEL_ARBITER); }
-		void				SetDuelTeam(uint32 team) { SetUInt32Value(PLAYER_DUEL_TEAM, team); }
-		uint32				GetDuelTeam() { return GetUInt32Value(PLAYER_DUEL_TEAM); }
+		void				SetDuelArbiter(uint64 guid) { SetUInt64Value(PLAYER_FIELD_DUEL_ARBITER, guid); }
+        uint64				GetDuelArbiter() { return GetUInt64Value(PLAYER_FIELD_DUEL_ARBITER); }
+        void				SetDuelTeam(uint32 team) { SetUInt32Value(PLAYER_FIELD_DUEL_TEAM, team); }
+        uint32				GetDuelTeam() { return GetUInt32Value(PLAYER_FIELD_DUEL_TEAM); }
 
 		/************************************************************************/
 		/* Trade                                                                */
@@ -1396,7 +1396,7 @@ class SERVER_DECL Player : public Unit
 		bool			HasItemCount(uint32 item, uint32 count, bool inBankAlso = false) const;
 		// item interface variables
 		ItemInterface*      m_ItemInterface;
-		int32 GetVisibleBase(int16 slot) { return (PLAYER_VISIBLE_ITEM_1_ENTRYID + (slot * PLAYER_VISIBLE_ITEM_LENGTH)); }
+		int32 GetVisibleBase(int16 slot) { return (PLAYER_FIELD_VISIBLE_ITEMS + (slot * PLAYER_VISIBLE_ITEM_LENGTH)); }
 
 		/************************************************************************/
 		/* Loot                                                                 */
@@ -1995,47 +1995,47 @@ class SERVER_DECL Player : public Unit
 		// EASY FUNCTIONS - MISC
 		/////////////////////////////////////////////////
 
-		void SetChosenTitle(uint32 id) { SetUInt32Value(PLAYER_CHOSEN_TITLE, id); }
+        void SetChosenTitle(uint32 id) { SetUInt32Value(PLAYER_FIELD_PLAYER_TITLE, id); }
 
-		void SetInventorySlot(uint32 slot, uint64 guid) { SetUInt64Value(PLAYER_FIELD_INV_SLOT_HEAD + (slot * 2), guid); }
+        void SetInventorySlot(uint32 slot, uint64 guid) { SetUInt64Value(PLAYER_FIELD_INV_SLOTS + (slot * 2), guid); }
 
-		void SetFarsightTarget(uint64 guid) { SetUInt64Value(PLAYER_FARSIGHT, guid); }
-		uint64 GetFarsightTarget() { return GetUInt64Value(PLAYER_FARSIGHT); }
+		void SetFarsightTarget(uint64 guid) { SetUInt64Value(PLAYER_FIELD_FARSIGHT_OBJECT, guid); }
+        uint64 GetFarsightTarget() { return GetUInt64Value(PLAYER_FIELD_FARSIGHT_OBJECT); }
 
-		void SetXp(uint32 xp) { SetUInt32Value(PLAYER_XP, xp); }
-		uint32 GetXp() { return GetUInt32Value(PLAYER_XP); }
-		void SetNextLevelXp(uint32 xp) { SetUInt32Value(PLAYER_NEXT_LEVEL_XP, xp); }
+		void SetXp(uint32 xp) { SetUInt32Value(PLAYER_FIELD_XP, xp); }
+        uint32 GetXp() { return GetUInt32Value(PLAYER_FIELD_XP); }
+		void SetNextLevelXp(uint32 xp) { SetUInt32Value(PLAYER_FIELD_NEXT_LEVEL_XP, xp); }
 
 		void SetTalentPointsForAllSpec( uint32 amt ){
 			m_specs[ 0 ].SetTP( amt );
 			m_specs[ 1 ].SetTP( amt );
-			SetUInt32Value( PLAYER_CHARACTER_POINTS, amt );
+			SetUInt32Value( PLAYER_FIELD_CHARACTER_POINTS, amt );
 			smsg_TalentsInfo( false );
 		}
 
 		void AddTalentPointsToAllSpec( uint32 amt ){
 			m_specs[ 0 ].SetTP( m_specs[ 0 ].GetTP() + amt );
 			m_specs[ 1 ].SetTP( m_specs[ 1 ].GetTP() + amt );
-			SetUInt32Value( PLAYER_CHARACTER_POINTS, GetUInt32Value( PLAYER_CHARACTER_POINTS ) + amt );
+            SetUInt32Value(PLAYER_FIELD_CHARACTER_POINTS, GetUInt32Value(PLAYER_FIELD_CHARACTER_POINTS) + amt);
 			smsg_TalentsInfo( false );
 		}
 
 		void SetCurrentTalentPoints( uint32 points ){
 			m_specs[ m_talentActiveSpec ].SetTP( points );
-			SetUInt32Value( PLAYER_CHARACTER_POINTS, points );
+            SetUInt32Value(PLAYER_FIELD_CHARACTER_POINTS, points);
 			smsg_TalentsInfo( false );
 		}
 
 		uint32 GetCurrentTalentPoints(){
-			uint32 points = GetUInt32Value( PLAYER_CHARACTER_POINTS );
+            uint32 points = GetUInt32Value(PLAYER_FIELD_CHARACTER_POINTS);
 			Arcemu::Util::ArcemuAssert( points == m_specs[ m_talentActiveSpec ].GetTP() );
 			return points;
 		}
 
 		///Maybe replace PLAYER_CARACTER_POINTS with PLAYER_PROFESSION_SKILL_LINE_1
-		void SetPrimaryProfessionPoints(uint32 amt) { SetUInt32Value(PLAYER_CHARACTER_POINTS, amt); }
-		void ModPrimaryProfessionPoints(int32 amt) { ModUnsigned32Value(PLAYER_CHARACTER_POINTS, amt); }
-		uint32 GetPrimaryProfessionPoints() { return GetUInt32Value(PLAYER_CHARACTER_POINTS); }
+        void SetPrimaryProfessionPoints(uint32 amt) { SetUInt32Value(PLAYER_FIELD_CHARACTER_POINTS, amt); }
+        void ModPrimaryProfessionPoints(int32 amt) { ModUnsigned32Value(PLAYER_FIELD_CHARACTER_POINTS, amt); }
+        uint32 GetPrimaryProfessionPoints() { return GetUInt32Value(PLAYER_FIELD_CHARACTER_POINTS); }
 
 		void ModPosDamageDoneMod(uint32 school, uint32 value) { ModUnsigned32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS + school, value); }
 		uint32 GetPosDamageDoneMod(uint32 school) { return GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS + school); }
@@ -2057,8 +2057,8 @@ class SERVER_DECL Player : public Unit
 		void ModArenaCurrency(uint32 value) { ModUnsigned32Value(PLAYER_FIELD_ARENA_CURRENCY, value); }
 		uint32 GetArenaCurrency() { return GetUInt32Value(PLAYER_FIELD_ARENA_CURRENCY); }*/
 
-		void SetGlyph(uint32 slot, uint32 id) { SetUInt32Value(PLAYER_FIELD_GLYPHS_1 + slot, id); }
-		uint32 GetGlyph(uint32 slot) { return GetUInt32Value(PLAYER_FIELD_GLYPHS_1 + slot); }
+		void SetGlyph(uint32 slot, uint32 id) { SetUInt32Value(PLAYER_FIELD_GLYPHS + slot, id); }
+        uint32 GetGlyph(uint32 slot) { return GetUInt32Value(PLAYER_FIELD_GLYPHS + slot); }
 
 		//! Do this on /pvp off
 		void ResetPvPTimer();
@@ -2181,7 +2181,7 @@ class SERVER_DECL Player : public Unit
 			SetSpeeds(RUN, PLAYER_NORMAL_RUN_SPEED);
 			SetSpeeds(SWIM, PLAYER_NORMAL_SWIM_SPEED);
 			SetMovement(MOVE_LAND_WALK, 8);
-			SetHealth(GetUInt32Value(UNIT_FIELD_MAXHEALTH));
+			SetHealth(GetUInt32Value(UNIT_FIELD_MAX_HEALTH));
 		}
 
 		LocationVector m_last_group_position;

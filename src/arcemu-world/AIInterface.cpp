@@ -297,16 +297,16 @@ void AIInterface::Update(uint32 p_time)
 			if((*next_timed_emote)->type == 1)   //standstate
 			{
 				m_Unit->SetStandState(static_cast<uint8>((*next_timed_emote)->value));
-				m_Unit->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
+				m_Unit->SetUInt32Value(UNIT_FIELD_NPC_EMOTESTATE, 0);
 			}
 			else if((*next_timed_emote)->type == 2)   //emotestate
 			{
-				m_Unit->SetUInt32Value(UNIT_NPC_EMOTESTATE, (*next_timed_emote)->value);
+				m_Unit->SetUInt32Value(UNIT_FIELD_NPC_EMOTESTATE, (*next_timed_emote)->value);
 				m_Unit->SetStandState(0);
 			}
 			else if((*next_timed_emote)->type == 3)   //oneshot emote
 			{
-				m_Unit->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
+				m_Unit->SetUInt32Value(UNIT_FIELD_NPC_EMOTESTATE, 0);
 				m_Unit->SetStandState(0);
 				m_Unit->Emote((EmoteType)(*next_timed_emote)->value);           // Animation
 			}
@@ -1204,7 +1204,7 @@ Unit* AIInterface::FindTarget()
 				continue;
 			if(tmpPlr->m_invisible)
 				continue;
-			if(!tmpPlr->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_UNKNOWN2))    //PvP Guard Attackable.
+			if(!tmpPlr->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_UNKNOWN2))    //PvP Guard Attackable.
 				continue;
 			if(!(tmpPlr->m_phase & m_Unit->m_phase))   //Not in the same phase, skip this target
 				continue;
@@ -2110,7 +2110,7 @@ bool AIInterface::showWayPoints(Player* pPlayer, bool Backwards)
 				pWayPoint->SetEmoteState(wp->forwardemoteid);
 			}
 			pWayPoint->setLevel(wp->id);
-			pWayPoint->SetUInt32Value(UNIT_NPC_FLAGS, 0);
+			pWayPoint->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, 0);
 			pWayPoint->SetFaction(pPlayer->GetFaction());
 			pWayPoint->SetHealth(1);
 			pWayPoint->SetMaxHealth(1);
@@ -4131,7 +4131,7 @@ void AIInterface::EventLeaveCombat(Unit* pUnit, uint32 misc1)
 			Creature* aiowner = TO< Creature* >(m_Unit);
 			//clear tagger.
 			aiowner->UnTag();
-			aiowner->SetUInt32Value(UNIT_DYNAMIC_FLAGS, aiowner->GetUInt32Value(UNIT_DYNAMIC_FLAGS) & ~(U_DYN_FLAG_TAGGED_BY_OTHER | U_DYN_FLAG_LOOTABLE));
+			aiowner->SetUInt32Value(OBJECT_FIELD_DYNAMIC_FLAGS, aiowner->GetUInt32Value(OBJECT_FIELD_DYNAMIC_FLAGS) & ~(U_DYN_FLAG_TAGGED_BY_OTHER | U_DYN_FLAG_LOOTABLE));
 		}
 		CALL_SCRIPT_EVENT(m_Unit, OnCombatStop)(SavedFollow);
 	}

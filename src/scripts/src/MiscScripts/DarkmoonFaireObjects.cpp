@@ -30,7 +30,7 @@ class Blastenheimer5000 : public GameObjectAIScript
 			// Do you think we should look for ai owner ?
 			/*GameObject* BlastCannon = pPlayer->GetMapMgr()->GetInterface()->GetGameObjectNearestCoords( pPlayer->GetPositionX(), pPlayer->GetPositionY(), pPlayer->GetPositionZ(), 180515 );
 			if ( BlastCannon != NULL )
-				BlastCannon->SetUInt32Value( GAMEOBJECT_FLAGS, 33 );*/
+				BlastCannon->SetUInt32Value( GAMEOBJECT_FIELD_FLAGS, 33 );*/
 
 			pPlayer->CastSpell(pPlayer, 24832, true);
 			pPlayer->SetMovement(MOVE_ROOT, 1);
@@ -64,7 +64,7 @@ class Blastenheimer5000 : public GameObjectAIScript
 
 			CurrentPlayer->SetMovement(MOVE_UNROOT, 1);
 			CurrentPlayer->CastSpell(CurrentPlayer, 42867, true);   // 24742
-			_gameobject->SetUInt32Value(GAMEOBJECT_FLAGS, 0);
+			_gameobject->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 0);
 			mPlayerGuid = 0;
 			RemoveAIUpdateEvent();
 		};
@@ -99,7 +99,7 @@ public:
 		tonkConsole = pPlayer->GetMapMgr()->GetInterface()->GetGameObjectNearestCoords(pPlayer->GetPositionX(), pPlayer->GetPositionY(), pPlayer->GetPositionZ(), 180524);
 
 		// Open and disable the Tonk Console
-		tonkConsole->SetUInt32Value(GAMEOBJECT_FLAGS, 1);
+		tonkConsole->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 1);
 		tonkConsole->SetState(0);
 
 		// Spawn Steam Tonk
@@ -131,7 +131,7 @@ public:
 			Tonk->Despawn(10000,0);
 
 			// Close the console so others can access it
-			Console->SetUInt32Value(GAMEOBJECT_FLAGS, 0);
+			Console->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 0);
 			Console->SetState(1);
 			RemoveAIUpdateEvent();
 		}
