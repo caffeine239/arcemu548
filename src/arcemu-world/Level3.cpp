@@ -835,7 +835,7 @@ bool ChatHandler::HandleNpcInfoCommand(const char* args, WorldSession* m_session
 		if(crt->isArmorer())
 			s.append(" (Armorer)");
 
-		SystemMessage(m_session, "NPCFlags: %d%s", crt->GetUInt32Value(UNIT_FIELD_NPC_FLAGS), s.c_str());
+		SystemMessage(m_session, "NPCFlags: %d%s", crt->GetUInt32Value(UNIT_NPC_FLAGS), s.c_str());
 	}
 	SystemMessage(m_session, "DisplayID: %u", crt->GetDisplayId() );
 	SystemMessage(m_session, "VehicleID: %u", crt->GetProto()->vehicleid );
@@ -859,16 +859,16 @@ bool ChatHandler::HandleNpcInfoCommand(const char* args, WorldSession* m_session
 	ColorSystemMessage(m_session, MSG_COLOR_RED, "Spawn ID: %d", crt->GetSQL_id());
 	// show byte
 	std::stringstream sstext;
-	uint32 theBytes = crt->GetUInt32Value(UNIT_FIELD_SEX);
-	sstext << "UNIT_FIELD_SEX are " << uint16((uint8)theBytes & 0xFF) << " " << uint16((uint8)(theBytes >> 8) & 0xFF) << " ";
+	uint32 theBytes = crt->GetUInt32Value(UNIT_FIELD_BYTES_0);
+	sstext << "UNIT_FIELD_BYTES_0 are " << uint16((uint8)theBytes & 0xFF) << " " << uint16((uint8)(theBytes >> 8) & 0xFF) << " ";
 	sstext << uint16((uint8)(theBytes >> 16) & 0xFF) << " " << uint16((uint8)(theBytes >> 24) & 0xFF) << '\n';
 
-	theBytes = crt->GetUInt32Value(UNIT_FIELD_ANIM_TIER);
-	sstext << "UNIT_FIELD_ANIM_TIER are " << uint16((uint8)theBytes & 0xFF) << " " << uint16((uint8)(theBytes >> 8) & 0xFF) << " ";
+	theBytes = crt->GetUInt32Value(UNIT_FIELD_BYTES_1);
+	sstext << "UNIT_FIELD_BYTES_1 are " << uint16((uint8)theBytes & 0xFF) << " " << uint16((uint8)(theBytes >> 8) & 0xFF) << " ";
 	sstext << uint16((uint8)(theBytes >> 16) & 0xFF) << " " << uint16((uint8)(theBytes >> 24) & 0xFF) << '\n';
 
-	theBytes = crt->GetUInt32Value(UNIT_FIELD_SHAPESHIFT_FORM);
-	sstext << "UNIT_FIELD_SHAPESHIFT_FORM are " << uint16((uint8)theBytes & 0xFF) << " " << uint16((uint8)(theBytes >> 8) & 0xFF) << " ";
+	theBytes = crt->GetUInt32Value(UNIT_FIELD_BYTES_2);
+	sstext << "UNIT_FIELD_BYTES_2 are " << uint16((uint8)theBytes & 0xFF) << " " << uint16((uint8)(theBytes >> 8) & 0xFF) << " ";
 	sstext << uint16((uint8)(theBytes >> 16) & 0xFF) << " " << uint16((uint8)(theBytes >> 24) & 0xFF) << '\0';
 	SendMultilineMessage(m_session, sstext.str().c_str());
 
@@ -884,13 +884,13 @@ bool ChatHandler::HandleNpcInfoCommand(const char* args, WorldSession* m_session
 	else
 		SystemMessage(m_session, "Class: invalid %u", crclass);
 
-	SystemMessage(m_session, "Free pet talent points: %u", crt->GetByte(UNIT_FIELD_ANIM_TIER, 1));
+	SystemMessage(m_session, "Free pet talent points: %u", crt->GetByte(UNIT_FIELD_BYTES_1, 1));
 
-	uint8 sheat = crt->GetByte(UNIT_FIELD_SHAPESHIFT_FORM, 0);
+	uint8 sheat = crt->GetByte(UNIT_FIELD_BYTES_2, 0);
 	if(sheat <= 2)
 		SystemMessage(m_session, "Sheat state: %s", SHEATSTATE[ sheat ]);
 
-	uint8 pvpflags = crt->GetByte(UNIT_FIELD_SHAPESHIFT_FORM, 1);
+	uint8 pvpflags = crt->GetByte(UNIT_FIELD_BYTES_2, 1);
 
 	SystemMessage(m_session, "PvP flags: %u", pvpflags);
 
@@ -898,7 +898,7 @@ bool ChatHandler::HandleNpcInfoCommand(const char* args, WorldSession* m_session
 		if((pvpflags & UnitPvPFlagToName[ i ].Flag) != 0)
 			SystemMessage(m_session, "%s", UnitPvPFlagToName[ i ].Name);
 
-	uint8 petflags = crt->GetByte(UNIT_FIELD_SHAPESHIFT_FORM, 2);
+	uint8 petflags = crt->GetByte(UNIT_FIELD_BYTES_2, 2);
 
 	SystemMessage(m_session, "Pet flags: %u", petflags);
 
@@ -3833,10 +3833,10 @@ bool ChatHandler::HandleArenaResetAllRatingsCommand(const char* args, WorldSessi
 
 bool ChatHandler::HandleWhisperBlockCommand(const char* args, WorldSession* m_session)
 {
-	if(m_session->GetPlayer()->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_GM))
+	if(m_session->GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_GM))
 		return false;
 
-	m_session->GetPlayer()->SetFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_GM);
+	m_session->GetPlayer()->SetFlag(PLAYER_FLAGS, PLAYER_FLAG_GM);
 	return true;
 }
 
@@ -4193,9 +4193,9 @@ bool ChatHandler::HandleSetTitle(const char* args, WorldSession* m_session)
 	}
 	if(title == 0)
 	{
-		plr->SetUInt64Value(PLAYER_FIELD_KNOWN_TITLES, 0);
-		plr->SetUInt64Value(PLAYER_FIELD_KNOWN_TITLES + 1, 0);
-		plr->SetUInt64Value(PLAYER_FIELD_KNOWN_TITLES + 2, 0);
+		plr->SetUInt64Value(PLAYER__FIELD_KNOWN_TITLES, 0);
+		plr->SetUInt64Value(PLAYER__FIELD_KNOWN_TITLES + 1, 0);
+		plr->SetUInt64Value(PLAYER__FIELD_KNOWN_TITLES + 2, 0);
 	}
 	else if(title > 0)
 		plr->SetKnownTitle(static_cast< RankTitles >(title), true);

@@ -614,7 +614,7 @@ void Spell::SpellEffectSchoolDMG(uint32 i) // dmg school
 			case SPELL_HASH_ICE_LANCE: // Ice Lance
 				{
 					// Deal triple damage to frozen targets or to those in Deep Freeze
-					if(unitTarget->HasFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_FROZEN) || unitTarget->HasAura(44572))
+					if(unitTarget->HasFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_FROZEN) || unitTarget->HasAura(44572))
 						dmg *= 3;
 					//	if (dmg>300)   //dirty bugfix.
 					//		dmg = (int32)(damage >> 1);
@@ -623,7 +623,7 @@ void Spell::SpellEffectSchoolDMG(uint32 i) // dmg school
 				break;
 			case SPELL_HASH_INCINERATE:	// Incinerate -> Deals x-x extra damage if the target is affected by immolate
 				{
-					if(unitTarget->HasFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_IMMOLATE))
+					if(unitTarget->HasFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_IMMOLATE))
 					{
 						// random extra damage
 						uint32 extra_dmg = 111 + (GetProto()->RankNumber * 11) + RandomUInt(GetProto()->RankNumber * 11);
@@ -728,7 +728,7 @@ void Spell::SpellEffectSchoolDMG(uint32 i) // dmg school
 				break;
 
 			case SPELL_HASH_CONFLAGRATE:
-				unitTarget->RemoveFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_IMMOLATE);
+				unitTarget->RemoveFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_IMMOLATE);
 				break;
 
 			case SPELL_HASH_JUDGEMENT_OF_COMMAND:
@@ -1138,7 +1138,7 @@ void Spell::SpellEffectApplyAura(uint32 i)  // Apply Aura
 			return;
 		}
 
-		if(g_caster && g_caster->GetUInt32Value(GAMEOBJECT_FIELD_CREATED_BY) && g_caster->m_summoner)
+		if(g_caster && g_caster->GetUInt32Value(OBJECT_FIELD_CREATED_BY) && g_caster->m_summoner)
 			pAura = sSpellFactoryMgr.NewAura(GetProto(), Duration, g_caster->m_summoner, unitTarget, m_triggeredSpell, i_caster);
 		else
 			pAura = sSpellFactoryMgr.NewAura(GetProto(), Duration, m_caster, unitTarget, m_triggeredSpell, i_caster);
@@ -1176,9 +1176,9 @@ void Spell::SpellEffectPowerDrain(uint32 i)  // Power Drain
 	if(!unitTarget || !unitTarget->isAlive())
 		return;
 
-	uint32 powerField = UNIT_FIELD_POWER + GetProto()->eff[i].EffectMiscValue;
+	uint32 powerField = UNIT_FIELD_POWER + 1 + GetProto()->eff[i].EffectMiscValue;
 	uint32 curPower = unitTarget->GetUInt32Value(powerField);
-	if(powerField == UNIT_FIELD_POWER && unitTarget->IsPlayer())
+	if(powerField == UNIT_FIELD_POWER + 1 && unitTarget->IsPlayer())
 	{
 		Player* mPlayer = TO< Player* >(unitTarget);
 		if(mPlayer->IsInFeralForm())
@@ -1210,7 +1210,7 @@ void Spell::SpellEffectHealthLeech(uint32 i) // Health Leech
 	if(!u_caster)
 		return;
 	uint32 playerCurHealth = u_caster->GetUInt32Value(UNIT_FIELD_HEALTH);
-	uint32 playerMaxHealth = u_caster->GetUInt32Value(UNIT_FIELD_MAX_HEALTH);
+	uint32 playerMaxHealth = u_caster->GetUInt32Value(UNIT_FIELD_MAXHEALTH);
 
 	if(playerCurHealth + amt > playerMaxHealth)
 	{
@@ -1313,7 +1313,7 @@ void Spell::SpellEffectHeal(uint32 i) // Heal
 					            mPlayer->GetShapeShift() != FORM_BEAR &&
 					            mPlayer->GetShapeShift() != FORM_DIREBEAR))
 						break;
-					uint32 max = mPlayer->GetUInt32Value(UNIT_FIELD_MAX_HEALTH);
+					uint32 max = mPlayer->GetUInt32Value(UNIT_FIELD_MAXHEALTH);
 					uint32 val = float2int32(((mPlayer->FindAura(34300)) ? 0.04f : 0.02f) * max);
 					if(val)
 						mPlayer->Heal(mPlayer, 34299, (uint32)(val));
@@ -1331,7 +1331,7 @@ void Spell::SpellEffectHeal(uint32 i) // Heal
 					uint32 val = mPlayer->GetPower(POWER_TYPE_RAGE);
 					if(val > 100)
 						val = 100;
-					uint32 HpPerPoint = float2int32((mPlayer->GetUInt32Value(UNIT_FIELD_MAX_HEALTH) * 0.003f));   //0.3% of hp per point of rage
+					uint32 HpPerPoint = float2int32((mPlayer->GetUInt32Value(UNIT_FIELD_MAXHEALTH) * 0.003f));   //0.3% of hp per point of rage
 					uint32 heal = HpPerPoint * (val / 10); //1 point of rage = 0.3% of max hp
 					mPlayer->ModPower(POWER_TYPE_RAGE, -1 * val);
 
@@ -1364,7 +1364,7 @@ void Spell::SpellEffectHeal(uint32 i) // Heal
 							//do not remove flag if we still can cast it again
 							if(!unitTarget->HasAurasWithNameHash(SPELL_HASH_REJUVENATION))
 							{
-								unitTarget->RemoveFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_REJUVENATE);
+								unitTarget->RemoveFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_REJUVENATE);
 								sEventMgr.RemoveEvents(unitTarget, EVENT_REJUVENATION_FLAG_EXPIRE);
 							}
 						}
@@ -1385,7 +1385,7 @@ void Spell::SpellEffectHeal(uint32 i) // Heal
 
 								unitTarget->RemoveAura(taura);
 
-								unitTarget->RemoveFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_REJUVENATE);
+								unitTarget->RemoveFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_REJUVENATE);
 								sEventMgr.RemoveEvents(unitTarget, EVENT_REJUVENATION_FLAG_EXPIRE);
 							}
 						}
@@ -2174,7 +2174,7 @@ void Spell::SpellEffectSummonGuardian(uint32 i, SummonPropertiesEntry* spe, Crea
 		if(spe->Type == SUMMON_TYPE_LIGHTWELL)
 		{
 			s->Root();
-			s->SetFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+			s->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
 		}
 
 		int32 duration = static_cast< int32 >(GetDuration());
@@ -2328,7 +2328,7 @@ void Spell::SpellEffectSummonVehicle( uint32 i, SummonPropertiesEntry *spe, Crea
 	c->SetCreatedBySpell( m_spellInfo->Id );
 	c->SetCreatedByGUID( u_caster->GetGUID() );
 	c->SetSummonedByGUID( u_caster->GetGUID() );
-	c->RemoveFlag( UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK );
+	c->RemoveFlag( UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK );
 	c->PushToWorld( u_caster->GetMapMgr() );
 
 	// Need to delay this a bit since first the client needs to see the vehicle
@@ -2567,7 +2567,7 @@ void Spell::SpellEffectOpenLock(uint32 i) // Open Lock
 				else if(gameObjTarget)
 				{
 					GameObjectInfo* info = gameObjTarget->GetInfo();
-					if(gameObjTarget->GetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0) == 0)
+					if(gameObjTarget->GetByte(GAMEOBJECT_BYTES_1, 0) == 0)
 						return;
 
 					Lock* lock = dbcLock.LookupEntry(info->SpellFocus);
@@ -2579,8 +2579,8 @@ void Spell::SpellEffectOpenLock(uint32 i) // Open Lock
 						if(lock->locktype[j] == 2 && lock->minlockskill[j] && lockskill >= lock->minlockskill[j])
 						{
 							v = lock->minlockskill[j];
-							gameObjTarget->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 0);
-							gameObjTarget->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 1);
+							gameObjTarget->SetUInt32Value(GAMEOBJECT_FLAGS, 0);
+							gameObjTarget->SetByte(GAMEOBJECT_BYTES_1, 0, 1);
 							//Add Fill GO loot here
 							if(gameObjTarget->loot.items.size() == 0)
 							{
@@ -3227,9 +3227,9 @@ void Spell::SpellEffectSummonObject(uint32 i)
 		GameObject* go = u_caster->GetMapMgr()->CreateGameObject(GO_FISHING_BOBBER);
 
 		go->CreateFromProto(GO_FISHING_BOBBER, mapid, posx, posy, posz, orient);
-		go->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 0);
-		go->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 0);
-		go->SetUInt64Value(GAMEOBJECT_FIELD_CREATED_BY, m_caster->GetGUID());
+		go->SetUInt32Value(GAMEOBJECT_FLAGS, 0);
+		go->SetByte(GAMEOBJECT_BYTES_1, 0, 0);
+		go->SetUInt64Value(OBJECT_FIELD_CREATED_BY, m_caster->GetGUID());
 		u_caster->SetChannelSpellTargetGUID(go->GetGUID());
 		go->Phase(PHASE_SET, u_caster->GetPhase());
 
@@ -3266,17 +3266,17 @@ void Spell::SpellEffectSummonObject(uint32 i)
 		GameObject* go = m_caster->GetMapMgr()->CreateGameObject(entry);
 
 		go->CreateFromProto(entry, mapid, posx, posy, pz, orient);
-		go->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 1);
-		go->SetUInt64Value(GAMEOBJECT_FIELD_CREATED_BY, m_caster->GetGUID());
+		go->SetByte(GAMEOBJECT_BYTES_1, 0, 1);
+		go->SetUInt64Value(OBJECT_FIELD_CREATED_BY, m_caster->GetGUID());
 		go->Phase(PHASE_SET, u_caster->GetPhase());
 		go->PushToWorld(m_caster->GetMapMgr());
 		sEventMgr.AddEvent(go, &GameObject::ExpireAndDelete, EVENT_GAMEOBJECT_EXPIRE, GetDuration(), 1, EVENT_FLAG_DO_NOT_EXECUTE_IN_WORLD_CONTEXT);
 		if(entry == 17032 && p_caster)   // this is a portal
 		{
 			// enable it for party only
-			go->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 0);
+			go->SetByte(GAMEOBJECT_BYTES_1, 0, 0);
 			//disable by default
-			WorldPacket* pkt = go->BuildFieldUpdatePacket(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 1 << 24);
+			WorldPacket* pkt = go->BuildFieldUpdatePacket(GAMEOBJECT_BYTES_1, 1 << 24);
 			SubGroup* pGroup = p_caster->GetGroup() ? p_caster->GetGroup()->GetSubGroup(p_caster->GetSubGroup()) : NULL;
 
 			if(pGroup)
@@ -3697,7 +3697,7 @@ void Spell::SpellEffectHealMaxHealth(uint32 i)   // Heal Max Health
 	if(!unitTarget || !unitTarget->isAlive())
 		return;
 
-	uint32 dif = unitTarget->GetUInt32Value(UNIT_FIELD_MAX_HEALTH) - unitTarget->GetUInt32Value(UNIT_FIELD_HEALTH);
+	uint32 dif = unitTarget->GetUInt32Value(UNIT_FIELD_MAXHEALTH) - unitTarget->GetUInt32Value(UNIT_FIELD_HEALTH);
 	if(!dif)
 	{
 		SendCastResult(SPELL_FAILED_ALREADY_AT_FULL_HEALTH);
@@ -4416,7 +4416,7 @@ void Spell::SpellEffectSummonObjectSlot(uint32 i)
 	}
 
 	GoSummon->SetLevel(u_caster->getLevel());
-	GoSummon->SetUInt64Value(GAMEOBJECT_FIELD_CREATED_BY, m_caster->GetGUID());
+	GoSummon->SetUInt64Value(OBJECT_FIELD_CREATED_BY, m_caster->GetGUID());
 	GoSummon->Phase(PHASE_SET, u_caster->GetPhase());
 
 	GoSummon->PushToWorld(m_caster->GetMapMgr());
@@ -5279,7 +5279,7 @@ void Spell::SpellEffectRenamePet(uint32 i)
 	        !TO< Pet* >(unitTarget)->GetPetOwner() || TO< Pet* >(unitTarget)->GetPetOwner()->getClass() != HUNTER)
 		return;
 
-	unitTarget->SetByte(UNIT_FIELD_SHAPESHIFT_FORM, 2, PET_RENAME_ALLOWED);
+	unitTarget->SetByte(UNIT_FIELD_BYTES_2, 2, PET_RENAME_ALLOWED);
 }
 
 void Spell::SpellEffectRestoreHealthPct(uint32 i)

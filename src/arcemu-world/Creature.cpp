@@ -366,7 +366,7 @@ void Creature::OnRespawn(MapMgr* m)
 	SetUInt32Value(OBJECT_FIELD_DYNAMIC_FLAGS, 0); // not tagging shit
 	if(m_spawn)
 	{
-		SetUInt32Value(UNIT_FIELD_NPC_FLAGS, proto->NPCFLags);
+		SetUInt32Value(UNIT_NPC_FLAGS, proto->NPCFLags);
 		SetEmoteState(m_spawn->emote_state);
 
 		/* creature's death state */
@@ -513,23 +513,23 @@ void Creature::SaveToDB()
 		m_spawn->form = 0;
 		m_spawn->id = spawnid = objmgr.GenerateCreatureSpawnID();
 		m_spawn->movetype = m_aiInterface->getMoveType();
-		m_spawn->displayid = m_uint32Values[UNIT_FIELD_DISPLAY_ID];
+		m_spawn->displayid = m_uint32Values[UNIT_FIELD_DISPLAYID];
 		m_spawn->x = m_position.x;
 		m_spawn->y = m_position.y;
 		m_spawn->z = m_position.z;
 		m_spawn->o = m_position.o;
-		m_spawn->emote_state = m_uint32Values[UNIT_FIELD_NPC_EMOTESTATE];
+		m_spawn->emote_state = m_uint32Values[UNIT_NPC_EMOTESTATE];
 		m_spawn->flags = m_uint32Values[UNIT_FIELD_FLAGS];
 		m_spawn->factionid = GetFaction();
-		m_spawn->bytes0 = m_uint32Values[UNIT_FIELD_SEX];
-		m_spawn->bytes1 = m_uint32Values[UNIT_FIELD_ANIM_TIER];
-		m_spawn->bytes2 = m_uint32Values[UNIT_FIELD_SHAPESHIFT_FORM];
+		m_spawn->bytes0 = m_uint32Values[UNIT_FIELD_BYTES_0];
+		m_spawn->bytes1 = m_uint32Values[UNIT_FIELD_BYTES_1];
+		m_spawn->bytes2 = m_uint32Values[UNIT_FIELD_BYTES_2];
 		m_spawn->stand_state = GetStandState();
 		m_spawn->death_state = 0;
 		m_spawn->channel_target_creature = 0;
 		m_spawn->channel_target_go = 0;
 		m_spawn->channel_spell = 0;
-		m_spawn->MountedDisplayID = m_uint32Values[UNIT_FIELD_MOUNT_DISPLAY_ID];
+		m_spawn->MountedDisplayID = m_uint32Values[UNIT_FIELD_MOUNTDISPLAYID];
 		m_spawn->Item1SlotDisplay = GetEquippedItem(MELEE);
 		m_spawn->Item2SlotDisplay = GetEquippedItem(OFFHAND);
 		m_spawn->Item3SlotDisplay = GetEquippedItem(RANGED);
@@ -567,13 +567,13 @@ void Creature::SaveToDB()
 	   << m_position.z << ","
 	   << m_position.o << ","
 	   << m_aiInterface->getMoveType() << ","
-	   << m_uint32Values[UNIT_FIELD_DISPLAY_ID] << ","
+	   << m_uint32Values[UNIT_FIELD_DISPLAYID] << ","
 	   << GetFaction() << ","
 	   << m_uint32Values[UNIT_FIELD_FLAGS] << ","
-	   << m_uint32Values[UNIT_FIELD_SEX] << ","
-	   << m_uint32Values[UNIT_FIELD_ANIM_TIER] << ","
-	   << m_uint32Values[UNIT_FIELD_SHAPESHIFT_FORM] << ","
-	   << m_uint32Values[UNIT_FIELD_NPC_EMOTESTATE] << ",0,";
+	   << m_uint32Values[UNIT_FIELD_BYTES_0] << ","
+	   << m_uint32Values[UNIT_FIELD_BYTES_1] << ","
+	   << m_uint32Values[UNIT_FIELD_BYTES_2] << ","
+	   << m_uint32Values[UNIT_NPC_EMOTESTATE] << ",0,";
 
 	ss << m_spawn->channel_spell << "," << m_spawn->channel_target_go << "," << m_spawn->channel_target_creature << ",";
 
@@ -581,7 +581,7 @@ void Creature::SaveToDB()
 
 	ss << m_spawn->death_state << ",";
 
-	ss << m_uint32Values[UNIT_FIELD_MOUNT_DISPLAY_ID] << ","
+	ss << m_uint32Values[UNIT_FIELD_MOUNTDISPLAYID] << ","
 	   << GetEquippedItem(MELEE) << ","
 	   << GetEquippedItem(OFFHAND) << ","
 	   << GetEquippedItem(RANGED) << ",";
@@ -869,8 +869,8 @@ void Creature::CalcResistance(uint32 type)
 	else
 		pos += FlatResistanceMod[ type ];
 
-	SetUInt32Value(UNIT_FIELD_RESISTANCE_BUFF_MODS_POSITIVE + type, pos);
-	SetUInt32Value(UNIT_FIELD_RESISTANCE_BUFF_MODS_NEGATIVE + type, neg);
+	SetUInt32Value(UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE + type, pos);
+	SetUInt32Value(UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE + type, neg);
 
 	int32 tot = BaseResistance[ type ] + pos - neg;
 
@@ -906,8 +906,8 @@ void Creature::CalcStat(uint32 type)
 	else
 		pos += FlatStatMod[ type ];
 
-	SetUInt32Value(UNIT_FIELD_STAT_POS_BUFF + type, pos);
-    SetUInt32Value(UNIT_FIELD_STAT_NEG_BUFF + type, neg);
+	SetUInt32Value(UNIT_FIELD_POSSTAT0 + type, pos);
+	SetUInt32Value(UNIT_FIELD_NEGSTAT0 + type, neg);
 
 	int32 tot = BaseStats[ type ] + pos - neg;
 	SetStat(type, tot > 0 ? tot : 0);
@@ -939,16 +939,16 @@ void Creature::CalcStat(uint32 type)
 			{
 				//Health
 				uint32 hp = GetBaseHealth();
-				uint32 stat_bonus = GetUInt32Value(UNIT_FIELD_STAT_POS_BUFF + 2) - GetUInt32Value(UNIT_FIELD_STAT_NEG_BUFF + 2);
+				uint32 stat_bonus = GetUInt32Value(UNIT_FIELD_POSSTAT0 + 2) - GetUInt32Value(UNIT_FIELD_NEGSTAT0 + 2);
 				if(static_cast<int32>(stat_bonus) < 0) stat_bonus = 0;
 
 				uint32 bonus = stat_bonus * 10 + m_healthfromspell;
 				uint32 res = hp + bonus;
 
 				if(res < hp) res = hp;
-				SetUInt32Value(UNIT_FIELD_MAX_HEALTH, res);
-				if(GetUInt32Value(UNIT_FIELD_HEALTH) > GetUInt32Value(UNIT_FIELD_MAX_HEALTH))
-					SetHealth(GetUInt32Value(UNIT_FIELD_MAX_HEALTH));
+				SetUInt32Value(UNIT_FIELD_MAXHEALTH, res);
+				if(GetUInt32Value(UNIT_FIELD_HEALTH) > GetUInt32Value(UNIT_FIELD_MAXHEALTH))
+					SetHealth(GetUInt32Value(UNIT_FIELD_MAXHEALTH));
 			}
 			break;
 		case STAT_INTELLECT:
@@ -956,7 +956,7 @@ void Creature::CalcStat(uint32 type)
 				if(GetPowerType() == POWER_TYPE_MANA)
 				{
 					uint32 mana = GetBaseMana();
-					uint32 stat_bonus = (GetUInt32Value(UNIT_FIELD_STAT_POS_BUFF + 3) - GetUInt32Value(UNIT_FIELD_STAT_NEG_BUFF + 3));
+					uint32 stat_bonus = (GetUInt32Value(UNIT_FIELD_POSSTAT0 + 3) - GetUInt32Value(UNIT_FIELD_NEGSTAT0 + 3));
 					if(static_cast<int32>(stat_bonus) < 0) stat_bonus = 0;
 
 					uint32 bonus = stat_bonus * 15;
@@ -1288,7 +1288,7 @@ bool Creature::Load(CreatureSpawn* spawn, uint32 mode, MapInfo* info)
 		m_aiInterface->m_canRangedAttack = false;
 
 //SETUP NPC FLAGS
-	SetUInt32Value(UNIT_FIELD_NPC_FLAGS, proto->NPCFLags);
+	SetUInt32Value(UNIT_NPC_FLAGS, proto->NPCFLags);
 
 	if(isVendor())
 		m_SellItems = objmgr.GetVendorList(GetEntry());
@@ -1317,9 +1317,9 @@ bool Creature::Load(CreatureSpawn* spawn, uint32 mode, MapInfo* info)
 	BaseAttackType = proto->AttackType;
 
 	SetCastSpeedMod(1.0f);   // better set this one
-	SetUInt32Value(UNIT_FIELD_SEX, spawn->bytes0);
-	SetUInt32Value(UNIT_FIELD_ANIM_TIER, spawn->bytes1);
-	SetUInt32Value(UNIT_FIELD_SHAPESHIFT_FORM, spawn->bytes2);
+	SetUInt32Value(UNIT_FIELD_BYTES_0, spawn->bytes0);
+	SetUInt32Value(UNIT_FIELD_BYTES_1, spawn->bytes1);
+	SetUInt32Value(UNIT_FIELD_BYTES_2, spawn->bytes2);
 
 ////////////AI
 
@@ -1369,9 +1369,9 @@ bool Creature::Load(CreatureSpawn* spawn, uint32 mode, MapInfo* info)
 
 
 //HACK!
-	if(m_uint32Values[UNIT_FIELD_DISPLAY_ID] == 17743 ||
-	        m_uint32Values[UNIT_FIELD_DISPLAY_ID] == 20242 ||
-	        m_uint32Values[UNIT_FIELD_DISPLAY_ID] == 15435 ||
+	if(m_uint32Values[UNIT_FIELD_DISPLAYID] == 17743 ||
+	        m_uint32Values[UNIT_FIELD_DISPLAYID] == 20242 ||
+	        m_uint32Values[UNIT_FIELD_DISPLAYID] == 15435 ||
 	        (creature_info->Family == UNIT_TYPE_MISC))
 	{
 		m_useAI = false;
@@ -1425,7 +1425,7 @@ bool Creature::Load(CreatureSpawn* spawn, uint32 mode, MapInfo* info)
 
 	if( IsVehicle() ){
 		AddVehicleComponent( proto->Id, proto->vehicleid );
-		SetFlag( UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK );
+		SetFlag( UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK );
 		setAItoUse( false );
 	}
 
@@ -1519,7 +1519,7 @@ void Creature::Load(CreatureProto* proto_, float x, float y, float z, float o)
 		m_aiInterface->m_canRangedAttack = false;
 
 	//SETUP NPC FLAGS
-	SetUInt32Value(UNIT_FIELD_NPC_FLAGS, proto->NPCFLags);
+	SetUInt32Value(UNIT_NPC_FLAGS, proto->NPCFLags);
 
 	if(isVendor())
 		m_SellItems = objmgr.GetVendorList(GetEntry());
@@ -1578,9 +1578,9 @@ void Creature::Load(CreatureProto* proto_, float x, float y, float z, float o)
 
 
 	//HACK!
-	if(m_uint32Values[ UNIT_FIELD_DISPLAY_ID ] == 17743 ||
-	        m_uint32Values[ UNIT_FIELD_DISPLAY_ID ] == 20242 ||
-	        m_uint32Values[ UNIT_FIELD_DISPLAY_ID ] == 15435 ||
+	if(m_uint32Values[ UNIT_FIELD_DISPLAYID ] == 17743 ||
+	        m_uint32Values[ UNIT_FIELD_DISPLAYID ] == 20242 ||
+	        m_uint32Values[ UNIT_FIELD_DISPLAYID ] == 15435 ||
 	        creature_info->Type == UNIT_TYPE_MISC)
 	{
 		m_useAI = false;
@@ -1606,7 +1606,7 @@ void Creature::Load(CreatureProto* proto_, float x, float y, float z, float o)
 
 	if( IsVehicle() ){
 		AddVehicleComponent( proto->Id, proto->vehicleid );
-		SetFlag( UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK );
+		SetFlag( UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK );
 		setAItoUse( false );
 	}
 
@@ -1783,8 +1783,8 @@ void Creature::SetGuardWaypoints()
 		wp->backwardemoteoneshot = false;
 		wp->forwardemoteid = 0;
 		wp->forwardemoteoneshot = false;
-		wp->backwardskinid = m_uint32Values[UNIT_FIELD_NATIVE_DISPLAY_ID];
-		wp->forwardskinid = m_uint32Values[UNIT_FIELD_NATIVE_DISPLAY_ID];
+		wp->backwardskinid = m_uint32Values[UNIT_FIELD_NATIVEDISPLAYID];
+		wp->forwardskinid = m_uint32Values[UNIT_FIELD_NATIVEDISPLAYID];
 		GetAIInterface()->addWayPoint(wp);
 	}
 }
@@ -1845,52 +1845,52 @@ uint32 Creature::GetRequiredLootSkill()
 //! Is PVP flagged?
 bool Creature::IsPvPFlagged()
 {
-	return HasByteFlag(UNIT_FIELD_SHAPESHIFT_FORM, 1, U_FIELD_BYTES_FLAG_PVP);
+	return HasByteFlag(UNIT_FIELD_BYTES_2, 1, U_FIELD_BYTES_FLAG_PVP);
 }
 
 void Creature::SetPvPFlag()
 {
-	SetByteFlag(UNIT_FIELD_SHAPESHIFT_FORM, 1, U_FIELD_BYTES_FLAG_PVP);
+	SetByteFlag(UNIT_FIELD_BYTES_2, 1, U_FIELD_BYTES_FLAG_PVP);
 	summonhandler.SetPvPFlags();
 }
 
 void Creature::RemovePvPFlag()
 {
-	RemoveByteFlag(UNIT_FIELD_SHAPESHIFT_FORM, 1, U_FIELD_BYTES_FLAG_PVP);
+	RemoveByteFlag(UNIT_FIELD_BYTES_2, 1, U_FIELD_BYTES_FLAG_PVP);
 	summonhandler.RemovePvPFlags();
 }
 
 bool Creature::IsFFAPvPFlagged()
 {
-	return HasByteFlag(UNIT_FIELD_SHAPESHIFT_FORM, 1, U_FIELD_BYTES_FLAG_FFA_PVP);
+	return HasByteFlag(UNIT_FIELD_BYTES_2, 1, U_FIELD_BYTES_FLAG_FFA_PVP);
 }
 
 void Creature::SetFFAPvPFlag()
 {
-	SetByteFlag(UNIT_FIELD_SHAPESHIFT_FORM, 1, U_FIELD_BYTES_FLAG_FFA_PVP);
+	SetByteFlag(UNIT_FIELD_BYTES_2, 1, U_FIELD_BYTES_FLAG_FFA_PVP);
 	summonhandler.SetFFAPvPFlags();
 }
 
 void Creature::RemoveFFAPvPFlag()
 {
-	RemoveByteFlag(UNIT_FIELD_SHAPESHIFT_FORM, 1, U_FIELD_BYTES_FLAG_FFA_PVP);
+	RemoveByteFlag(UNIT_FIELD_BYTES_2, 1, U_FIELD_BYTES_FLAG_FFA_PVP);
 	summonhandler.RemoveFFAPvPFlags();
 }
 
 bool Creature::IsSanctuaryFlagged()
 {
-	return HasByteFlag(UNIT_FIELD_SHAPESHIFT_FORM, 1, U_FIELD_BYTES_FLAG_SANCTUARY);
+	return HasByteFlag(UNIT_FIELD_BYTES_2, 1, U_FIELD_BYTES_FLAG_SANCTUARY);
 }
 
 void Creature::SetSanctuaryFlag()
 {
-	SetByteFlag(UNIT_FIELD_SHAPESHIFT_FORM, 1, U_FIELD_BYTES_FLAG_SANCTUARY);
+	SetByteFlag(UNIT_FIELD_BYTES_2, 1, U_FIELD_BYTES_FLAG_SANCTUARY);
 	summonhandler.SetSanctuaryFlags();
 }
 
 void Creature::RemoveSanctuaryFlag()
 {
-	RemoveByteFlag(UNIT_FIELD_SHAPESHIFT_FORM, 1, U_FIELD_BYTES_FLAG_SANCTUARY);
+	RemoveByteFlag(UNIT_FIELD_BYTES_2, 1, U_FIELD_BYTES_FLAG_SANCTUARY);
 	summonhandler.RemoveSanctuaryFlags();
 }
 

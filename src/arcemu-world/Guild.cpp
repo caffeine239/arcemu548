@@ -1052,7 +1052,7 @@ void Guild::GuildChat(const char* szMessage, WorldSession* pClient, uint32 iType
 	}
 
 	WorldPacket* data = sChatHandler.FillMessageData(CHAT_MSG_GUILD, ((int32)iType) == CHAT_MSG_ADDON ? -1 : LANG_UNIVERSAL, szMessage,
-	                    pClient->GetPlayer()->GetGUID(), pClient->GetPlayer()->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_GM) ? 4 : 0);
+	                    pClient->GetPlayer()->GetGUID(), pClient->GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_GM) ? 4 : 0);
 
 	m_lock.Acquire();
 	for(GuildMemberMap::iterator itr = m_members.begin(); itr != m_members.end(); ++itr)

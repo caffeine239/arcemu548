@@ -229,43 +229,43 @@ void CommandTableStorage::Init()
 {
 	static ChatCommand modifyCommandTable[] =
 	{
-		{ "hp",              'm', NULL,                                   "Modifies health points (HP) of selected target",                  NULL, UNIT_FIELD_HEALTH,                 UNIT_FIELD_MAX_HEALTH, 1 },
+		{ "hp",              'm', NULL,                                   "Modifies health points (HP) of selected target",                  NULL, UNIT_FIELD_HEALTH,                 UNIT_FIELD_MAXHEALTH, 1 },
 		{ "gender",          'm', &ChatHandler::HandleGenderChanger,      "Changes gender of selected target. Usage: 0=male, 1=female.",     NULL, 0,                                 0,                    0 },
-		{ "mana",            'm', NULL,                                   "Modifies mana points (MP) of selected target.",                   NULL, UNIT_FIELD_POWER,                  UNIT_FIELD_MAX_POWER + 0, 1 },
-		{ "rage",            'm', NULL,                                   "Modifies rage points of selected target.",                        NULL, UNIT_FIELD_POWER + 1,              UNIT_FIELD_MAX_POWER + 1, 1 },
-		{ "energy",          'm', NULL,                                   "Modifies energy points of selected target.",                      NULL, UNIT_FIELD_POWER + 3,              UNIT_FIELD_MAX_POWER + 3, 1 },
-		{ "runicpower",      'm', NULL,                                   "Modifies runic power points of selected target.",                 NULL, UNIT_FIELD_POWER + 4,              UNIT_FIELD_MAX_POWER + 4, 1 }, //7 is gone, i guess 5... what happens with happines tho?
+		{ "mana",            'm', NULL,                                   "Modifies mana points (MP) of selected target.",                   NULL, UNIT_FIELD_POWER + 1,                 UNIT_FIELD_MAXPOWER + 1, 1 },
+		{ "rage",            'm', NULL,                                   "Modifies rage points of selected target.",                        NULL, UNIT_FIELD_POWER + 2,                 UNIT_FIELD_MAXPOWER + 2, 1 },
+		{ "energy",          'm', NULL,                                   "Modifies energy points of selected target.",                      NULL, UNIT_FIELD_POWER + 4,                 UNIT_FIELD_MAXPOWER + 4, 1 },
+		{ "runicpower",      'm', NULL,                                   "Modifies runic power points of selected target.",                 NULL, UNIT_FIELD_POWER + 5,                 UNIT_FIELD_MAXPOWER + 5, 1 }, //7 is gone, i guess 5... what happens with happines tho?
 		{ "level",           'm', &ChatHandler::HandleModifyLevelCommand, "Modifies the level of selected target.",                          NULL, 0,                                 0,                    0 },
-		{ "strength",        'm', NULL,                                   "Modifies the strength value of the selected target.",             NULL, UNIT_FIELD_STATS,                  0,                    1 },
-		{ "agility",         'm', NULL,                                   "Modifies the agility value of the selected target.",              NULL, UNIT_FIELD_STATS + 1,              0,                    1 },
-		{ "intelligence",    'm', NULL,                                   "Modifies the intelligence value of the selected target.",         NULL, UNIT_FIELD_STATS + 3,              0,                    1 },
-		{ "spirit",          'm', NULL,                                   "Modifies the spirit value of the selected target.",               NULL, UNIT_FIELD_STATS + 4,              0,                    1 },
+		{ "strength",        'm', NULL,                                   "Modifies the strength value of the selected target.",             NULL, UNIT_FIELD_STAT0,                  0,                    1 },
+		{ "agility",         'm', NULL,                                   "Modifies the agility value of the selected target.",              NULL, UNIT_FIELD_STAT0 + 1,                  0,                    1 },
+		{ "intelligence",    'm', NULL,                                   "Modifies the intelligence value of the selected target.",         NULL, UNIT_FIELD_STAT0 + 3,                  0,                    1 },
+		{ "spirit",          'm', NULL,                                   "Modifies the spirit value of the selected target.",               NULL, UNIT_FIELD_STAT0 + 4,                  0,                    1 },
 		{ "armor",           'm', NULL,                                   "Modifies the armor of selected target.",                          NULL, UNIT_FIELD_RESISTANCES,            0,                    1 },
-		{ "holy",            'm', NULL,                                   "Modifies the holy resistance of selected target.",                NULL, UNIT_FIELD_RESISTANCES + 1,        0,                    1 },
-		{ "fire",            'm', NULL,                                   "Modifies the fire resistance of selected target.",                NULL, UNIT_FIELD_RESISTANCES + 2,        0,                    1 },
-		{ "nature",          'm', NULL,                                   "Modifies the nature resistance of selected target.",              NULL, UNIT_FIELD_RESISTANCES + 3,        0,                    1 },
-		{ "frost",           'm', NULL,                                   "Modifies the frost resistance of selected target.",               NULL, UNIT_FIELD_RESISTANCES + 4,        0,                    1 },
-		{ "shadow",          'm', NULL,                                   "Modifies the shadow resistance of selected target.",              NULL, UNIT_FIELD_RESISTANCES + 5,        0,                    1 },
-		{ "arcane",          'm', NULL,                                   "Modifies the arcane resistance of selected target.",              NULL, UNIT_FIELD_RESISTANCES + 6,        0,                    1 },
-		{ "damage",          'm', NULL,                                   "Modifies the damage done by the selected target.",                NULL, UNIT_FIELD_MIN_DAMAGE,             UNIT_FIELD_MAX_DAMAGE, 2 },
+		{ "holy",            'm', NULL,                                   "Modifies the holy resistance of selected target.",                NULL, UNIT_FIELD_RESISTANCES + 1,         0,                    1 },
+		{ "fire",            'm', NULL,                                   "Modifies the fire resistance of selected target.",                NULL, UNIT_FIELD_RESISTANCES + 2,         0,                    1 },
+		{ "nature",          'm', NULL,                                   "Modifies the nature resistance of selected target.",              NULL, UNIT_FIELD_RESISTANCES + 3,         0,                    1 },
+		{ "frost",           'm', NULL,                                   "Modifies the frost resistance of selected target.",               NULL, UNIT_FIELD_RESISTANCES + 4,         0,                    1 },
+		{ "shadow",          'm', NULL,                                   "Modifies the shadow resistance of selected target.",              NULL, UNIT_FIELD_RESISTANCES + 5,         0,                    1 },
+		{ "arcane",          'm', NULL,                                   "Modifies the arcane resistance of selected target.",              NULL, UNIT_FIELD_RESISTANCES + 6,         0,                    1 },
+		{ "damage",          'm', NULL,                                   "Modifies the damage done by the selected target.",                NULL, UNIT_FIELD_MINDAMAGE,              UNIT_FIELD_MAXDAMAGE, 2 },
 		{ "ap",              'm', NULL,                                   "Modifies the attack power of the selected target.",               NULL, UNIT_FIELD_ATTACK_POWER,           0,                    1 },
 		{ "rangeap",         'm', NULL,                                   "Modifies the range attack power of the selected target.",         NULL, UNIT_FIELD_RANGED_ATTACK_POWER,    0,                    1 },
-		{ "scale",           'm', NULL,                                   "Modifies the scale of the selected target.",                      NULL, OBJECT_FIELD_SCALE,                0,                    2 },
+		{ "scale",           'm', NULL,                                   "Modifies the scale of the selected target.",                      NULL, OBJECT_FIELD_SCALE_X,              0,                    2 },
 		{ "gold",            'm', &ChatHandler::HandleModifyGoldCommand,  "Modifies the gold amount of the selected target. Copper value.",  NULL, 0,                                 0,                    0 },
 		{ "speed",           'm', &ChatHandler::HandleModifySpeedCommand, "Modifies the movement speed of the selected target.",             NULL, 0,                                 0,                    0 },
-		{ "nativedisplayid", 'm', NULL,                                   "Modifies the native display identifier of the target.",           NULL, UNIT_FIELD_NATIVE_DISPLAY_ID,      0,                    1 },
-		{ "displayid",       'm', NULL,                                   "Modifies the display identifier (DisplayID) of the target.",      NULL, UNIT_FIELD_DISPLAY_ID,             0,                    1 },
+		{ "nativedisplayid", 'm', NULL,                                   "Modifies the native display identifier of the target.",           NULL, UNIT_FIELD_NATIVEDISPLAYID,        0,                    1 },
+		{ "displayid",       'm', NULL,                                   "Modifies the display identifier (DisplayID) of the target.",      NULL, UNIT_FIELD_DISPLAYID,              0,                    1 },
 		{ "flags",           'm', NULL,                                   "Modifies the flags of the selected target.",                      NULL, UNIT_FIELD_FLAGS,                  0,                    1 },
-		{ "faction",         'm', NULL,                                   "Modifies the faction template of the selected target.",           NULL, UNIT_FIELD_FACTION_TEMPLATE,       0,                    1 },
-		{ "dynamicflags",    'm', NULL,                                   "Modifies the dynamic flags of the selected target.",              NULL, OBJECT_FIELD_DYNAMIC_FLAGS,        0,                    1 },
+		{ "faction",         'm', NULL,                                   "Modifies the faction template of the selected target.",           NULL, UNIT_FIELD_FACTIONTEMPLATE,        0,                    1 },
+		{ "dynamicflags",    'm', NULL,                                   "Modifies the dynamic flags of the selected target.",              NULL, OBJECT_FIELD_DYNAMIC_FLAGS,                0,                    1 },
 		{ "talentpoints",    'm', &ChatHandler::HandleModifyTPsCommand,	  "Modifies the available talent points of the selected target.",    NULL, 0,								  0,                    0 },
-		{ "happiness",       'm', NULL,                                   "Modifies the happiness value of the selected target.",            NULL, UNIT_FIELD_POWER + 4,              UNIT_FIELD_MAX_POWER + 4, 1 },
-		{ "boundingraidius", 'm', NULL,                                   "Modifies the bounding radius of the selected target.",            NULL, UNIT_FIELD_BOUNDING_RADIUS,        0,                    2 },
-		{ "combatreach",     'm', NULL,                                   "Modifies the combat reach of the selected target.",               NULL, UNIT_FIELD_COMBAT_REACH,           0,                    2 },
-		{ "npcemotestate",   'm', NULL,                                   "Modifies the NPC emote state of the selected target.",            NULL, UNIT_FIELD_NPC_EMOTESTATE,         0,                    1 },
-		{ "bytes0",          'm', NULL,                                   "WARNING! Modifies the bytes0 entry of selected target.",          NULL, UNIT_FIELD_SEX,                    0,                    1 },
-		{ "bytes1",          'm', NULL,                                   "WARNING! Modifies the bytes1 entry of selected target.",          NULL, UNIT_FIELD_ANIM_TIER,              0,                    1 },
-		{ "bytes2",          'm', NULL,                                   "WARNING! Modifies the bytes2 entry of selected target.",          NULL, UNIT_FIELD_SHAPESHIFT_FORM,        0,                    1 },
+		{ "happiness",       'm', NULL,                                   "Modifies the happiness value of the selected target.",            NULL, UNIT_FIELD_POWER + 5,                 UNIT_FIELD_MAXPOWER + 5, 1 },
+		{ "boundingraidius", 'm', NULL,                                   "Modifies the bounding radius of the selected target.",            NULL, UNIT_FIELD_BOUNDINGRADIUS,         0,                    2 },
+		{ "combatreach",     'm', NULL,                                   "Modifies the combat reach of the selected target.",               NULL, UNIT_FIELD_COMBATREACH,            0,                    2 },
+		{ "npcemotestate",   'm', NULL,                                   "Modifies the NPC emote state of the selected target.",            NULL, UNIT_NPC_EMOTESTATE,               0,                    1 },
+		{ "bytes0",          'm', NULL,                                   "WARNING! Modifies the bytes0 entry of selected target.",          NULL, UNIT_FIELD_BYTES_0,                0,                    1 },
+		{ "bytes1",          'm', NULL,                                   "WARNING! Modifies the bytes1 entry of selected target.",          NULL, UNIT_FIELD_BYTES_1,                0,                    1 },
+		{ "bytes2",          'm', NULL,                                   "WARNING! Modifies the bytes2 entry of selected target.",          NULL, UNIT_FIELD_BYTES_2,                0,                    1 },
 		{ NULL,              '0', NULL,                                   "",                                                                NULL, 0,                                 0,                    0 }
 	};
 	dupe_command_table(modifyCommandTable, _modifyCommandTable);
@@ -1215,7 +1215,7 @@ bool ChatHandler::CmdSetValueField(WorldSession* m_session, uint32 field, uint32
 			GreenSystemMessageToPlr(plr, "%s set your %s to %d.", m_session->GetPlayer()->GetName(), fieldname, av);
 		}
 
-		if(field == UNIT_FIELD_STATS + 1) av /= 2;
+		if(field == UNIT_FIELD_STAT0 + 1) av /= 2;
 		if(field == UNIT_FIELD_BASE_HEALTH)
 		{
 			plr->SetHealth(av);
@@ -1241,19 +1241,19 @@ bool ChatHandler::CmdSetValueField(WorldSession* m_session, uint32 field, uint32
 			else
 				BlueSystemMessage(m_session, "Setting %s of %s to %d.", fieldname, creaturename.c_str(), av);
 			sGMLog.writefromsession(m_session, "used modify field value: [creature]%s, %u on %s", fieldname, av, creaturename.c_str());
-			if(field == UNIT_FIELD_STATS + 1) av /= 2;
+			if(field == UNIT_FIELD_STAT0 + 1) av /= 2;
 			if(field == UNIT_FIELD_BASE_HEALTH)
 				cr->SetHealth(av);
 
 			switch(field)
 			{
-				case UNIT_FIELD_FACTION_TEMPLATE:
+				case UNIT_FIELD_FACTIONTEMPLATE:
 					{
 						if(cr->m_spawn)
 							WorldDatabase.Execute("UPDATE creature_spawns SET faction = %u WHERE entry = %u", av, cr->m_spawn->entry);
 					}
 					break;
-				case UNIT_FIELD_NPC_FLAGS:
+				case UNIT_NPC_FLAGS:
 					{
 						WorldDatabase.Execute("UPDATE creature_proto SET npcflags = %u WHERE entry = %u", av, cr->GetProto()->Id);
 					}
@@ -1267,7 +1267,7 @@ bool ChatHandler::CmdSetValueField(WorldSession* m_session, uint32 field, uint32
 				cr->SetUInt32Value(fieldmax, mv);
 			}
 			// reset faction
-			if(field == UNIT_FIELD_FACTION_TEMPLATE)
+			if(field == UNIT_FIELD_FACTIONTEMPLATE)
 				cr->_setFaction();
 
 			// Only actually save the change if we are modifying a spawn

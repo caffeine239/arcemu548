@@ -339,7 +339,7 @@ bool ChatHandler::HandleGMListCommand(const char* args, WorldSession* m_session)
 	{
 		if(itr->second->GetSession()->GetPermissionCount())
 		{
-			if(isGM || !sWorld.gamemaster_listOnlyActiveGMs || (sWorld.gamemaster_listOnlyActiveGMs && itr->second->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_GM)))
+			if(isGM || !sWorld.gamemaster_listOnlyActiveGMs || (sWorld.gamemaster_listOnlyActiveGMs && itr->second->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_GM)))
 			{
 				if(first)
 					GreenSystemMessage(m_session, "There are following active GMs on this server:");
@@ -348,7 +348,7 @@ bool ChatHandler::HandleGMListCommand(const char* args, WorldSession* m_session)
 					SystemMessage(m_session, " - %s", itr->second->GetName());
 				else
 				{
-					if(sWorld.gamemaster_listOnlyActiveGMs && !itr->second->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_GM))
+					if(sWorld.gamemaster_listOnlyActiveGMs && !itr->second->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_GM))
 						SystemMessage(m_session, "|cff888888 - %s [%s]|r", itr->second->GetName(), itr->second->GetSession()->GetPermissions());
 					else
 						SystemMessage(m_session, " - %s [%s]", itr->second->GetName(), itr->second->GetSession()->GetPermissions());
@@ -368,7 +368,7 @@ bool ChatHandler::HandleGMListCommand(const char* args, WorldSession* m_session)
 
 bool ChatHandler::HandleGMStatusCommand(const char* args, WorldSession* m_session)
 {
-	if(m_session->GetPlayer()->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_GM))
+	if(m_session->GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_GM))
 		BlueSystemMessage(m_session, "GM Flag: On");
 	else
 		BlueSystemMessage(m_session, "GM Flag: Off");

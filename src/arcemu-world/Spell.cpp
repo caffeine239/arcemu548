@@ -421,7 +421,7 @@ void Spell::FillSpecifiedTargetsInArea(uint32 i, float srcx, float srcy, float s
 			}
 			else //cast from GO
 			{
-				if(g_caster && g_caster->GetUInt32Value(GAMEOBJECT_FIELD_CREATED_BY) && g_caster->m_summoner)
+				if(g_caster && g_caster->GetUInt32Value(OBJECT_FIELD_CREATED_BY) && g_caster->m_summoner)
 				{
 					//trap, check not to attack owner and friendly
 					if(isAttackable(g_caster->m_summoner, *itr, !(GetProto()->c_is_flags & SPELL_FLAG_IS_TARGETINGSTEALTHED)))
@@ -501,7 +501,7 @@ void Spell::FillAllTargetsInArea(uint32 i, float srcx, float srcy, float srcz, f
 			}
 			else //cast from GO
 			{
-				if(g_caster != NULL && g_caster->GetUInt32Value(GAMEOBJECT_FIELD_CREATED_BY) && g_caster->m_summoner != NULL)
+				if(g_caster != NULL && g_caster->GetUInt32Value(OBJECT_FIELD_CREATED_BY) && g_caster->m_summoner != NULL)
 				{
 					//trap, check not to attack owner and friendly
 					if(isAttackable(g_caster->m_summoner, *itr, !(GetProto()->c_is_flags & SPELL_FLAG_IS_TARGETINGSTEALTHED)))
@@ -564,7 +564,7 @@ void Spell::FillAllFriendlyInArea(uint32 i, float srcx, float srcy, float srcz, 
 			}
 			else //cast from GO
 			{
-				if(g_caster != NULL && g_caster->GetUInt32Value(GAMEOBJECT_FIELD_CREATED_BY) && g_caster->m_summoner != NULL)
+				if(g_caster != NULL && g_caster->GetUInt32Value(OBJECT_FIELD_CREATED_BY) && g_caster->m_summoner != NULL)
 				{
 					//trap, check not to attack owner and friendly
 					if(isFriendly(g_caster->m_summoner, TO< Unit* >(*itr)))
@@ -622,7 +622,7 @@ uint64 Spell::GetSinglePossibleEnemy(uint32 i, float prange)
 			}
 			else //cast from GO
 			{
-				if(g_caster && g_caster->GetUInt32Value(GAMEOBJECT_FIELD_CREATED_BY) && g_caster->m_summoner)
+				if(g_caster && g_caster->GetUInt32Value(OBJECT_FIELD_CREATED_BY) && g_caster->m_summoner)
 				{
 					//trap, check not to attack owner and friendly
 					if(isAttackable(g_caster->m_summoner, *itr, !(GetProto()->c_is_flags & SPELL_FLAG_IS_TARGETINGSTEALTHED)))
@@ -675,7 +675,7 @@ uint64 Spell::GetSinglePossibleFriend(uint32 i, float prange)
 			}
 			else //cast from GO
 			{
-				if(g_caster && g_caster->GetUInt32Value(GAMEOBJECT_FIELD_CREATED_BY) && g_caster->m_summoner)
+				if(g_caster && g_caster->GetUInt32Value(OBJECT_FIELD_CREATED_BY) && g_caster->m_summoner)
 				{
 					//trap, check not to attack owner and friendly
 					if(isFriendly(g_caster->m_summoner, TO< Unit* >(*itr)))
@@ -1040,7 +1040,7 @@ uint8 Spell::prepare(SpellCastTargets* targets)
 
 		// aura state removal
 		if(GetProto()->sar.CasterAuraState && GetProto()->sar.CasterAuraState != AURASTATE_FLAG_JUDGEMENT)
-			u_caster->RemoveFlag(UNIT_FIELD_AURA_STATE, GetProto()->sar.CasterAuraState);
+			u_caster->RemoveFlag(UNIT_FIELD_AURASTATE, GetProto()->sar.CasterAuraState);
 	}
 
 	//instant cast(or triggered) and not channeling
@@ -1261,7 +1261,7 @@ void Spell::cast(bool check)
 			}
 			else if(m_spellInfo->NameHash == SPELL_HASH_VICTORY_RUSH)
 			{
-				p_caster->RemoveFlag(UNIT_FIELD_AURA_STATE, AURASTATE_FLAG_LASTKILLWITHHONOR);
+				p_caster->RemoveFlag(UNIT_FIELD_AURASTATE, AURASTATE_FLAG_LASTKILLWITHHONOR);
 			}
 
 			if(GetProto()->NameHash == SPELL_HASH_HOLY_LIGHT || GetProto()->NameHash == SPELL_HASH_FLASH_OF_LIGHT)
@@ -1526,7 +1526,7 @@ void Spell::cast(bool check)
 						Target->HandleProc(PROC_ON_SPELL_LAND_VICTIM, u_caster, GetProto(), m_triggeredSpell);
 						p_caster->m_procCounter = 0; //this is required for to be able to count the depth of procs (though i have no idea where/why we use proc on proc)
 
-						Target->RemoveFlag(UNIT_FIELD_AURA_STATE, GetProto()->sar.TargetAuraState);
+						Target->RemoveFlag(UNIT_FIELD_AURASTATE, GetProto()->sar.TargetAuraState);
 					}
 				}
 			}
@@ -2387,7 +2387,7 @@ bool Spell::HasPower()
 {
 	int32 powerField;
 	if(u_caster != NULL)
-		if(u_caster->HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_TRAINER))
+		if(u_caster->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_TRAINER))
 			return true;
 
 	if(p_caster && p_caster->PowerCheat)
@@ -2411,22 +2411,22 @@ bool Spell::HasPower()
 			{	powerField = UNIT_FIELD_HEALTH;						}
 			break;
 		case POWER_TYPE_MANA:
-			{	powerField = UNIT_FIELD_POWER;	m_usesMana = true;	}
+			{	powerField = UNIT_FIELD_POWER + 1;	m_usesMana = true;	}
 			break;
 		case POWER_TYPE_RAGE:
-			{	powerField = UNIT_FIELD_POWER + 1;						}
-			break;
-		case POWER_TYPE_FOCUS:
 			{	powerField = UNIT_FIELD_POWER + 2;						}
 			break;
-		case POWER_TYPE_ENERGY:
+		case POWER_TYPE_FOCUS:
 			{	powerField = UNIT_FIELD_POWER + 3;						}
 			break;
-		/*case POWER_TYPE_HAPPINESS:
+		case POWER_TYPE_ENERGY:
 			{	powerField = UNIT_FIELD_POWER + 4;						}
+			break;
+		/*case POWER_TYPE_HAPPINESS:
+			{	powerField = UNIT_FIELD_POWER + 5;						}
 			break;*/
 		case POWER_TYPE_RUNIC_POWER:
-			{	powerField = UNIT_FIELD_POWER + 4;						}
+			{	powerField = UNIT_FIELD_POWER + 5;						}
 			break;
 		case POWER_TYPE_RUNES:
 			{
@@ -2527,7 +2527,7 @@ bool Spell::TakePower()
 {
 	int32 powerField;
 	if(u_caster != NULL)
-		if(u_caster->HasFlag(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_TRAINER))
+		if(u_caster->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_TRAINER))
 			return true;
 
 	if(p_caster && p_caster->PowerCheat)
@@ -2551,22 +2551,22 @@ bool Spell::TakePower()
 			{	powerField = UNIT_FIELD_HEALTH;						}
 			break;
 		case POWER_TYPE_MANA:
-			{	powerField = UNIT_FIELD_POWER;	m_usesMana = true;	}
+			{	powerField = UNIT_FIELD_POWER + 1;	m_usesMana = true;	}
 			break;
 		case POWER_TYPE_RAGE:
-			{	powerField = UNIT_FIELD_POWER + 1;						}
-			break;
-		case POWER_TYPE_FOCUS:
 			{	powerField = UNIT_FIELD_POWER + 2;						}
 			break;
-		case POWER_TYPE_ENERGY:
+		case POWER_TYPE_FOCUS:
 			{	powerField = UNIT_FIELD_POWER + 3;						}
 			break;
-		/*case POWER_TYPE_HAPPINESS:
+		case POWER_TYPE_ENERGY:
 			{	powerField = UNIT_FIELD_POWER + 4;						}
+			break;
+		/*case POWER_TYPE_HAPPINESS:
+			{	powerField = UNIT_FIELD_POWER5;						}
 			break;*/
 		case POWER_TYPE_RUNIC_POWER:
-			{	powerField = UNIT_FIELD_POWER + 4;						}
+			{	powerField = UNIT_FIELD_POWER + 5;						}
 			break;
 		case POWER_TYPE_RUNES:
 			{
@@ -3080,7 +3080,7 @@ uint8 Spell::CanCast(bool tolerate)
 		if(target)
 		{
 			// GM Flagged Players should be immune to other players' casts, but not their own.
-			if((target != m_caster) && target->IsPlayer() && TO< Player* >(target)->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_GM))
+			if((target != m_caster) && target->IsPlayer() && TO< Player* >(target)->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_GM))
 				return SPELL_FAILED_BM_OR_INVISGOD;
 
 			//you can't mind control someone already mind controlled
@@ -3514,8 +3514,8 @@ uint8 Spell::CanCast(bool tolerate)
 		 */
 		if(!p_caster->ignoreAuraStateCheck)
 		{
-			if((GetProto()->sar.CasterAuraState && !p_caster->HasFlag(UNIT_FIELD_AURA_STATE, GetProto()->sar.CasterAuraState))
-			        ||	(GetProto()->sar.CasterAuraStateNot && p_caster->HasFlag(UNIT_FIELD_AURA_STATE, GetProto()->sar.CasterAuraStateNot))
+			if((GetProto()->sar.CasterAuraState && !p_caster->HasFlag(UNIT_FIELD_AURASTATE, GetProto()->sar.CasterAuraState))
+			        ||	(GetProto()->sar.CasterAuraStateNot && p_caster->HasFlag(UNIT_FIELD_AURASTATE, GetProto()->sar.CasterAuraStateNot))
 			  )
 				return SPELL_FAILED_CASTER_AURASTATE;
 		}
@@ -3861,11 +3861,11 @@ uint8 Spell::CanCast(bool tolerate)
 				}
 
 				// check aurastate
-				if(GetProto()->sar.TargetAuraState && !target->HasFlag(UNIT_FIELD_AURA_STATE, GetProto()->sar.TargetAuraState) && !p_caster->ignoreAuraStateCheck)
+				if(GetProto()->sar.TargetAuraState && !target->HasFlag(UNIT_FIELD_AURASTATE, GetProto()->sar.TargetAuraState) && !p_caster->ignoreAuraStateCheck)
 				{
 					return SPELL_FAILED_TARGET_AURASTATE;
 				}
-				if(GetProto()->sar.TargetAuraStateNot && target->HasFlag(UNIT_FIELD_AURA_STATE, GetProto()->sar.TargetAuraStateNot) && !p_caster->ignoreAuraStateCheck)
+				if(GetProto()->sar.TargetAuraStateNot && target->HasFlag(UNIT_FIELD_AURASTATE, GetProto()->sar.TargetAuraStateNot) && !p_caster->ignoreAuraStateCheck)
 				{
 					return SPELL_FAILED_TARGET_AURASTATE;
 				}
@@ -5125,7 +5125,7 @@ void Spell::Heal(int32 amount, bool ForceCrit)
 
 	uint32 overheal = 0;
 	uint32 curHealth = unitTarget->GetUInt32Value(UNIT_FIELD_HEALTH);
-	uint32 maxHealth = unitTarget->GetUInt32Value(UNIT_FIELD_MAX_HEALTH);
+	uint32 maxHealth = unitTarget->GetUInt32Value(UNIT_FIELD_MAXHEALTH);
 	if((curHealth + amount) >= maxHealth)
 	{
 		unitTarget->SetHealth(maxHealth);

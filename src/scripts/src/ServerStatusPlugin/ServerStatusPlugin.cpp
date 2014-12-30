@@ -414,7 +414,7 @@ void StatDumper::DumpStats()
 		{
 			plr = gms.front();
 			gms.pop_front();
-			if(!plr->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_GM))
+			if(!plr->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_GM))
 				continue;
 			FillOnlineTime(t - plr->OnlineTime, otime);
 			fprintf(f, "    <gmplr>\n");

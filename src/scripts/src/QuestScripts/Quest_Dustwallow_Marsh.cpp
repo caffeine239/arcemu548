@@ -33,7 +33,7 @@ class BalosJackenQAI : public CreatureAIScript
 		void OnDamageTaken(Unit* mAttacker, uint32 fAmount)
 		{
 			// If Balos Jacken HP - fAmount < 20%
-			if(_unit->GetUInt32Value(UNIT_FIELD_HEALTH) - fAmount <= _unit->GetUInt32Value(UNIT_FIELD_MAX_HEALTH) * 0.2f)
+			if(_unit->GetUInt32Value(UNIT_FIELD_HEALTH) - fAmount <= _unit->GetUInt32Value(UNIT_FIELD_MAXHEALTH) * 0.2f)
 			{
 				//Missing: modify fAmount to prevent Balos Jacken death.
 				//{...}
@@ -143,7 +143,7 @@ class OverlordMokMorokk : public CreatureAIScript
 			{
 				_unit->CastSpell(mAttacker, dbcSpell.LookupEntry(6749), true);
 			}
-			if(_unit->GetUInt32Value(UNIT_FIELD_HEALTH) - fAmount <= _unit->GetUInt32Value(UNIT_FIELD_MAX_HEALTH) * 0.3f)
+			if(_unit->GetUInt32Value(UNIT_FIELD_HEALTH) - fAmount <= _unit->GetUInt32Value(UNIT_FIELD_MAXHEALTH) * 0.3f)
 			{
 				if(mAttacker->IsPlayer())
 				{
@@ -210,7 +210,7 @@ class PrivateHendel : public CreatureAIScript
 
 		void OnDamageTaken(Unit* mAttacker, uint32 fAmount)
 		{
-			if(_unit->GetUInt32Value(UNIT_FIELD_HEALTH) - fAmount <= _unit->GetUInt32Value(UNIT_FIELD_MAX_HEALTH) * 0.37f)
+			if(_unit->GetUInt32Value(UNIT_FIELD_HEALTH) - fAmount <= _unit->GetUInt32Value(UNIT_FIELD_MAXHEALTH) * 0.37f)
 			{
 				if(mAttacker->IsPlayer())
 				{

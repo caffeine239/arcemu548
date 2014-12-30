@@ -128,11 +128,11 @@ void HonorHandler::OnPlayerKilled(Player* pPlayer, Player* pVictim)
 					pPlayer->m_bg->HookOnHK(*vtr);
 					if(pVictim)
 					{
-// 						// Send PVP credit
-// 						WorldPacket data(SMSG_PVP_CREDIT, 12);
-// 						uint32 pvppoints = pts * 10;
-// 						data << pvppoints << pVictim->GetGUID() << uint32(pVictim->GetPVPRank());
-// 						(*vtr)->GetSession()->SendPacket(&data);
+						// Send PVP credit
+						WorldPacket data(SMSG_PVP_CREDIT, 12);
+						uint32 pvppoints = pts * 10;
+						data << pvppoints << pVictim->GetGUID() << uint32(pVictim->GetPVPRank());
+						(*vtr)->GetSession()->SendPacket(&data);
 					}
 				}
 			}
@@ -194,10 +194,10 @@ void HonorHandler::OnPlayerKilled(Player* pPlayer, Player* pVictim)
 
 				sHookInterface.OnHonorableKill(pAffectedPlayer, pVictim);
 
-// 				WorldPacket data(SMSG_PVP_CREDIT, 12);
-// 				uint32 pvppoints = contributorpts * 10; // Why *10?
-// 				data << pvppoints << pVictim->GetGUID() << uint32(pVictim->GetPVPRank());
-// 				pAffectedPlayer->GetSession()->SendPacket(&data);
+				WorldPacket data(SMSG_PVP_CREDIT, 12);
+				uint32 pvppoints = contributorpts * 10; // Why *10?
+				data << pvppoints << pVictim->GetGUID() << uint32(pVictim->GetPVPRank());
+				pAffectedPlayer->GetSession()->SendPacket(&data);
 
 				int PvPToken = 0;
 				Config.OptionalConfig.GetInt("Extra", "PvPToken", &PvPToken);

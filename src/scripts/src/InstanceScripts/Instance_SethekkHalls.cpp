@@ -1706,7 +1706,7 @@ class DARKWEAVERSYTHAI : public CreatureAIScript
 			if(LakkasCage != NULL)
 			{
 				LakkasCage->SetState(0);
-				LakkasCage->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, LakkasCage->GetUInt32Value(GAMEOBJECT_FIELD_FLAGS) - 1);
+				LakkasCage->SetUInt32Value(GAMEOBJECT_FLAGS, LakkasCage->GetUInt32Value(GAMEOBJECT_FLAGS) - 1);
 			}
 
 			if(mLakka != NULL && mLakka->GetScript())

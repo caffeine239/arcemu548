@@ -335,7 +335,7 @@ class DofNaralexGossip : public GossipScript
 
 				case 2: // Start Event
 					{
-						pCreature->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, 0);
+						pCreature->SetUInt32Value(UNIT_NPC_FLAGS, 0);
 						pCreature->GetAIInterface()->StopMovement(0);
 						pCreature->GetAIInterface()->SetAIState(STATE_SCRIPTMOVE);
 						pCreature->GetAIInterface()->setMoveType(MOVEMENTTYPE_WANTEDWP);

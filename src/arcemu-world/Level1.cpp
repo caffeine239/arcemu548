@@ -138,11 +138,11 @@ bool ChatHandler::HandleWAnnounceCommand(const char* args, WorldSession* m_sessi
 bool ChatHandler::HandleGMOnCommand(const char* args, WorldSession* m_session)
 {
 	Player* _player = m_session->GetPlayer();
-	if(_player->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_GM))
+	if(_player->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_GM))
 		RedSystemMessage(m_session, "GM Flag is already set on.");
 	else
 	{
-		_player->SetFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_GM);	// <GM>
+		_player->SetFlag(PLAYER_FLAGS, PLAYER_FLAG_GM);	// <GM>
 
 		_player->SetFaction(35);
 		_player->RemovePvPFlag();
@@ -160,10 +160,10 @@ bool ChatHandler::HandleGMOnCommand(const char* args, WorldSession* m_session)
 bool ChatHandler::HandleGMOffCommand(const char* args, WorldSession* m_session)
 {
 	Player* _player = m_session->GetPlayer();
-	if(_player->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_GM))
+	if(_player->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_GM))
 	{
 
-		_player->RemoveFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_GM);	// <GM>
+		_player->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAG_GM);	// <GM>
 
 		_player->SetFaction(_player->GetInitialFactionId());
 		_player->UpdatePvPArea();
@@ -183,10 +183,10 @@ bool ChatHandler::HandleDeveloperCommand(const char* args, WorldSession* m_sessi
 
 	Player* _player = m_session->GetPlayer();
 
-	if(_player->HasFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_DEVELOPER))
-		_player->RemoveFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_DEVELOPER);
+	if(_player->HasFlag(PLAYER_FLAGS, PLAYER_FLAG_DEVELOPER))
+		_player->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAG_DEVELOPER);
 	else
-		_player->SetFlag(PLAYER_FIELD_PLAYER_FLAGS, PLAYER_FLAG_DEVELOPER);
+		_player->SetFlag(PLAYER_FLAGS, PLAYER_FLAG_DEVELOPER);
 
 	BlueSystemMessage(m_session, "Developer flag toggled.");
 

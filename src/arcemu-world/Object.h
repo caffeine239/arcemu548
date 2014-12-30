@@ -68,7 +68,6 @@ enum TYPE
     TYPE_AREATRIGGER	= 512,
 };
 
-
 enum TYPEID
 {
     TYPEID_OBJECT		= 0,
@@ -252,11 +251,11 @@ class SERVER_DECL Object : public EventableObject
 		void SetHighGUID(uint32 val) { m_uint32Values[ HIGHGUID ] = val; }
 
 		const WoWGuid & GetNewGUID() const { return m_wowGuid; }
-		uint32 GetEntry() { return m_uint32Values[ OBJECT_FIELD_ENTRY_ID ]; }
-        void SetEntry(uint32 value) { SetUInt32Value(OBJECT_FIELD_ENTRY_ID, value); }
+		uint32 GetEntry() { return m_uint32Values[ OBJECT_FIELD_ENTRY ]; }
+		void SetEntry(uint32 value) { SetUInt32Value(OBJECT_FIELD_ENTRY, value); }
 
-		float GetScale() { return m_floatValues[ OBJECT_FIELD_SCALE ]; }
-		void SetScale(float scale) { SetFloatValue(OBJECT_FIELD_SCALE, scale); };
+		float GetScale() { return m_floatValues[ OBJECT_FIELD_SCALE_X ]; }
+		void SetScale(float scale) { SetFloatValue(OBJECT_FIELD_SCALE_X, scale); };
 
 		const uint32 GetTypeFromGUID() const { return (m_uint32Values[ HIGHGUID ] & HIGHGUID_TYPE_MASK); }
 		const uint32 GetUIdFromGUID() const { return (m_uint32Values[ LOWGUID ] & LOWGUID_ENTRY_MASK); }
@@ -274,7 +273,6 @@ class SERVER_DECL Object : public EventableObject
 		bool IsGameObject() { return m_objectTypeId == TYPEID_GAMEOBJECT; }
 		bool IsCorpse() { return m_objectTypeId == TYPEID_CORPSE; }
 		bool IsContainer() { return m_objectTypeId == TYPEID_CONTAINER; }
-		bool isType(uint16 mask) const { return (mask & m_objectType); }
 
 		//! This includes any nested objects we have, inventory for example.
 		virtual uint32  BuildCreateUpdateBlockForPlayer(ByteBuffer* data, Player* target);
@@ -371,7 +369,7 @@ class SERVER_DECL Object : public EventableObject
 		void ModSignedInt32Value(uint32 index, int32 value);
 		void ModUnsigned32Value(uint32 index, int32 mod);
 		uint32 GetModPUInt32Value(const uint32 index, const int32 value);
-		
+
 		//! Set uint32 property
 		void SetByte(uint32 index, uint32 index1, uint8 value);
 
@@ -724,8 +722,6 @@ class SERVER_DECL Object : public EventableObject
 		void _BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2, Player* target);
 		void _BuildValuesUpdate(ByteBuffer* data, UpdateMask* updateMask, Player* target);
 
-		uint16 m_objectType;
-
 		//! WoWGuid class
 		WoWGuid m_wowGuid;
 		//! Type id.
@@ -814,26 +810,6 @@ class SERVER_DECL Object : public EventableObject
 		bool GetPoint(float angle, float rad, float & outx, float & outy, float & outz, bool sloppypath = false);
 		bool GetRandomPoint(float rad, float & outx, float & outy, float & outz) { return GetPoint(RandomFloat(float(M_PI * 2)), rad, outx, outy, outz); }
 		bool GetRandomPoint(float rad, LocationVector & out) { return GetRandomPoint(rad, out.x, out.y, out.z); }
-		
-		Player* ToPlayer() { if (GetTypeId() == TYPEID_PLAYER) return reinterpret_cast<Player*>(this); else return NULL; }
-		Player const* ToPlayer() const { if (GetTypeId() == TYPEID_PLAYER) return reinterpret_cast<Player const*>(this); else return NULL; }
-
-		Creature* ToCreature() { if (GetTypeId() == TYPEID_UNIT) return reinterpret_cast<Creature*>(this); else return NULL; }
-		Creature const* ToCreature() const { if (GetTypeId() == TYPEID_UNIT) return reinterpret_cast<Creature const*>(this); else return NULL; }
-
-		Unit* ToUnit() { if (isType(TYPE_UNIT)) return reinterpret_cast<Unit*>(this); else return NULL; }
-		Unit const* ToUnit() const { if (isType(TYPE_UNIT)) return reinterpret_cast<Unit const*>(this); else return NULL; }
-
-		GameObject* ToGameObject() { if (GetTypeId() == TYPEID_GAMEOBJECT) return reinterpret_cast<GameObject*>(this); else return NULL; }
-		GameObject const* ToGameObject() const { if (GetTypeId() == TYPEID_GAMEOBJECT) return reinterpret_cast<GameObject const*>(this); else return NULL; }
-
-		Corpse* ToCorpse() { if (GetTypeId() == TYPEID_CORPSE) return reinterpret_cast<Corpse*>(this); else return NULL; }
-		Corpse const* ToCorpse() const { if (GetTypeId() == TYPEID_CORPSE) return reinterpret_cast<Corpse const*>(this); else return NULL; }
-
-		DynamicObject* ToDynObject() { if (GetTypeId() == TYPEID_DYNAMICOBJECT) return reinterpret_cast<DynamicObject*>(this); else return NULL; }
-		DynamicObject const* ToDynObject() const { if (GetTypeId() == TYPEID_DYNAMICOBJECT) return reinterpret_cast<DynamicObject const*>(this); else return NULL; }
-
-
 };
 
 

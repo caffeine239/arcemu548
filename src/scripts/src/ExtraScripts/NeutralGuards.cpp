@@ -15,7 +15,7 @@ class ShatteredSunSpawner : public CreatureAIScript
 					float x = mTarget->GetPositionX() + RandomUInt(20) - 10;
 					float y = mTarget->GetPositionY() + RandomUInt(20) - 10;
 					float z = mTarget->GetPositionZ();
-					Creature* guard = _unit->GetMapMgr()->GetInterface()->SpawnCreature(26253, x, y, z, 0, true, false, _unit->GetUInt32Value(UNIT_FIELD_FACTION_TEMPLATE), 50);
+					Creature* guard = _unit->GetMapMgr()->GetInterface()->SpawnCreature(26253, x, y, z, 0, true, false, _unit->GetUInt32Value(UNIT_FIELD_FACTIONTEMPLATE), 50);
 
 					if(guard != NULL)
 					{

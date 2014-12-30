@@ -66,7 +66,7 @@ class SCRIPT_DECL EasyFunctions
 				pCreature->m_custom_waypoint_map = new WayPointMap;
 
 			if(!modelid)
-				modelid = pCreature->GetUInt32Value(UNIT_FIELD_DISPLAY_ID);
+				modelid = pCreature->GetUInt32Value(UNIT_FIELD_DISPLAYID);
 
 			WayPoint* wp = new WayPoint;
 			wp->id = pCreature->m_custom_waypoint_map->size() ? pCreature->m_custom_waypoint_map->size() : 1;
@@ -169,7 +169,7 @@ class SCRIPT_DECL EasyFunctions
 			pCreature->GetAIInterface()->disable_targeting = dis_target;
 			pCreature->PushToWorld(pThis->GetMapMgr());
 			pCreature->Despawn(duration, 0);
-			pCreature->SetUInt32Value(UNIT_FIELD_FACTION_TEMPLATE, faction);
+			pCreature->SetUInt32Value(UNIT_FIELD_FACTIONTEMPLATE, faction);
 			pCreature->_setFaction();
 
 			return pCreature;

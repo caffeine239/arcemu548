@@ -323,7 +323,7 @@ class ThrallAI : public MoonScriptCreatureAI // this will be replaced with escor
 			if(pGO)
 				pGO->SetState(pGO->GetState() == 1 ? 0 : 1);
 
-			_unit->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
+			_unit->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
 			SetMoveType(Move_ForwardThenStop);
 		};
 

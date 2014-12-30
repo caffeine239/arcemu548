@@ -85,9 +85,9 @@ class ZethGorMustBurnAlliance : public GameObjectAIScript
 				float SSZ = pPlayer->GetPositionZ();
 
 				GameObject* pBeacon = pPlayer->GetMapMgr()->GetInterface()->GetGameObjectNearestCoords(SSX, SSY, SSZ, 184661);
-				if(pBeacon != NULL && pBeacon->GetUInt32Value(GAMEOBJECT_FIELD_FLAGS) > 0)
+				if(pBeacon != NULL && pBeacon->GetUInt32Value(GAMEOBJECT_FLAGS) > 0)
 				{
-					pBeacon->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, (pBeacon->GetUInt32Value(GAMEOBJECT_FIELD_FLAGS) - 1));
+					pBeacon->SetUInt32Value(GAMEOBJECT_FLAGS, (pBeacon->GetUInt32Value(GAMEOBJECT_FLAGS) - 1));
 				}
 
 				// Northern Zeth'Gor Tower

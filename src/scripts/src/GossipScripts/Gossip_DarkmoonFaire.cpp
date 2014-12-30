@@ -513,7 +513,7 @@ class ProfessorThaddeusPaleo_Gossip : public GossipScript
 			GossipMenu* Menu;
 			objmgr.CreateGossipMenuForPlayer(&Menu, pObject->GetGUID(), 60016, plr);
 
-			if(pObject->GetUInt32Value(UNIT_FIELD_NPC_FLAGS) & UNIT_NPC_FLAG_VENDOR)
+			if(pObject->GetUInt32Value(UNIT_NPC_FLAGS) & UNIT_NPC_FLAG_VENDOR)
 				Menu->AddItem(1, "Let me browse your goods.", 1);
 			Menu->AddItem(0, "Tell me more about these Darkmoon Cards.", 2);
 

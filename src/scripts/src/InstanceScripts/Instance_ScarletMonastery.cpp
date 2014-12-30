@@ -292,7 +292,7 @@ class MograineAI : public CreatureAIScript
 
 			_unit->PlaySoundToSet(5835);
 
-			RegisterAIUpdateEvent(_unit->GetUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME));
+			RegisterAIUpdateEvent(_unit->GetUInt32Value(UNIT_FIELD_BASEATTACKTIME));
 		}
 
 		void OnTargetDied(Unit* mTarget)
@@ -463,7 +463,7 @@ class WhitemaneAI : public CreatureAIScript
 
 			_unit->PlaySoundToSet(5838);
 
-			RegisterAIUpdateEvent(_unit->GetUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME));
+			RegisterAIUpdateEvent(_unit->GetUInt32Value(UNIT_FIELD_BASEATTACKTIME));
 		}
 
 		void OnTargetDied(Unit* mTarget)
@@ -648,7 +648,7 @@ class FairbanksAI : public CreatureAIScript
 
 		void OnCombatStart(Unit* mTarget)
 		{
-			RegisterAIUpdateEvent(_unit->GetUInt32Value(UNIT_FIELD_ATTACK_ROUND_BASE_TIME));
+			RegisterAIUpdateEvent(_unit->GetUInt32Value(UNIT_FIELD_BASEATTACKTIME));
 		}
 
 		void OnTargetDied(Unit* mTarget)

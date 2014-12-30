@@ -28,10 +28,10 @@ GameObject::GameObject(uint64 guid)
 	m_updateMask.SetCount(GAMEOBJECT_END);
 	SetUInt32Value(OBJECT_FIELD_TYPE, TYPE_GAMEOBJECT | TYPE_OBJECT);
 	SetGUID(guid);
-	SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 3, 100);
+	SetByte(GAMEOBJECT_BYTES_1, 3, 100);
 	m_wowGuid.Init(GetGUID());
 	SetScale(1);  //info->Size  );
-	SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 3, 100);
+	SetByte(GAMEOBJECT_BYTES_1, 3, 100);
 	counter = 0; //not needed at all but to prevent errors that var was not initialized, can be removed in release
 	bannerslot = bannerauraslot = -1;
 	m_summonedGo = false;
@@ -73,7 +73,7 @@ GameObject::~GameObject()
 		myScript = NULL;
 	}
 
-	uint32 guid = GetUInt32Value(GAMEOBJECT_FIELD_CREATED_BY);
+	uint32 guid = GetUInt32Value(OBJECT_FIELD_CREATED_BY);
 	if(guid)
 	{
 		Player* plr = objmgr.GetPlayer(guid);
@@ -116,8 +116,8 @@ bool GameObject::CreateFromProto(uint32 entry, uint32 mapid, float x, float y, f
 	SetParentRotation(2, r2);
 	SetParentRotation(3, r3);
 	UpdateRotation();
-	SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 3, 0);
-	SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 1);
+	SetByte(GAMEOBJECT_BYTES_1, 3, 0);
+	SetByte(GAMEOBJECT_BYTES_1, 0, 1);
 	SetDisplayId(pInfo->DisplayID);
 	SetType(static_cast<uint8>(pInfo->Type));
 	InitAI();
@@ -152,7 +152,7 @@ void GameObject::Update(uint32 p_time)
 	if(m_deleted)
 		return;
 
-	if(spell && (GetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0) == 1))
+	if(spell && (GetByte(GAMEOBJECT_BYTES_1, 0) == 1))
 	{
 		if(checkrate > 1)
 		{
@@ -233,8 +233,8 @@ void GameObject::Despawn(uint32 delay, uint32 respawntime)
 	//This is for go get deleted while looting
 	if(m_spawn)
 	{
-		SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, static_cast<uint8>(m_spawn->state));
-		SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, m_spawn->flags);
+		SetByte(GAMEOBJECT_BYTES_1, 0, static_cast<uint8>(m_spawn->state));
+		SetUInt32Value(GAMEOBJECT_FLAGS, m_spawn->flags);
 	}
 
 	CALL_GO_SCRIPT_EVENT(this, OnDespawn)();
@@ -266,7 +266,7 @@ void GameObject::SaveToDB()
 		m_spawn->entry = GetEntry();
 		m_spawn->facing = GetOrientation();
 		m_spawn->faction = GetFaction();
-		m_spawn->flags = GetUInt32Value(GAMEOBJECT_FIELD_FLAGS);
+		m_spawn->flags = GetUInt32Value(GAMEOBJECT_FLAGS);
 		m_spawn->id = objmgr.GenerateGameObjectSpawnID();
 		m_spawn->o1 = GetParentRotation(0);
 		m_spawn->o2 = GetParentRotation(2);
@@ -276,7 +276,7 @@ void GameObject::SaveToDB()
 		m_spawn->y = GetPositionY();
 		m_spawn->z = GetPositionZ();
 		m_spawn->o = 0.0f;
-		m_spawn->state = GetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0);
+		m_spawn->state = GetByte(GAMEOBJECT_BYTES_1, 0);
 		m_spawn->phase = GetPhase();
 		m_spawn->overrides = m_overrides;
 
@@ -308,8 +308,8 @@ void GameObject::SaveToDB()
 	   << GetParentRotation(0) << ","
 	   << GetParentRotation(2) << ","
 	   << GetParentRotation(3) << ","
-	   << GetUInt32Value(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID) << ","
-	   << GetUInt32Value(GAMEOBJECT_FIELD_FLAGS) << ","
+	   << GetUInt32Value(GAMEOBJECT_BYTES_1) << ","
+	   << GetUInt32Value(GAMEOBJECT_FLAGS) << ","
 	   << GetFaction() << ","
 	   << GetScale() << ","
 	   << "0,"
@@ -336,8 +336,8 @@ void GameObject::SaveToFile(std::stringstream & name)
 	   << GetParentRotation(0) << ","
 	   << GetParentRotation(2) << ","
 	   << GetParentRotation(3) << ","
-	   << GetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0) << ","
-	   << GetUInt32Value(GAMEOBJECT_FIELD_FLAGS) << ","
+	   << GetByte(GAMEOBJECT_BYTES_1, 0) << ","
+	   << GetUInt32Value(GAMEOBJECT_FLAGS) << ","
 	   << GetFaction() << ","
 	   << GetScale() << ","
 	   << "0,"
@@ -471,9 +471,9 @@ bool GameObject::Load(GOSpawn* spawn)
 	m_spawn = spawn;
 	m_phase = spawn->phase;
 	//SetRotation(spawn->o);
-	SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, spawn->flags);
+	SetUInt32Value(GAMEOBJECT_FLAGS, spawn->flags);
 //	SetLevel(spawn->level);
-	SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, static_cast<uint8>(spawn->state));
+	SetByte(GAMEOBJECT_BYTES_1, 0, static_cast<uint8>(spawn->state));
 	if(spawn->faction)
 	{
 		SetFaction(spawn->faction);
@@ -491,16 +491,16 @@ void GameObject::DeleteFromDB()
 
 void GameObject::EventCloseDoor()
 {
-	// GAMEOBJECT_FIELD_FLAGS +1 closedoor animate restore the pointer flag.
+	// gameobject_flags +1 closedoor animate restore the pointer flag.
 	// by cebernic
-	SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 1);
-	RemoveFlag(GAMEOBJECT_FIELD_FLAGS, 1);
+	SetByte(GAMEOBJECT_BYTES_1, 0, 1);
+	RemoveFlag(GAMEOBJECT_FLAGS, 1);
 }
 
 void GameObject::UseFishingNode(Player* player)
 {
 	sEventMgr.RemoveEvents(this);
-	if(!HasFlag(GAMEOBJECT_FIELD_FLAGS, 32))     // Clicking on the bobber before something is hooked
+	if(!HasFlag(GAMEOBJECT_FLAGS, 32))     // Clicking on the bobber before something is hooked
 	{
 		player->GetSession()->OutPacket(SMSG_FISH_NOT_HOOKED);
 		EndFishing(player, true);
@@ -602,9 +602,9 @@ void GameObject::FishHooked(Player* player)
 	data << GetGUID();
 	data << (uint32)(0); // value < 4
 	player->GetSession()->SendPacket(&data);
-	//SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 0);
-	//BuildFieldUpdatePacket(player, GAMEOBJECT_FIELD_FLAGS, 32);
-	SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 32);
+	//SetByte(GAMEOBJECT_BYTES_1, 0, 0);
+	//BuildFieldUpdatePacket(player, GAMEOBJECT_FLAGS, 32);
+	SetUInt32Value(GAMEOBJECT_FLAGS, 32);
 }
 
 /////////////
@@ -700,12 +700,12 @@ void GameObject::ExpireAndDelete()
 //! Deactivates selected gameobject ex. stops doors from opening/closing.
 void GameObject::Deactivate()
 {
-	SetUInt32Value(GAMEOBJECT_DYNAMIC, 0);
+	SetUInt32Value(GAMEOBJECT_FIELD_PERCENT_HEALTH, 0);
 }
 
 void GameObject::Activate()
 {
-	SetUInt32Value(GAMEOBJECT_DYNAMIC, 1);
+	SetUInt32Value(GAMEOBJECT_FIELD_PERCENT_HEALTH, 1);
 }
 
 void GameObject::CallScriptUpdate()
@@ -834,12 +834,12 @@ void GameObject::UpdateRotation()
 
 void GameObject::SetState(uint8 state)
 {
-	SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, state);
+	SetByte(GAMEOBJECT_BYTES_1, 0, state);
 }
 
 uint8 GameObject::GetState()
 {
-	return GetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0);
+	return GetByte(GAMEOBJECT_BYTES_1, 0);
 }
 
 void GameObject::Damage( uint32 damage, uint64 AttackerGUID, uint64 ControllerGUID, uint32 SpellID ){

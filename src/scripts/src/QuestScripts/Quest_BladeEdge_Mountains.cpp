@@ -214,15 +214,15 @@ class LegionObelisk : public GameObjectAIScript
 			}
 
 			if(obelisk1 != NULL)
-				sEventMgr.AddEvent(TO_OBJECT(obelisk1), &Object::SetByte, (uint32)GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, (uint32)GAMEOBJECT_BYTES_STATE, (uint8)1, EVENT_UNK, 10000, 0, 1);
+				sEventMgr.AddEvent(TO_OBJECT(obelisk1), &Object::SetByte, (uint32)GAMEOBJECT_BYTES_1, (uint32)GAMEOBJECT_BYTES_STATE, (uint8)1, EVENT_UNK, 10000, 0, 1);
 			if(obelisk2 != NULL)
-				sEventMgr.AddEvent(TO_OBJECT(obelisk2), &Object::SetByte, (uint32)GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, (uint32)GAMEOBJECT_BYTES_STATE, (uint8)1, EVENT_UNK, 10000, 0, 1);
+				sEventMgr.AddEvent(TO_OBJECT(obelisk2), &Object::SetByte, (uint32)GAMEOBJECT_BYTES_1, (uint32)GAMEOBJECT_BYTES_STATE, (uint8)1, EVENT_UNK, 10000, 0, 1);
 			if(obelisk3 != NULL)
-				sEventMgr.AddEvent(TO_OBJECT(obelisk3), &Object::SetByte, (uint32)GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, (uint32)GAMEOBJECT_BYTES_STATE, (uint8)1, EVENT_UNK, 10000, 0, 1);
+				sEventMgr.AddEvent(TO_OBJECT(obelisk3), &Object::SetByte, (uint32)GAMEOBJECT_BYTES_1, (uint32)GAMEOBJECT_BYTES_STATE, (uint8)1, EVENT_UNK, 10000, 0, 1);
 			if(obelisk4 != NULL)
-				sEventMgr.AddEvent(TO_OBJECT(obelisk4), &Object::SetByte, (uint32)GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, (uint32)GAMEOBJECT_BYTES_STATE, (uint8)1, EVENT_UNK, 10000, 0, 1);
+				sEventMgr.AddEvent(TO_OBJECT(obelisk4), &Object::SetByte, (uint32)GAMEOBJECT_BYTES_1, (uint32)GAMEOBJECT_BYTES_STATE, (uint8)1, EVENT_UNK, 10000, 0, 1);
 			if(obelisk5 != NULL)
-				sEventMgr.AddEvent(TO_OBJECT(obelisk5), &Object::SetByte, (uint32)GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, (uint32)GAMEOBJECT_BYTES_STATE, (uint8)1, EVENT_UNK, 10000, 0, 1);
+				sEventMgr.AddEvent(TO_OBJECT(obelisk5), &Object::SetByte, (uint32)GAMEOBJECT_BYTES_1, (uint32)GAMEOBJECT_BYTES_STATE, (uint8)1, EVENT_UNK, 10000, 0, 1);
 		}
 
 };

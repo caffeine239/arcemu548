@@ -29,11 +29,11 @@ bool Transporter::CreateAsTransporter(uint32 EntryID, const char* Name, int32 Ti
 		return false;
 
 	// Override these flags to avoid mistakes in proto
-	SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 40);
-	SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 3, 100);
+	SetUInt32Value(GAMEOBJECT_FLAGS, 40);
+	SetByte(GAMEOBJECT_BYTES_1, 3, 100);
 
 	//Maybe this would be the perfect way, so there would be no extra checks in Object.cpp:
-	//SetByte( GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, GAMEOBJECT_TYPE_TRANSPORT );
+	//SetByte( GAMEOBJECT_BYTES_1, 0, GAMEOBJECT_TYPE_TRANSPORT );
 	//but these fields seems to change often and between server flavours (ArcEmu, Aspire, name another one) - by: VLack aka. VLsoft
 	if(pInfo)
 		pInfo->Type = GAMEOBJECT_TYPE_TRANSPORT;

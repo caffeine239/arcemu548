@@ -739,7 +739,7 @@ class BarnesGS : public GossipScript
 						pCreature->GetAIInterface()->SetAIState(STATE_SCRIPTMOVE);
 						pCreature->GetAIInterface()->setMoveType(11);
 						pCreature->GetAIInterface()->setWaypointToMove(0);
-						pCreature->SetUInt32Value(UNIT_FIELD_NPC_FLAGS, 0);
+						pCreature->SetUInt32Value(UNIT_NPC_FLAGS, 0);
 						pCreature->PlaySoundToSet(9357);
 						WayStartBBW[pCreature->GetInstanceID()] = 2;
 					}
@@ -1318,7 +1318,7 @@ class CuratorAI : public CreatureAIScript
 			_unit->PlaySoundToSet(sound);
 			_unit->SendChatMessage(CHAT_MSG_MONSTER_YELL, LANG_UNIVERSAL, text);
 
-			_unit->SetUInt32Value(UNIT_FIELD_POWER, _unit->GetPower(POWER_TYPE_MANA) - (_unit->GetMaxPower(POWER_TYPE_MANA) / 10));
+			_unit->SetUInt32Value(UNIT_FIELD_POWER + 1, _unit->GetPower(POWER_TYPE_MANA) - (_unit->GetMaxPower(POWER_TYPE_MANA) / 10));
 			float dX = _unit->GetPositionX();
 			float dY = _unit->GetPositionY();
 			Creature* AstralFlare = NULL;
@@ -1565,7 +1565,7 @@ class ShadeofAranAI : public CreatureAIScript
 			if(SDoor)
 			{
 				SDoor->SetState(1);
-				SDoor->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 33);
+				SDoor->SetUInt32Value(GAMEOBJECT_FLAGS, 33);
 			}
 		}
 
@@ -1575,12 +1575,12 @@ class ShadeofAranAI : public CreatureAIScript
 			_unit->GetAIInterface()->setCurrentAgent(AGENT_NULL);
 			_unit->GetAIInterface()->SetAIState(STATE_IDLE);
 			RemoveAIUpdateEvent();
-			_unit->SetUInt32Value(UNIT_FIELD_POWER, _unit->GetMaxPower(POWER_TYPE_MANA));
+			_unit->SetUInt32Value(UNIT_FIELD_POWER + 1, _unit->GetMaxPower(POWER_TYPE_MANA));
 			// Door opening
 			GameObject* SDoor = NULL;
 			SDoor = _unit->GetMapMgr()->GetInterface()->GetGameObjectNearestCoords(-11190.012f, -1881.016f, 231.95f, 184517);
 			if(SDoor)
-				SDoor->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 34);
+				SDoor->SetUInt32Value(GAMEOBJECT_FLAGS, 34);
 		}
 
 		void OnDied(Unit* mKiller)
@@ -1593,7 +1593,7 @@ class ShadeofAranAI : public CreatureAIScript
 			GameObject* SDoor = NULL;
 			SDoor = _unit->GetMapMgr()->GetInterface()->GetGameObjectNearestCoords(-11190.012f, -1881.016f, 231.95f, 184517);
 			if(SDoor)
-				SDoor->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 34);
+				SDoor->SetUInt32Value(GAMEOBJECT_FLAGS, 34);
 		}
 
 		void OnTargetDied(Unit* mTarget)
@@ -2864,7 +2864,7 @@ class MalchezaarAI : public MoonScriptCreatureAI
 			if(MDoor != NULL)
 			{
 				MDoor->SetState(1);
-				MDoor->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 33);
+				MDoor->SetUInt32Value(GAMEOBJECT_FLAGS, 33);
 			}
 		}
 
@@ -3446,7 +3446,7 @@ class NetherspiteAI : public CreatureAIScript
 			if(NDoor)
 			{
 				NDoor->SetState(1);
-				NDoor->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 33);
+				NDoor->SetUInt32Value(GAMEOBJECT_FLAGS, 33);
 			}
 		}
 

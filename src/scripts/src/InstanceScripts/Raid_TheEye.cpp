@@ -2099,7 +2099,7 @@ class AlarAI : public CreatureAIScript
 			//_unit->SetPosition( fly[11].x, fly[11].y, fly[11].z, fly[11].o);
 			SetPhase(2);
 			_unit->CastSpell(_unit, spells[6].info, spells[6].instant);
-			_unit->SetUInt64Value(UNIT_FIELD_HEALTH, _unit->GetUInt32Value(UNIT_FIELD_MAX_HEALTH));
+			_unit->SetUInt64Value(UNIT_FIELD_HEALTH, _unit->GetUInt32Value(UNIT_FIELD_MAXHEALTH));
 			_unit->setDeathState(ALIVE);
 			_unit->RemoveFlag(OBJECT_FIELD_DYNAMIC_FLAGS, U_DYN_FLAG_TAGGED_BY_OTHER);
 			_unit->SetFlag(OBJECT_FIELD_DYNAMIC_FLAGS, U_DYN_FLAG_LOOTABLE);
@@ -2496,7 +2496,7 @@ class EmberAlarAI : public CreatureAIScript
 			uint32 Phase = Alar->GetBaseMana();
 			if(Phase == 2/*&& Alar->isAlive()*/)
 			{
-				uint32 maxhp = Alar->GetUInt32Value(UNIT_FIELD_MAX_HEALTH);
+				uint32 maxhp = Alar->GetUInt32Value(UNIT_FIELD_MAXHEALTH);
 				Alar->DealDamage(Alar, (maxhp * 3) / 100, 0, 0, 0);
 			}
 		}
@@ -2900,7 +2900,7 @@ class PhoenixAI : public MoonScriptCreatureAI
 		void AIUpdate()
 		{
 			double CurrentHP = (double)_unit->GetUInt32Value(UNIT_FIELD_HEALTH);
-			double PercMaxHP = (double)_unit->GetUInt32Value(UNIT_FIELD_MAX_HEALTH) * 0.05;
+			double PercMaxHP = (double)_unit->GetUInt32Value(UNIT_FIELD_MAXHEALTH) * 0.05;
 			if(CurrentHP > PercMaxHP && IsTimerFinished(mBurnTimer))
 			{
 				_unit->SetHealth((uint32)(CurrentHP - PercMaxHP));

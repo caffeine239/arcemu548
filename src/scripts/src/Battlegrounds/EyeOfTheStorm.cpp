@@ -509,7 +509,7 @@ void EyeOfTheStorm::DropFlag2(Player* plr, uint32 id)
 
 	plr->CastSpell(plr, 42792, true);
 
-	m_dropFlag->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 1);
+	m_dropFlag->SetUInt32Value(GAMEOBJECT_FLAGS, 1);
 	m_dropFlag->PushToWorld(m_mapMgr);
 	m_flagHolder = 0;
 	sEventMgr.AddEvent(this, &EyeOfTheStorm::EventResetFlag, EVENT_EOTS_RESET_FLAG, 10000, 1, EVENT_FLAG_DO_NOT_EXECUTE_IN_WORLD_CONTEXT);
@@ -537,7 +537,7 @@ void EyeOfTheStorm::EventResetFlag()
 		return;
 
 	m_dropFlag->RemoveFromWorld(false);
-	m_dropFlag->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 0);
+	m_dropFlag->SetUInt32Value(GAMEOBJECT_FLAGS, 0);
 	m_standFlag->PushToWorld(m_mapMgr);
 
 	SetWorldState(2757, 1);
@@ -599,10 +599,10 @@ void EyeOfTheStorm::OnCreate()
 		}
 
 		m_bubbles[i]->SetScale(0.1f);
-		m_bubbles[i]->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 1);
-		m_bubbles[i]->SetUInt32Value(GAMEOBJECT_FIELD_FLAGS, 32);
+		m_bubbles[i]->SetByte(GAMEOBJECT_BYTES_1, 0, 1);
+		m_bubbles[i]->SetUInt32Value(GAMEOBJECT_FLAGS, 32);
 		m_bubbles[i]->SetFaction(114);
-		m_bubbles[i]->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 3, 100);
+		m_bubbles[i]->SetByte(GAMEOBJECT_BYTES_1, 3, 100);
 
 		m_bubbles[i]->PushToWorld(m_mapMgr);
 	}
@@ -919,9 +919,9 @@ void EyeOfTheStorm::SpawnBuff(uint32 x)
 
 		EOTSm_buffs[x]->SetParentRotation(2, EOTSBuffRotations[x][0]);
 		EOTSm_buffs[x]->SetParentRotation(3, EOTSBuffRotations[x][1]);
-		EOTSm_buffs[x]->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 0, 1);
+		EOTSm_buffs[x]->SetByte(GAMEOBJECT_BYTES_1, 0, 1);
 		EOTSm_buffs[x]->SetType(GAMEOBJECT_TYPE_TRAP);
-		EOTSm_buffs[x]->SetByte(GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, 3, 100);
+		EOTSm_buffs[x]->SetByte(GAMEOBJECT_BYTES_1, 3, 100);
 		EOTSm_buffs[x]->PushToWorld(m_mapMgr);
 	}
 	else
