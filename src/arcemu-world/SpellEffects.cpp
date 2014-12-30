@@ -3829,7 +3829,7 @@ void Spell::SpellEffectAddFarsight(uint32 i) // Add Farsight
 	}
 	*/
 	dynObj->SetUInt32Value(OBJECT_FIELD_TYPE, 65);
-	dynObj->SetUInt32Value(DYNAMICOBJECT_BYTES, 0x80000002);
+	dynObj->SetUInt32Value(DYNAMICOBJECT_FIELD_TYPE_AND_VISUAL_ID, 0x80000002);
 	dynObj->SetInstanceID(p_caster->GetInstanceID());
 	p_caster->SetFarsightTarget(dynObj->GetGUID());
 

@@ -914,6 +914,24 @@ enum School
     SCHOOL_COUNT
 };
 
+enum UnitMoveType
+{
+	MOVE_WALK = 0,
+	MOVE_RUN = 1,
+	MOVE_RUN_BACK = 2,
+	MOVE_SWIM = 3,
+	MOVE_SWIM_BACK = 4,
+	MOVE_TURN_RATE = 5,
+	MOVE_FLIGHT = 6,
+	MOVE_FLIGHT_BACK = 7,
+	MOVE_PITCH_RATE = 8
+};
+
+#define MAX_MOVE_TYPE     9
+
+extern float baseMoveSpeed[MAX_MOVE_TYPE];
+extern float playerBaseMoveSpeed[MAX_MOVE_TYPE];
+
 #define UNIT_SUMMON_SLOTS 6
 
 typedef std::list<struct ProcTriggerSpellOnSpell> ProcTriggerSpellOnSpellList;
@@ -932,7 +950,7 @@ class SERVER_DECL CombatStatusHandler
 		Unit* m_Unit;
 		bool m_lastStatus;
 		AttackerMap m_attackTargets;
-		uint64 m_primaryAttackTarget;
+		uint64 m_primaryAttackTarget;		
 
 	public:
 		CombatStatusHandler() : m_lastStatus(false), m_primaryAttackTarget(0) {}
@@ -962,6 +980,7 @@ class SERVER_DECL CombatStatusHandler
 		void SetUnit(Unit* p) { m_Unit = p; }
 		void TryToClearAttackTargets();									// for pvp timeout
 		void AttackersForgetHate();										// used right now for Feign Death so attackers go home
+		
 
 	protected:
 		bool InternalIsInCombat();										// called by UpdateFlag, do not call from anything else!
@@ -1028,6 +1047,7 @@ class SERVER_DECL Unit : public Object
 		uint32 getClassMask() { return 1 << (getClass() - 1); }
 		uint32 getRaceMask() { return 1 << (getRace() - 1); }
 		uint8 getStandState() { return ((uint8)m_uint32Values[UNIT_FIELD_ANIM_TIER]); }
+		float GetSpeed(UnitMoveType mtype) const;
 
 		//// Combat
 		uint32 GetSpellDidHitResult(Unit* pVictim, uint32 weapon_damage_type, SpellEntry* ability);
@@ -1039,6 +1059,7 @@ class SERVER_DECL Unit : public Object
 		float GetCriticalDamageBonusForSpell(Object* victim, SpellEntry* spell, float amount);
 		bool IsCriticalHealForSpell(Object* victim, SpellEntry* spell);
 		float GetCriticalHealBonusForSpell(Object* victim, SpellEntry* spell, float amount);
+		Unit* GetVictim() const { return m_victim; }
 
 		void RemoveExtraStrikeTarget(SpellEntry* spell_info);
 		void AddExtraStrikeTarget(SpellEntry* spell_info, uint32 charges);
@@ -1914,6 +1935,8 @@ class SERVER_DECL Unit : public Object
 		void RemoveGarbage();
 		void AddGarbageAura(Aura* aur);
 		void AddGarbageSpell(Spell* sp);
+		Unit* const m_attacker;
+		Unit* const m_victim;
 
 		uint32 m_meleespell;
 		uint8 m_meleespell_ecn; // extra_cast_number

@@ -68,6 +68,7 @@ enum TYPE
     TYPE_AREATRIGGER	= 512,
 };
 
+
 enum TYPEID
 {
     TYPEID_OBJECT		= 0,
@@ -273,6 +274,7 @@ class SERVER_DECL Object : public EventableObject
 		bool IsGameObject() { return m_objectTypeId == TYPEID_GAMEOBJECT; }
 		bool IsCorpse() { return m_objectTypeId == TYPEID_CORPSE; }
 		bool IsContainer() { return m_objectTypeId == TYPEID_CONTAINER; }
+		bool isType(uint16 mask) const { return (mask & m_objectType); }
 
 		//! This includes any nested objects we have, inventory for example.
 		virtual uint32  BuildCreateUpdateBlockForPlayer(ByteBuffer* data, Player* target);
@@ -369,6 +371,25 @@ class SERVER_DECL Object : public EventableObject
 		void ModSignedInt32Value(uint32 index, int32 value);
 		void ModUnsigned32Value(uint32 index, int32 mod);
 		uint32 GetModPUInt32Value(const uint32 index, const int32 value);
+
+		Player* ToPlayer() { if (GetTypeId() == TYPEID_PLAYER) return reinterpret_cast<Player*>(this); else return NULL; }
+		Player const* ToPlayer() const { if (GetTypeId() == TYPEID_PLAYER) return reinterpret_cast<Player const*>(this); else return NULL; }
+
+		Creature* ToCreature() { if (GetTypeId() == TYPEID_UNIT) return reinterpret_cast<Creature*>(this); else return NULL; }
+		Creature const* ToCreature() const { if (GetTypeId() == TYPEID_UNIT) return reinterpret_cast<Creature const*>(this); else return NULL; }
+
+		Unit* ToUnit() { if (isType(TYPE_UNIT)) return reinterpret_cast<Unit*>(this); else return NULL; }
+		Unit const* ToUnit() const { if (isType(TYPE_UNIT)) return reinterpret_cast<Unit const*>(this); else return NULL; }
+
+		GameObject* ToGameObject() { if (GetTypeId() == TYPEID_GAMEOBJECT) return reinterpret_cast<GameObject*>(this); else return NULL; }
+		GameObject const* ToGameObject() const { if (GetTypeId() == TYPEID_GAMEOBJECT) return reinterpret_cast<GameObject const*>(this); else return NULL; }
+
+		Corpse* ToCorpse() { if (GetTypeId() == TYPEID_CORPSE) return reinterpret_cast<Corpse*>(this); else return NULL; }
+		Corpse const* ToCorpse() const { if (GetTypeId() == TYPEID_CORPSE) return reinterpret_cast<Corpse const*>(this); else return NULL; }
+
+		DynamicObject* ToDynObject() { if (GetTypeId() == TYPEID_DYNAMICOBJECT) return reinterpret_cast<DynamicObject*>(this); else return NULL; }
+		DynamicObject const* ToDynObject() const { if (GetTypeId() == TYPEID_DYNAMICOBJECT) return reinterpret_cast<DynamicObject const*>(this); else return NULL; }
+
 
 		//! Set uint32 property
 		void SetByte(uint32 index, uint32 index1, uint8 value);
@@ -721,6 +742,8 @@ class SERVER_DECL Object : public EventableObject
 		//! Create updates that player will see
 		void _BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2, Player* target);
 		void _BuildValuesUpdate(ByteBuffer* data, UpdateMask* updateMask, Player* target);
+
+		uint16 m_objectType;
 
 		//! WoWGuid class
 		WoWGuid m_wowGuid;

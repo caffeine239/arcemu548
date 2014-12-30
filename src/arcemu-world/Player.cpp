@@ -3764,7 +3764,7 @@ void Player::_LoadQuestLogEntry(QueryResult* result)
 	// clear all fields
 	for (int i = 0; i < 25; ++i)
 	{
-		baseindex = PLAYER_QUEST_LOG_1_1 + (i * 5);
+		baseindex = PLAYER_FIELD_QUEST_LOG + (i * 5);
 		SetUInt32Value(baseindex + 0, 0);
 		SetUInt32Value(baseindex + 1, 0);
 		SetUInt64Value(baseindex + 2, 0);
@@ -5646,7 +5646,7 @@ void Player::UpdateStats()
 
 	uint32 hp = GetBaseHealth();
 
-	int32 stat_bonus = GetUInt32Value(UNIT_FIELD_POSSTAT2) - GetUInt32Value(UNIT_FIELD_NEGSTAT2);
+	int32 stat_bonus = GetUInt32Value(UNIT_FIELD_STAT_POS_BUFF + 2) - GetUInt32Value(UNIT_FIELD_STAT_NEG_BUFF + 2);
 	if (stat_bonus < 0)
 		stat_bonus = 0; // Avoid of having negative health
 	int32 bonus = stat_bonus * 10 + m_healthfromspell + m_healthfromitems;

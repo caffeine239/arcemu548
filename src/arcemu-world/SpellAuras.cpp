@@ -3536,12 +3536,12 @@ void Aura::SpellAuraModIncreaseEnergy(bool apply)
 	else if(powerType == POWER_TYPE_RAGE) // Rage
 	{
 		powerField = UNIT_FIELD_POWER + 1;
-		maxField = UNIT_FIELD_MAXPOWER2;
+		maxField = UNIT_FIELD_MAX_POWER + 1;
 	}
 	else if(powerType == POWER_TYPE_ENERGY) // Energy
 	{
 		powerField = UNIT_FIELD_POWER + 3;
-		maxField = UNIT_FIELD_MAXPOWER4;
+		maxField = UNIT_FIELD_MAX_POWER + 3;
 	}
 	else // Capt: if we can not use identify the type: do nothing
 		return; */

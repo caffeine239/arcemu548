@@ -64,13 +64,13 @@ void DynamicObject::Create(Unit* caster, Spell* pSpell, float x, float y, float 
 		p_caster = pSpell->p_caster;
 
 	m_spellProto = pSpell->GetProto();
-	SetUInt64Value(DYNAMICOBJECT_CASTER, caster->GetGUID());
+	SetUInt64Value(DYNAMICOBJECT_FIELD_CASTER, caster->GetGUID());
 
 	SetEntry(m_spellProto->Id);
-	m_uint32Values[DYNAMICOBJECT_BYTES] = 0x01eeeeee;
-	m_uint32Values[DYNAMICOBJECT_SPELLID] = m_spellProto->Id;
+	m_uint32Values[DYNAMICOBJECT_FIELD_TYPE_AND_VISUAL_ID] = 0x01eeeeee;
+	m_uint32Values[DYNAMICOBJECT_FIELD_SPELL_ID] = m_spellProto->Id;
 
-	m_floatValues[DYNAMICOBJECT_RADIUS] = radius;
+	m_floatValues[DYNAMICOBJECT_FIELD_RADIUS] = radius;
 	m_position.x = x; //m_floatValues[DYNAMICOBJECT_POS_X]  = x;
 	m_position.y = y; //m_floatValues[DYNAMICOBJECT_POS_Y]  = y;
 	m_position.z = z; //m_floatValues[DYNAMICOBJECT_POS_Z]  = z;
@@ -122,7 +122,7 @@ void DynamicObject::UpdateTargets()
 		Unit* target;
 		Aura* pAura;
 
-		float radius = m_floatValues[ DYNAMICOBJECT_RADIUS ] * m_floatValues[ DYNAMICOBJECT_RADIUS ];
+		float radius = m_floatValues[ DYNAMICOBJECT_FIELD_RADIUS ] * m_floatValues[ DYNAMICOBJECT_FIELD_RADIUS ];
 
 		// Looking for targets in the Object set
 		for(std::set< Object* >::iterator itr = m_objectsInRange.begin(); itr != m_objectsInRange.end(); ++itr)

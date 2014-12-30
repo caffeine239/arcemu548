@@ -1005,7 +1005,7 @@ void Group::UpdateAllOutOfRangePlayersFor(Player* pPlayer)
 					hisMask.Clear();
 					myMask.Clear();
 					u1 = u2 = false;
-					for(uint32 j = PLAYER_QUEST_LOG_1_1; j <= PLAYER_QUEST_LOG_25_5; ++j)
+					for (uint32 j = PLAYER_FIELD_QUEST_LOG; j <= PLAYER_FIELD_QUEST_LOG + 0x4F; ++j)
 					{
 						if(plr->GetUInt32Value(j))
 						{
@@ -1062,11 +1062,11 @@ void Group::HandleUpdateFieldChange(uint32 Index, Player* pPlayer)
 			Flags = GROUP_UPDATE_FLAG_POWER;
 			break;
 
-		case UNIT_FIELD_MAXPOWER1:
-		case UNIT_FIELD_MAXPOWER2:
-		case UNIT_FIELD_MAXPOWER3:
-		case UNIT_FIELD_MAXPOWER4:
-		case UNIT_FIELD_MAXPOWER5: //runicpower in cata?
+		case UNIT_FIELD_MAX_POWER:
+		case UNIT_FIELD_MAX_POWER + 1:
+		case UNIT_FIELD_MAX_POWER + 2:
+		case UNIT_FIELD_MAX_POWER + 3:
+		case UNIT_FIELD_MAX_POWER + 4: //runicpower in cata?
 			Flags = GROUP_UPDATE_FLAG_MAXPOWER;
 			break;
 

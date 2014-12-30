@@ -481,7 +481,7 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 		Unit const* self = ToUnit();
 		ObjectGuid guid = GetGUID();
 
-		hasFallDirection = self->HasUnitMovementFlag(MOVEMENTFLAG_FALLING);
+		hasFallDirection = self->HasUnitMovementFlag(MOVEFLAG_FALLING);
 		hasFallData = hasFallDirection || self->m_movementInfo.jump.fallTime != 0;
 		movementFlags = self->GetUnitMovementFlags();
 		movementFlagsExtra = self->GetExtraUnitMovementFlags();

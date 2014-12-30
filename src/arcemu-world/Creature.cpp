@@ -939,7 +939,7 @@ void Creature::CalcStat(uint32 type)
 			{
 				//Health
 				uint32 hp = GetBaseHealth();
-				uint32 stat_bonus = GetUInt32Value(UNIT_FIELD_POSSTAT2) - GetUInt32Value(UNIT_FIELD_NEGSTAT2);
+				uint32 stat_bonus = GetUInt32Value(UNIT_FIELD_STAT_POS_BUFF + 2) - GetUInt32Value(UNIT_FIELD_STAT_NEG_BUFF + 2);
 				if(static_cast<int32>(stat_bonus) < 0) stat_bonus = 0;
 
 				uint32 bonus = stat_bonus * 10 + m_healthfromspell;
@@ -956,7 +956,7 @@ void Creature::CalcStat(uint32 type)
 				if(GetPowerType() == POWER_TYPE_MANA)
 				{
 					uint32 mana = GetBaseMana();
-					uint32 stat_bonus = (GetUInt32Value(UNIT_FIELD_POSSTAT3) - GetUInt32Value(UNIT_FIELD_NEGSTAT3));
+					uint32 stat_bonus = (GetUInt32Value(UNIT_FIELD_STAT_POS_BUFF + 3) - GetUInt32Value(UNIT_FIELD_STAT_NEG_BUFF + 3));
 					if(static_cast<int32>(stat_bonus) < 0) stat_bonus = 0;
 
 					uint32 bonus = stat_bonus * 15;
@@ -1783,8 +1783,8 @@ void Creature::SetGuardWaypoints()
 		wp->backwardemoteoneshot = false;
 		wp->forwardemoteid = 0;
 		wp->forwardemoteoneshot = false;
-		wp->backwardskinid = m_uint32Values[UNIT_FIELD_NATIVEDISPLAYID];
-		wp->forwardskinid = m_uint32Values[UNIT_FIELD_NATIVEDISPLAYID];
+		wp->backwardskinid = m_uint32Values[UNIT_FIELD_NATIVE_DISPLAY_ID];
+		wp->forwardskinid = m_uint32Values[UNIT_FIELD_NATIVE_DISPLAY_ID];
 		GetAIInterface()->addWayPoint(wp);
 	}
 }
