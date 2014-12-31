@@ -194,16 +194,48 @@ uint32 Object::BuildCreateUpdateBlockForPlayer(ByteBuffer* data, Player* target)
 WorldPacket* Object::BuildFieldUpdatePacket(uint32 index, uint32 value)
 {
 	WorldPacket * packet = new WorldPacket(SMSG_UPDATE_OBJECT, 1500);
+
+	ASSERT(packet->empty());                                // shouldn't happen
+	packet->Initialize(SMSG_UPDATE_OBJECT);
+
+	*packet << uint16(GetMapId());
+	*packet << uint32(m_blockCount + (m_outOfRangeGUIDs.empty() ? 0 : 1));
+
+	if (!m_outOfRangeGUIDs.empty())
+	{
+		*packet << uint8(UPDATETYPE_OUT_OF_RANGE_OBJECTS);
+		*packet << uint32(m_outOfRangeGUIDs.size());
+
+		for (std::set<uint64>::const_iterator i = m_outOfRangeGUIDs.begin(); i != m_outOfRangeGUIDs.end(); ++i)
+			packet->appendPackGUID(*i);
+	}
+
+	packet->append(m_data);
+	BuildFieldUpdatePacket(packet, index, value);
+	return packet;
+
+	/*WorldPacket * packet = new WorldPacket(SMSG_UPDATE_OBJECT, 1500);
 	*packet << uint16(GetMapId());
 	*packet << (uint32)1;//number of update/create blocks
 	BuildFieldUpdatePacket(packet, index, value);
-	return packet;
+	return packet;*/
 }
 
 void Object::BuildFieldUpdatePacket(Player* Target, uint32 Index, uint32 Value)
 {
 	ByteBuffer buf(500);
-	BuildFieldUpdatePacket(&buf, Index, Value);
+	buf << uint8(UPDATETYPE_VALUES);
+	buf << GetNewGUID();
+
+	uint32 mBlocks = Index / 32 + 1;
+	buf << (uint8)mBlocks;
+
+	for (uint32 dword_n = mBlocks - 1; dword_n; dword_n--)
+		buf << (uint32)0;
+
+	buf << (((uint32)(1)) << (Index % 32));
+	buf << Value;
+
 	Target->PushUpdateData(&buf, 1);
 }
 
@@ -277,19 +309,19 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 {
 	uint16 moveflags2 = 0;
 	//bool hasTransport = transporter_info.guid;
-	bool hasTransport = flags & UPDATEFLAG_TRANSPORT;
+	bool hasTransport = transporter_info.guid; // flags & UPDATEFLAG_TRANSPORT;
 	bool isSplineEnabled = false; // spline not supported
 	//bool hasPitch = (flags2 & (0x00100000) || (moveflags2 & 0x0010));
-	bool hasPitch = (flags2 & (MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING)) || (moveflags2 & MOVEFLAG2_ALLOW_PITCHING); // (hasPitch == swimming) flags2 & (MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING)) || (moveflags2 & MOVEMENTFLAG2_ALWAYS_ALLOW_PITCHING)
-	bool haveFallData; // = flags2 & MOVEFLAG2_INTERPOLATED_TURNING;
-	bool hasFallDirection = flags & MOVEMENTFLAG_FALLING;
+	bool hasPitch = false; // (flags2 & (MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING)) || (moveflags2 & MOVEFLAG2_ALLOW_PITCHING); // (hasPitch == swimming) flags2 & (MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING)) || (moveflags2 & MOVEMENTFLAG2_ALWAYS_ALLOW_PITCHING)
+	bool haveFallData = false; //; // = flags2 & MOVEFLAG2_INTERPOLATED_TURNING;
+	bool hasFallDirection = false; // flags & MOVEMENTFLAG_FALLING;
 	bool hasElevation = false; //flags & 0x02000000; // MOVEMENTFLAG_SPLINE_ELEVATION, I think flags(1); 2: spline not supported/enabled
 	bool hasOrientation = GetTypeId() != TYPEID_ITEM && GetTypeId() != TYPEID_CONTAINER;
 	//bool hasVehicle = false; //flags & UPDATEFLAG_VEHICLE;
 	//bool hasAnimKits = false; //flags & UPDATEFLAG_ANIMKITS;
 	bool hasLiving = flags & UPDATEFLAG_LIVING;
 	bool hasStacionaryPostion = flags & 0x0040;
-	bool hasGobjectRotation = flags & UPDATEFLAG_ROTATION;
+	bool hasGobjectRotation = false; // flags & UPDATEFLAG_ROTATION;
 	bool hasTransportPosition = false; // flags & UPDATEFLAG_GO_TRANSPORT_POSITION;
 	bool hasTarget = flags & UPDATEFLAG_HAS_TARGET;
 	bool hasVehicle = false; //flags & UPDATEFLAG_VEHICLE;
@@ -299,31 +331,28 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 
 	data->WriteBit(0);
 	data->WriteBit(hasAnimKits);
-	data->WriteBit(hasLiving);
+	data->WriteBit(flags & UPDATEFLAG_LIVING);
 	data->WriteBit(0);
 	data->WriteBit(0);
 	data->WriteBits(0, 22);
 	data->WriteBit(hasVehicle);
 	data->WriteBit(0);
 	data->WriteBit(0);
-	data->WriteBit(0);
-	data->WriteBit(hasGobjectRotation);
+	data->WriteBit(flags & UPDATEFLAG_TRANSPORT);
+	data->WriteBit(flags & UPDATEFLAG_ROTATION);
 	data->WriteBit(0);
 	data->WriteBit(flags & UPDATEFLAG_SELF);
-	data->WriteBit(hasTarget);
+	data->WriteBit(flags & UPDATEFLAG_HAS_TARGET);
 	data->WriteBit(0);
 	data->WriteBit(0);
 	data->WriteBit(0);
 	data->WriteBit(0);
-	data->WriteBit(hasTransportPosition);
+	data->WriteBit(flags & UPDATEFLAG_POSITION);
 	data->WriteBit(0);
-	data->WriteBit(hasStacionaryPostion);
+	data->WriteBit(flags & UPDATEFLAG_HAS_POSITION);
 
 
-	if (flags & UPDATEFLAG_LIVING)  // UPDATEFLAG_LIVING
-	{
-		haveFallData = hasFallDirection; // || self->m_movementInfo.jump.fallTime != 0;
-		Player* pThis = NULL;
+Player* pThis = NULL;
 		MovementInfo* moveinfo = NULL;
 		if (IsPlayer())
 		{
@@ -340,6 +369,12 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 		if (IsCreature())
 			uThis = TO< Creature* >(this);
 
+
+	if (flags & UPDATEFLAG_LIVING)  // UPDATEFLAG_LIVING
+	{
+		haveFallData = hasFallDirection; // || self->m_movementInfo.jump.fallTime != 0;
+		
+
 		if (pThis && pThis->transporter_info.guid != 0)
 			flags2 |= MOVEMENTFLAG_DISABLE_GRAVITY; // MOVEMENTFLAG_DISABLE_GRAVITY
 		else if (uThis != NULL && transporter_info.guid != 0 && uThis->transporter_info.guid != 0)
@@ -353,24 +388,25 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 		if (GetTypeId() == TYPEID_UNIT)
 			flags2 &= MOVEMENTFLAG_MASK_CREATURE_ALLOWED;
 
-		ObjectGuid guid = GetGUID();
+		uint8 plrGuid[8];
+		*(uint64*)plrGuid = GetGUID();
 
-		data->WriteBit(guid[2]);
+		data->WriteBit(plrGuid[2]);
 		data->WriteBit(0);
 		data->WriteBit(1);
 		data->WriteBit(0);
 		data->WriteBit(0);
 
 		data->WriteBit(0);
-		data->WriteBit(guid[6]);
-		data->WriteBit(guid[4]);
-		data->WriteBit(guid[3]);
+		data->WriteBit(plrGuid[6]);
+		data->WriteBit(plrGuid[4]);
+		data->WriteBit(plrGuid[3]);
 
 		/// If eq 0 so we put 1 so the bit is inverted
 		data->WriteBit(G3D::fuzzyEq(GetOrientation(), 0.0f));
 
 		data->WriteBit(1);
-		data->WriteBit(guid[5]);
+		data->WriteBit(plrGuid[5]);
 		data->WriteBits(0, 22); // Forces
 		data->WriteBit(!flags2);
 		data->WriteBits(0, 19);
@@ -382,9 +418,9 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 		data->WriteBit(1); // !ReadFloat
 		data->WriteBit(0); // hasSpline
 		data->WriteBit(0);
-		data->WriteBit(guid[0]);
-		data->WriteBit(guid[7]);
-		data->WriteBit(guid[1]);
+		data->WriteBit(plrGuid[0]);
+		data->WriteBit(plrGuid[7]);
+		data->WriteBit(plrGuid[1]);
 
 		data->WriteBit(!moveflags2);
 
@@ -413,17 +449,19 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 
 	if (flags & UPDATEFLAG_LIVING)  // UPDATEFLAG_LIVING
 	{
-		ObjectGuid guid = GetGUID();
+		uint8 plrGuid[8];
+		*(uint64*)plrGuid = GetGUID();
+		LOG_ERROR("flags & UPDATEFLAG_LIVING AND YOUR guid IS %u ", plrGuid);
 
 		// Transport Here
 
-		data->WriteByteSeq(guid[4]);
+		data->WriteByteSeq(plrGuid[4]);
 
 		//if (hasSpline)
 		//    Movement::PacketBuilder::WriteCreateData(*self->movespline, *data);
 
 		*data << m_flySpeed;
-		data->WriteByteSeq(guid[2]);
+		data->WriteByteSeq(plrGuid[2]);
 
 		if (haveFallData)
 		{
@@ -438,11 +476,11 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 			*data << (float)0; // velocity
 		}
 
-		data->WriteByteSeq(guid[1]);
+		data->WriteByteSeq(plrGuid[1]);
 		*data << m_turnRate;
 		*data << uint32(0);
 		*data << m_swimSpeed;
-		data->WriteByteSeq(guid[7]);
+		data->WriteByteSeq(plrGuid[7]);
 		*data << float(8);
 		*data << float(m_position.x);
 
@@ -456,10 +494,10 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 
 		*data << float(m_position.y);
 		*data << m_backFlySpeed;
-		data->WriteByteSeq(guid[3]);
-		data->WriteByteSeq(guid[5]);
-		data->WriteByteSeq(guid[6]);
-		data->WriteByteSeq(guid[0]);
+		data->WriteByteSeq(plrGuid[3]);
+		data->WriteByteSeq(plrGuid[5]);
+		data->WriteByteSeq(plrGuid[6]);
+		data->WriteByteSeq(plrGuid[0]);
 		*data << m_backWalkSpeed;
 
 		if (m_runSpeed == 0)
@@ -648,10 +686,10 @@ void Object::_BuildValuesUpdate(ByteBuffer* data, UpdateMask* updateMask, Player
 
 	if (activate_quest_object)
 	{
-		oldflags = m_uint32Values[GAMEOBJECT_FIELD_PERCENT_HEALTH];
-		if (!updateMask->GetBit(GAMEOBJECT_FIELD_PERCENT_HEALTH))
-			updateMask->SetBit(GAMEOBJECT_FIELD_PERCENT_HEALTH);
-		m_uint32Values[GAMEOBJECT_FIELD_PERCENT_HEALTH] = 1 | 8; // 8 to show sparkles
+		oldflags = m_uint32Values[8+8];
+		if (!updateMask->GetBit(8+8))
+			updateMask->SetBit(8+8);
+		m_uint32Values[8+8] = 1 | 8; // 8 to show sparkles
 		reset = true;
 	}
 
@@ -689,7 +727,7 @@ void Object::_BuildValuesUpdate(ByteBuffer* data, UpdateMask* updateMask, Player
 			m_uint32Values[OBJECT_FIELD_DYNAMIC_FLAGS] = oldflags;
 			break;
 		case TYPEID_GAMEOBJECT:
-			m_uint32Values[GAMEOBJECT_FIELD_PERCENT_HEALTH] = oldflags;
+			m_uint32Values[8+8] = oldflags;
 			break;
 		}
 	}
@@ -2347,7 +2385,7 @@ void Object::SendAIReaction(uint32 reaction)
 void Object::SendDestroyObject()
 {
 	Player* target;
-	bool onDeath;
+	bool onDeath = false;
 
 	ASSERT(target);
 
@@ -2377,7 +2415,7 @@ void Object::SendDestroyObject()
 	data.WriteByteSeq(guid[1]);
 	data.WriteByteSeq(guid[5]);
 
-	LOG_ERROR("DESTROYED OBJECT : %u", guid);
+	LOG_ERROR("DESTROYED OBJECT : %u", GetGUID());
 
 	target->GetSession()->SendPacket(&data);
 	SendMessageToSet(&data, false);

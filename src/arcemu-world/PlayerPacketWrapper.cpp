@@ -46,11 +46,11 @@ void Player::SendPetUntrainConfirm()
 
 void Player::SendWorldStateUpdate(uint32 WorldState, uint32 Value)
 {
-	WorldPacket data(SMSG_UPDATE_WORLD_STATE, 8);
+	WorldPacket data(SMSG_UPDATE_WORLD_STATE, 4 + 4 + 1);
 
-	data << uint32(WorldState);
+	data.WriteBit(0);
 	data << uint32(Value);
-
+	data << uint32(WorldState);
 	m_session->SendPacket(&data);
 }
 
@@ -799,4 +799,5 @@ void Player::SendInitialWorldstates(){
 	/*WorldPacket data( SMSG_INIT_WORLD_STATES, 100 );
 	m_mapMgr->GetWorldStatesHandler().BuildInitWorldStatesForZone( m_zoneId, m_AreaID, data );
 	m_session->SendPacket( &data );*/
+
 }

@@ -29,7 +29,7 @@
 enum Opcodes
 {
 	MSG_NULL_ACTION = 0x000,
-	CMSG_BOOTME = 0xBAD,
+	CMSG_BOOTME = 0x10B3,
 	CMSG_DBLOOKUP = 0xBAD,
 	SMSG_DBLOOKUP = 0xBAD,
 	CMSG_QUERY_OBJECT_POSITION = 0xBAD,
@@ -329,7 +329,7 @@ enum Opcodes
 	CMSG_SET_TRADE_GOLD = 0x11F,	// implemented
 	SMSG_TRADE_STATUS = 0x120,	// implemented
 	SMSG_TRADE_STATUS_EXTENDED = 0x121,	// implemented
-	SMSG_INITIALIZE_FACTIONS = 0x4634,	// 15595
+	SMSG_INITIALIZE_FACTIONS = 0x0AAA,	// 5.4.8 18414
 	SMSG_SET_FACTION_VISIBLE = 0x123,	// implemented
 	SMSG_SET_FACTION_STANDING = 0x124,	// implemented
 	CMSG_SET_FACTION_ATWAR = 0x125,	// implemented
@@ -745,8 +745,8 @@ enum Opcodes
 	CMSG_SET_ACTIONBAR_TOGGLES = 0x2BF,	// implemented
 	UMSG_DELETE_GUILD_CHARTER = 0x2C0,	// not used in client
 	MSG_PETITION_RENAME = 0x2C1,	// implemented
-	SMSG_INIT_WORLD_STATES = 0x2C2,	// implemented
-	SMSG_UPDATE_WORLD_STATE = 0x2C3,	// implemented
+	SMSG_INIT_WORLD_STATES = 0x1560,	// 5.4.8 18414
+	SMSG_UPDATE_WORLD_STATE = 0x121B,	// 5.4.8 18414
 	CMSG_ITEM_NAME_QUERY = 0x2C4,	// implemented
 	SMSG_ITEM_NAME_QUERY_RESPONSE = 0x2C5,	// implemented
 	SMSG_PET_ACTION_FEEDBACK = 0x2C6,	// implemented
@@ -795,7 +795,7 @@ enum Opcodes
 	SMSG_PET_UNLEARN_CONFIRM = 0x2F1,	// implemented
 	SMSG_PARTY_MEMBER_STATS_FULL = 0x2F2,	// implemented
 	CMSG_PET_SPELL_AUTOCAST = 0x2F3,	// implemented
-	SMSG_WEATHER = 0x2904,	// 15595       NOT UPDATED!!!!
+	SMSG_WEATHER = 0x06AB,	// 5.4.8 18414
 	SMSG_PLAY_TIME_WARNING = 0x2F5,	/// TODO: implement (exist only in china).
 	SMSG_MINIGAME_SETUP = 0x2F6,	/// TODO: implement
 	SMSG_MINIGAME_STATE = 0x2F7,	/// TODO: implement

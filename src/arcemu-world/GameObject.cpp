@@ -700,12 +700,12 @@ void GameObject::ExpireAndDelete()
 //! Deactivates selected gameobject ex. stops doors from opening/closing.
 void GameObject::Deactivate()
 {
-	SetUInt32Value(GAMEOBJECT_FIELD_PERCENT_HEALTH, 0);
+	SetUInt32Value(8+8, 0);
 }
 
 void GameObject::Activate()
 {
-	SetUInt32Value(GAMEOBJECT_FIELD_PERCENT_HEALTH, 1);
+	SetUInt32Value(8+8, 1);
 }
 
 void GameObject::CallScriptUpdate()

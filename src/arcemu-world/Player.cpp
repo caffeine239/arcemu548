@@ -1861,8 +1861,12 @@ void Player::smsg_InitialSpells()
 	size_t pos;
 
 	WorldPacket data(SMSG_INITIAL_SPELLS, 5 + (spellCount * 4) + (itemCount * 4));
-	data << uint8(0);
-	data << uint16(spellCount); // spell count
+	data.WriteBit(0);
+
+	size_t bitPos = data.bitwpos();
+	data.WriteBits(0, 22); // spell count placeholder
+
+	data.FlushBits();
 
 	SpellSet::iterator sitr;
 	for (sitr = mSpells.begin(); sitr != mSpells.end(); ++sitr)
@@ -1870,10 +1874,13 @@ void Player::smsg_InitialSpells()
 		// todo: check out when we should send 0x0 and when we should send 0xeeee
 		// this is not slot, values is always eeee or 0, seems to be cooldown
 		data << uint32(*sitr);				   // spell id
-		data << uint16(0x0000);
+		//data << uint16(0x0000);
 	}
 
-	pos = data.wpos();
+	data.PutBits(bitPos, spellCount, 22);
+	data.FlushBits();
+
+	/*pos = data.wpos();
 	data << uint16(0);		// placeholder
 
 	itemCount = 0;
@@ -1931,8 +1938,9 @@ void Player::smsg_InitialSpells()
 	GetSession()->SendPacket(&data);
 
 	uint32 v = 0;
-	GetSession()->OutPacket(0x041d, 4, &v);
+	GetSession()->OutPacket(0x041d, 4, &v);*/
 	//Log::getSingleton( ).outDetail( "CHARACTER: Sent Initial Spells" );
+	GetSession()->SendPacket(&data);
 }
 
 void Player::smsg_TalentsInfo(bool SendPetTalents)
@@ -2902,6 +2910,7 @@ void Player::RemovePendingPlayer()
 {
 	if (m_session)
 	{
+		LOG_ERROR("character login failed");
 		uint8 respons = E_CHAR_LOGIN_NO_CHARACTER;
 		m_session->OutPacket(SMSG_CHARACTER_LOGIN_FAILED, 1, &respons);
 		m_session->m_loggingInPlayer = NULL;
@@ -6551,12 +6560,12 @@ bool Player::removeDeletedSpell(uint32 SpellID)
 
 void Player::EventActivateGameObject(GameObject* obj)
 {
-	obj->BuildFieldUpdatePacket(this, GAMEOBJECT_FIELD_PERCENT_HEALTH, 1 | 8);
+	obj->BuildFieldUpdatePacket(this, 8+8, 1 | 8);
 }
 
 void Player::EventDeActivateGameObject(GameObject* obj)
 {
-	obj->BuildFieldUpdatePacket(this, GAMEOBJECT_FIELD_PERCENT_HEALTH, 0);
+	obj->BuildFieldUpdatePacket(this, 8+8, 0);
 }
 
 void Player::EventTimedQuestExpire(uint32 questid){

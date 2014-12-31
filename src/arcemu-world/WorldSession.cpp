@@ -554,6 +554,10 @@ void WorldSession::InitPacketHandlerTable()
 	    &WorldSession::HandlePlayerLoginOpcode;
 	WorldPacketHandlers[CMSG_PLAYER_LOGIN].status = STATUS_AUTHED;
 
+	WorldPacketHandlers[CMSG_OBJECT_UPDATE_FAILED].handler =
+		&WorldSession::HandleObjectUpdateFailedOpcode;
+	WorldPacketHandlers[CMSG_OBJECT_UPDATE_FAILED].status = STATUS_AUTHED;
+	
 	WorldPacketHandlers[CMSG_REALM_SPLIT].handler =
 	    &WorldSession::HandleRealmSplitOpcode;
 	WorldPacketHandlers[CMSG_REALM_SPLIT].status = STATUS_AUTHED;
