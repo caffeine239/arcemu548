@@ -388,25 +388,24 @@ Player* pThis = NULL;
 		if (GetTypeId() == TYPEID_UNIT)
 			flags2 &= MOVEMENTFLAG_MASK_CREATURE_ALLOWED;
 
-		uint8 plrGuid[8];
-		*(uint64*)plrGuid = GetGUID();
+		ObjectGuid guid = GetGUID();
 
-		data->WriteBit(plrGuid[2]);
+		data->WriteBit(guid[2]);
 		data->WriteBit(0);
 		data->WriteBit(1);
 		data->WriteBit(0);
 		data->WriteBit(0);
 
 		data->WriteBit(0);
-		data->WriteBit(plrGuid[6]);
-		data->WriteBit(plrGuid[4]);
-		data->WriteBit(plrGuid[3]);
+		data->WriteBit(guid[6]);
+		data->WriteBit(guid[4]);
+		data->WriteBit(guid[3]);
 
 		/// If eq 0 so we put 1 so the bit is inverted
 		data->WriteBit(G3D::fuzzyEq(GetOrientation(), 0.0f));
 
 		data->WriteBit(1);
-		data->WriteBit(plrGuid[5]);
+		data->WriteBit(guid[5]);
 		data->WriteBits(0, 22); // Forces
 		data->WriteBit(!flags2);
 		data->WriteBits(0, 19);
@@ -418,9 +417,9 @@ Player* pThis = NULL;
 		data->WriteBit(1); // !ReadFloat
 		data->WriteBit(0); // hasSpline
 		data->WriteBit(0);
-		data->WriteBit(plrGuid[0]);
-		data->WriteBit(plrGuid[7]);
-		data->WriteBit(plrGuid[1]);
+		data->WriteBit(guid[0]);
+		data->WriteBit(guid[7]);
+		data->WriteBit(guid[1]);
 
 		data->WriteBit(!moveflags2);
 
@@ -449,19 +448,18 @@ Player* pThis = NULL;
 
 	if (flags & UPDATEFLAG_LIVING)  // UPDATEFLAG_LIVING
 	{
-		uint8 plrGuid[8];
-		*(uint64*)plrGuid = GetGUID();
-		LOG_ERROR("flags & UPDATEFLAG_LIVING AND YOUR guid IS %u ", plrGuid);
+		ObjectGuid guid = GetGUID();
+		LOG_ERROR("flags & UPDATEFLAG_LIVING AND YOUR guid IS %u ", guid);
 
 		// Transport Here
 
-		data->WriteByteSeq(plrGuid[4]);
+		data->WriteByteSeq(guid[4]);
 
 		//if (hasSpline)
 		//    Movement::PacketBuilder::WriteCreateData(*self->movespline, *data);
 
 		*data << m_flySpeed;
-		data->WriteByteSeq(plrGuid[2]);
+		data->WriteByteSeq(guid[2]);
 
 		if (haveFallData)
 		{
@@ -476,11 +474,11 @@ Player* pThis = NULL;
 			*data << (float)0; // velocity
 		}
 
-		data->WriteByteSeq(plrGuid[1]);
+		data->WriteByteSeq(guid[1]);
 		*data << m_turnRate;
 		*data << uint32(0);
 		*data << m_swimSpeed;
-		data->WriteByteSeq(plrGuid[7]);
+		data->WriteByteSeq(guid[7]);
 		*data << float(8);
 		*data << float(m_position.x);
 
@@ -494,10 +492,10 @@ Player* pThis = NULL;
 
 		*data << float(m_position.y);
 		*data << m_backFlySpeed;
-		data->WriteByteSeq(plrGuid[3]);
-		data->WriteByteSeq(plrGuid[5]);
-		data->WriteByteSeq(plrGuid[6]);
-		data->WriteByteSeq(plrGuid[0]);
+		data->WriteByteSeq(guid[3]);
+		data->WriteByteSeq(guid[5]);
+		data->WriteByteSeq(guid[6]);
+		data->WriteByteSeq(guid[0]);
 		*data << m_backWalkSpeed;
 
 		if (m_runSpeed == 0)

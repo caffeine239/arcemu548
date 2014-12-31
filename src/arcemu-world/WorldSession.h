@@ -158,9 +158,9 @@ enum ObjectUpdateFlags
     UPDATEFLAG_UNKNOWN               = 0x0008,
     UPDATEFLAG_LOWGUID               = 0x0010,
     UPDATEFLAG_LIVING                = 0x0020,
-    UPDATEFLAG_HAS_POSITION          = 0x0040,
+    UPDATEFLAG_HAS_POSITION          = 0x0040, //UPDATEFLAG_STATIONARY_POSITION
     UPDATEFLAG_VEHICLE               = 0x0080,
-    UPDATEFLAG_POSITION              = 0x0100,           // UPDATEFLAG_HAS_STATIONARY_POSITION (used in Object.cpp for transport data)
+    UPDATEFLAG_POSITION              = 0x0100, //UPDATEFLAG_GO_TRANSPORT_POSITION
     UPDATEFLAG_ROTATION              = 0x0200,
     UPDATEFLAG_UNK3                  = 0x0400,
     UPDATEFLAG_HAS_ANIMKITS          = 0x0800,
