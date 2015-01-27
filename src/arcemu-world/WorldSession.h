@@ -195,6 +195,7 @@ struct AccountDataEntry
 	char* data;
 	uint32 sz;
 	bool bIsDirty;
+	time_t Time;
 };
 
 typedef struct Cords
@@ -386,6 +387,7 @@ class SERVER_DECL WorldSession
 
 		/// Authentification and misc opcodes (MiscHandler.cpp):
 		void HandlePingOpcode(WorldPacket & recvPacket);
+		void SendNameQueryOpcode(ObjectGuid guid);
 		void HandleAuthSessionOpcode(WorldPacket & recvPacket);
 		void HandleRepopRequestOpcode(WorldPacket & recvPacket);
 		void HandleAutostoreLootItemOpcode(WorldPacket & recvPacket);

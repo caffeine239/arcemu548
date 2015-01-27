@@ -20,6 +20,7 @@
 
 #include "StdAfx.h"
 #include "Unit.h"
+#include "UpdateData.h"
 using namespace std;
 
 Object::Object() : m_position(0, 0, 0, 0), m_spawnLocation(0, 0, 0, 0)
@@ -108,31 +109,22 @@ void Object::_Create(uint32 mapid, float x, float y, float z, float ang)
 
 uint32 Object::BuildCreateUpdateBlockForPlayer(ByteBuffer* data, Player* target)
 {
-
-	uint16 flags = 0;
-	uint32 flags2 = 0;
+	uint16 flags = 0; // updateflags
+	uint32 flags2 = 0; // flags2 will be 0, values will change in _BuildMovementUpdate
 
 	uint8 updatetype = 1; // UPDATETYPE_CREATE_OBJECT
-
-	if (target == this)                                      // building packet for yourself
-		flags |= UPDATEFLAG_SELF;
-
-
-
-
-	//uint8 temp_objectTypeId = m_objectTypeId;
 
 	switch (m_objectTypeId)
 	{
 	case TYPEID_CORPSE:
 	case TYPEID_DYNAMICOBJECT:
-		flags = UPDATEFLAG_POSITION; // UPDATEFLAG_HAS_STATIONARY_POSITION
+	case TYPEID_AREATRIGGER:
+		flags = UPDATEFLAG_HAS_POSITION; // UPDATEFLAG_HAS_STATIONARY_POSITION
 		updatetype = 2;
 		break;
 
 	case TYPEID_GAMEOBJECT:
-		flags = UPDATEFLAG_POSITION | UPDATEFLAG_ROTATION;
-		//flags = 0x0040 | 0x0200; // UPDATEFLAG_HAS_STATIONARY_POSITION | UPDATEFLAG_ROTATION
+		flags = UPDATEFLAG_HAS_POSITION | UPDATEFLAG_ROTATION;
 		updatetype = 2;
 		break;
 
@@ -141,6 +133,48 @@ uint32 Object::BuildCreateUpdateBlockForPlayer(ByteBuffer* data, Player* target)
 		flags = UPDATEFLAG_LIVING;
 		updatetype = 2;
 		break;
+	}
+
+
+	if(IsGameObject())
+	{
+			switch( GetByte(GAMEOBJECT_BYTES_1, GAMEOBJECT_BYTES_TYPE_ID) )
+	switch(m_uint32Values[GAMEOBJECT_BYTES_1])
+	{
+	case GAMEOBJECT_TYPE_MO_TRANSPORT:
+	{
+	if(GetTypeFromGUID() != HIGHGUID_TYPE_TRANSPORTER)
+	return 0;   // bad transporter
+	else
+	flags = 0x0352;
+	}
+	break;
+
+	case GAMEOBJECT_TYPE_TRANSPORT: // 1
+	{
+	flags |= 0x0002 | 0x0040 | 0x0200; // UPDATEFLAG_TRANSPORT | UPDATEFLAG_HAS_STATIONARY_POSITION | UPDATEFLAG_ROTATION
+	}
+	break;
+
+	case GAMEOBJECT_TYPE_TRAP:
+	case GAMEOBJECT_TYPE_DUEL_ARBITER:
+	case GAMEOBJECT_TYPE_FLAGSTAND:
+	case GAMEOBJECT_TYPE_FLAGDROP:
+	updatetype = 2; // UPDATETYPE_CREATE_OBJECT2
+	break;
+
+	default:
+	break;
+	}
+	//The above 3 checks FAIL to identify transports, thus their flags remain 0x58, and this is BAAAAAAD! Later they don't get position x,y,z,o updates, so they appear randomly by a client-calculated path, they always face north, etc... By: VLack
+	if(flags != 0x0352 && IsGameObject() && TO< GameObject* >(this)->GetInfo()->Type == GAMEOBJECT_TYPE_TRANSPORT && !(TO< GameObject* >(this)->GetOverrides() & GAMEOBJECT_OVERRIDE_PARENTROT))
+	flags = 0x0352;
+	}
+
+	if(GetTypeFromGUID() == HIGHGUID_TYPE_VEHICLE)
+	{
+	flags |= UPDATEFLAG_VEHICLE;
+	updatetype = 2; // UPDATETYPE_CREATE_OBJECT_SELF
 	}
 
 
@@ -156,18 +190,15 @@ uint32 Object::BuildCreateUpdateBlockForPlayer(ByteBuffer* data, Player* target)
 		if (TO_UNIT(this)->GetTargetGUID())
 			flags |= UPDATEFLAG_HAS_TARGET; // UPDATEFLAG_HAS_ATTACKING_TARGET
 	}
-	ByteBuffer buf(500);
-	buf << uint8(updatetype);
-	buf.append(GetNewGUID());
-	buf << uint8(m_objectTypeId);
 
-	//*data << updatetype;
+	// build our actual update
+	*data << updatetype;
 
 	// we shouldn't be here, under any circumstances, unless we have a wowguid..
-	//ASSERT(m_wowGuid.GetNewGuidLen());
-	//*data << m_wowGuid;
+	ASSERT(m_wowGuid.GetNewGuidLen());
+	*data << m_wowGuid;
 
-	//*data << m_objectTypeId;
+	*data << m_objectTypeId;
 
 	_BuildMovementUpdate(data, flags, flags2, target);
 
@@ -181,51 +212,37 @@ uint32 Object::BuildCreateUpdateBlockForPlayer(ByteBuffer* data, Player* target)
 
 	/// @TODO Implement dynamic update fields
 	*data << uint8(0);
-
 	// update count: 1 ;)
 	return 1;
 }
 
-
-//That is dirty fix it actually creates update of 1 field with
-//the given value ignoring existing changes in fields and so on
-//useful if we want update this field for certain players
-//NOTE: it does not change fields. This is also very fast method
 WorldPacket* Object::BuildFieldUpdatePacket(uint32 index, uint32 value)
 {
-	WorldPacket * packet = new WorldPacket(SMSG_UPDATE_OBJECT, 1500);
+	WorldPacket* packet = new WorldPacket(1500);
+	packet->SetOpcode(SMSG_UPDATE_OBJECT);
 
-	ASSERT(packet->empty());                                // shouldn't happen
-	packet->Initialize(SMSG_UPDATE_OBJECT);
+	*packet << (uint32)1;
 
-	*packet << uint16(GetMapId());
-	*packet << uint32(m_blockCount + (m_outOfRangeGUIDs.empty() ? 0 : 1));
+	*packet << (uint8)UPDATETYPE_VALUES;		// update type == update
+	packet->append(GetNewGUID());
 
-	if (!m_outOfRangeGUIDs.empty())
-	{
-		*packet << uint8(UPDATETYPE_OUT_OF_RANGE_OBJECTS);
-		*packet << uint32(m_outOfRangeGUIDs.size());
+	uint32 mBlocks = index / 32 + 1;
+	*packet << (uint8)mBlocks;
 
-		for (std::set<uint64>::const_iterator i = m_outOfRangeGUIDs.begin(); i != m_outOfRangeGUIDs.end(); ++i)
-			packet->appendPackGUID(*i);
-	}
+	for (uint32 dword_n = mBlocks - 1; dword_n; dword_n--)
+		*packet << (uint32)0;
 
-	packet->append(m_data);
-	BuildFieldUpdatePacket(packet, index, value);
+	*packet << (((uint32)(1)) << (index % 32));
+	*packet << value;
+
 	return packet;
-
-	/*WorldPacket * packet = new WorldPacket(SMSG_UPDATE_OBJECT, 1500);
-	*packet << uint16(GetMapId());
-	*packet << (uint32)1;//number of update/create blocks
-	BuildFieldUpdatePacket(packet, index, value);
-	return packet;*/
 }
 
 void Object::BuildFieldUpdatePacket(Player* Target, uint32 Index, uint32 Value)
 {
 	ByteBuffer buf(500);
 	buf << uint8(UPDATETYPE_VALUES);
-	buf << GetNewGUID();
+	buf.append(GetNewGUID());
 
 	uint32 mBlocks = Index / 32 + 1;
 	buf << (uint8)mBlocks;
@@ -281,8 +298,6 @@ uint32 Object::BuildValuesUpdateBlockForPlayer(ByteBuffer* data, Player* target)
 
 uint32 Object::BuildValuesUpdateBlockForPlayer(ByteBuffer* buf, UpdateMask* mask)
 {
-	// returns: update count
-	// update type == update
 	*buf << (uint8)UPDATETYPE_VALUES;
 
 	ARCEMU_ASSERT(m_wowGuid.GetNewGuidLen() > 0);
@@ -297,13 +312,7 @@ uint32 Object::BuildValuesUpdateBlockForPlayer(ByteBuffer* buf, UpdateMask* mask
 	return 1;
 }
 
-///////////////////////////////////////////////////////////////
-/// Build the Movement Data portion of the update packet
-/// Fills the data with this object's movement/speed info
-/// TODO: rewrite this stuff, document unknown fields and flags
 uint32 TimeStamp();
-
-//!!! This method needs improvements
 
 void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2, Player* target)
 {
@@ -326,8 +335,6 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 	bool hasTarget = flags & UPDATEFLAG_HAS_TARGET;
 	bool hasVehicle = false; //flags & UPDATEFLAG_VEHICLE;
 	bool hasAnimKits = false; //flags & UPDATEFLAG_ANIMKITS;
-
-
 
 	data->WriteBit(0);
 	data->WriteBit(hasAnimKits);
@@ -352,7 +359,7 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 	data->WriteBit(flags & UPDATEFLAG_HAS_POSITION);
 
 
-Player* pThis = NULL;
+	Player* pThis = NULL;
 		MovementInfo* moveinfo = NULL;
 		if (IsPlayer())
 		{
@@ -448,8 +455,8 @@ Player* pThis = NULL;
 
 	if (flags & UPDATEFLAG_LIVING)  // UPDATEFLAG_LIVING
 	{
+		Unit const* self = TO_UNIT(this);
 		ObjectGuid guid = GetGUID();
-		LOG_ERROR("flags & UPDATEFLAG_LIVING AND YOUR guid IS %u ", guid);
 
 		// Transport Here
 
@@ -480,7 +487,7 @@ Player* pThis = NULL;
 		*data << m_swimSpeed;
 		data->WriteByteSeq(guid[7]);
 		*data << float(8);
-		*data << float(m_position.x);
+		*data << self->GetPositionX();// m_position.x);
 
 		if (!G3D::fuzzyEq(GetOrientation(), 0.0f)) // do we need this check here?
 			*data << m_position.o;
@@ -490,7 +497,7 @@ Player* pThis = NULL;
 		else
 			*data << m_walkSpeed;	// walk speed
 
-		*data << float(m_position.y);
+		*data << self->GetPositionY();
 		*data << m_backFlySpeed;
 		data->WriteByteSeq(guid[3]);
 		data->WriteByteSeq(guid[5]);
@@ -504,7 +511,7 @@ Player* pThis = NULL;
 			*data << m_runSpeed;	// run speed
 
 		*data << m_backSwimSpeed;
-		*data << float(m_position.o);
+		*data << self->GetPositionZ();
 	}
 
 	if (flags & UPDATEFLAG_HAS_TARGET)
@@ -524,7 +531,7 @@ Player* pThis = NULL;
 	if (hasStacionaryPostion)
 	{
 		*data << (float)m_position.y;
-		*data << (float)m_position.z;
+		*data << GetPositionZ();
 		*data << (float)m_position.o;
 		*data << (float)m_position.x;
 	}

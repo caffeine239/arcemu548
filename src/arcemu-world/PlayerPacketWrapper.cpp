@@ -564,10 +564,6 @@ void Player::SendLoot(uint64 guid, uint8 loot_type, uint32 mapid)
 
 void Player::SendInitialLogonPackets()
 {
-	//WorldPacket data;
-
-	// 15595
-	//data.Initialize(SMSG_BINDPOINTUPDATE,  5 * 4);
 	WorldPacket datao(SMSG_BINDPOINTUPDATE, 5 * 4);
 	datao << float(m_bind_pos_x);
 	datao << float(m_bind_pos_y);
@@ -583,13 +579,12 @@ void Player::SendInitialLogonPackets()
 	SendSetProficiency(2, weapon_proficiency);
 
 	// Tutorial Flags
-	// Disabled for now
-	/*data.Initialize(SMSG_TUTORIAL_FLAGS); // updated opcode to 15595, don't know if structure changed
+	WorldPacket data(SMSG_TUTORIAL_FLAGS, 4 * 8);
 
 	for(int i = 0; i < 8; i++)
 		data << uint32(m_Tutorials[i]);
 
-	m_session->SendPacket(&data);*/
+	m_session->SendPacket(&data);
 
 	// don't send this, it's just a sandbox
 	//smsg_TalentsInfo(false); // not updated (15595)
@@ -606,14 +601,12 @@ void Player::SendInitialLogonPackets()
 	smsg_InitialFactions(); // 15595
 
 
-	// 15595 should work
-	//data.Initialize(SMSG_LOGIN_SETTIMESPEED, 4 + 4 + 4); // size: 4 + 4 + 4
 	WorldPacket datatt(SMSG_LOGIN_SETTIMESPEED, 4 + 4 + 4);
-
-	datatt << uint32( Arcemu::Util::MAKE_GAME_TIME() );
-	datatt << float(0.0166666669777748f);    // Normal Game Speed
-	datatt << uint32(0);                     // 3.1.2
-
+	datatt << uint32(0);
+	datatt << uint32(Arcemu::Util::MAKE_GAME_TIME());
+	datatt << uint32(0);
+	datatt << uint32(Arcemu::Util::MAKE_GAME_TIME());
+	datatt << float(0.01666667f);
 	m_session->SendPacket(&datatt);
 
 	// cebernic for speedhack bug
@@ -630,6 +623,7 @@ void Player::SendInitialLogonPackets()
 	ArenaSettings << uint32(sWorld.Arena_Season);
 
 	m_session->SendPacket(&ArenaSettings);*/
+	
 
 	LOG_DETAIL("WORLD: Sent initial logon packets for %s.", GetName());
 }

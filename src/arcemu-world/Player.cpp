@@ -8759,12 +8759,28 @@ void Player::SafeTeleport(MapMgr* mgr, const LocationVector & vec)
 
 	m_mapId = mgr->GetMapId();
 	m_instanceId = mgr->GetInstanceID();
+
 	WorldPacket data(SMSG_TRANSFER_PENDING, 20);
+	data.WriteBit(0);       // unknown
+	data.WriteBit(transporter_info.guid != NULL);
+
+	data << uint32(m_mapId);
+
+	if (transporter_info.guid)
+	{
+		// Might be in wrong order
+		data << GetMapId();
+		data << transporter_info.guid;
+	}
 	data << mgr->GetMapId();
 	GetSession()->SendPacket(&data);
 
 	data.Initialize(SMSG_NEW_WORLD);
-	data << mgr->GetMapId() << vec << vec.o;
+	data << float(vec.x);
+	data << uint32(m_mapId);
+	data << float(vec.y);
+	data << float(vec.z);
+	data << float(vec.o);
 	GetSession()->SendPacket(&data);
 
 	SetPlayerStatus(TRANSFER_PENDING);
@@ -10269,7 +10285,26 @@ void Player::UnPossess()
 
 	/* send "switch mover" packet */
 	WorldPacket data(SMSG_CLIENT_CONTROL_UPDATE, 10);
-	data << pTarget->GetNewGUID() << uint8(0);
+	Unit* target;
+	ObjectGuid guid = target->GetGUID();
+	data.WriteBit(guid[2]);  // 26
+	data.WriteBit(guid[7]);  // 31
+	data.WriteBit(false);
+	data.WriteBit(guid[0]);  // 24
+	data.WriteBit(guid[3]);  // 27
+	data.WriteBit(guid[6]);  // 30
+	data.WriteBit(guid[5]);  // 29
+	data.WriteBit(guid[1]);  // 25
+	data.WriteBit(guid[4]);  // 28
+
+	data.WriteByteSeq(guid[1]);  // 25
+	data.WriteByteSeq(guid[5]);  // 29
+	data.WriteByteSeq(guid[7]);  // 31
+	data.WriteByteSeq(guid[4]);  // 28
+	data.WriteByteSeq(guid[2]);  // 26
+	data.WriteByteSeq(guid[6]);  // 30
+	data.WriteByteSeq(guid[3]);  // 27
+	data.WriteByteSeq(guid[0]);  // 24
 	m_session->SendPacket(&data);
 
 	if (!(pTarget->IsPet() && TO< Pet* >(pTarget) == GetSummon()))
