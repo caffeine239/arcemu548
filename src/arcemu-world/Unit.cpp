@@ -25,6 +25,31 @@
 
 #include "StdAfx.h"
 
+float baseMoveSpeed[MAX_MOVE_TYPE] =
+{
+	2.5f,                  // MOVE_WALK
+	7.0f,                  // MOVE_RUN
+	4.5f,                  // MOVE_RUN_BACK
+	4.722222f,             // MOVE_SWIM
+	2.5f,                  // MOVE_SWIM_BACK
+	3.141594f,             // MOVE_TURN_RATE
+	7.0f,                  // MOVE_FLIGHT
+	4.5f,                  // MOVE_FLIGHT_BACK
+	3.14f                  // MOVE_PITCH_RATE
+};
+
+float playerBaseMoveSpeed[MAX_MOVE_TYPE] =
+{
+	2.5f,                  // MOVE_WALK
+	7.0f,                  // MOVE_RUN
+	4.5f,                  // MOVE_RUN_BACK
+	4.722222f,             // MOVE_SWIM
+	2.5f,                  // MOVE_SWIM_BACK
+	3.141594f,             // MOVE_TURN_RATE
+	7.0f,                  // MOVE_FLIGHT
+	4.5f,                  // MOVE_FLIGHT_BACK
+	3.14f                  // MOVE_PITCH_RATE
+};
 
 static float AttackToRageConversionTable[PLAYER_LEVEL_CAP + 1] =
 {
@@ -116,6 +141,11 @@ static float AttackToRageConversionTable[PLAYER_LEVEL_CAP + 1] =
 Unit::Unit()
 {
 	int i;
+
+	m_objectType |= TYPE_UNIT;
+	m_objectTypeId = TYPEID_UNIT;
+
+	m_updateFlag = UPDATEFLAG_LIVING;
 
 	m_attackTimer = 0;
 	m_attackTimer_1 = 0;
@@ -5497,7 +5527,7 @@ int32 Unit::getDetectRangeMod(uint64 guid)
 	return 0;
 }
 
-void Unit::SetStandState(uint8 standstate) //!!! 15595 should work
+void Unit::SetStandState(uint8 standstate)
 {
 	printf("received setStandState\n");
 	//only take actions if standstate did change.
@@ -5509,9 +5539,13 @@ void Unit::SetStandState(uint8 standstate) //!!! 15595 should work
 	if(standstate == STANDSTATE_STAND)  //standup
 		RemoveAurasByInterruptFlag(AURA_INTERRUPT_ON_STAND_UP);
 
-	if(IsPlayer())
+	if (IsPlayer())
+	{
 		printf("Standstate succeeded\n");
-		TO< Player* >(this)->GetSession()->OutPacket(SMSG_STANDSTATE_UPDATE, 1, &standstate);
+		WorldPacket data(SMSG_STANDSTATE_UPDATE, 1);
+		data << (uint8)standstate;
+		TO< Player* >(this)->GetSession()->SendPacket(&data);
+	}
 }
 
 void Unit::RemoveAurasByInterruptFlag(uint32 flag)
@@ -8332,4 +8366,9 @@ void Unit::SendEnvironmentalDamageLog( uint64 guid, uint8 type, uint32 damage ){
 	data << uint64( 0 );
 
 	SendMessageToSet( &data, true, false );
+}
+
+float Unit::GetSpeed(UnitMoveType mtype) const
+{
+	return m_speed_rate[mtype] * (IsControlledByPlayer() ? playerBaseMoveSpeed[mtype] : baseMoveSpeed[mtype]);
 }

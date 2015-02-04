@@ -60,7 +60,6 @@ class SERVER_DECL WorldSocket : public Socket
 		void OnRead();
 		void OnConnect();
 		void OnDisconnect();
-		void OnConnectTwo(); // todo change me, no need for thousand of functions
 
 		ARCEMU_INLINE void SetSession(WorldSession* session) { mSession = session; }
 		ARCEMU_INLINE WorldSession* GetSession() { return mSession; }

@@ -815,16 +815,24 @@ void WorldSession::HandleLogoutRequestOpcode(WorldPacket & recv_data)
 	CHECK_INWORLD_RETURN
 
 	Player* pPlayer = GetPlayer();
+
 	WorldPacket data(SMSG_LOGOUT_RESPONSE, 5);
 
 	LOG_DEBUG("WORLD: Recvd CMSG_LOGOUT_REQUEST Message");
 
 	if(pPlayer)
 	{
+		if (pPlayer->m_isResting || pPlayer->GetTaxiState())
+		{
+			SetLogoutTimer(1);
+			return;
+		}
+
 		if(!sHookInterface.OnLogoutRequest(pPlayer))
 		{
-			// Declined Logout Request
-			data << uint32(1) << uint8(0);
+			data << uint32(1);
+			data.WriteBit(0);
+			data.FlushBits();
 			SendPacket(&data);
 			return;
 		}
@@ -839,21 +847,21 @@ void WorldSession::HandleLogoutRequestOpcode(WorldPacket & recv_data)
 		if(pPlayer->CombatStatus.IsInCombat() ||	//can't quit still in combat
 		        pPlayer->DuelingWith != NULL)			//can't quit still dueling or attacking
 		{
-			data << uint32(1) << uint8(0);
+			data << uint32(1);
+			data.WriteBit(0);
+			data.FlushBits();
 			SendPacket(&data);
 			return;
 		}
 
-		if(pPlayer->m_isResting ||	  // We are resting so log out instantly
-		        pPlayer->GetTaxiState())  // or we are on a taxi
+		if(pPlayer->m_isResting || pPlayer->GetTaxiState())
 		{
-			//Logout on NEXT sessionupdate to preserve processing of dead packets (all pending ones should be processed)
 			SetLogoutTimer(1);
 			return;
 		}
 
-		data << uint32(0); //Filler
-		data << uint8(0); //Logout accepted
+		data.WriteBit(0);
+		data.FlushBits();
 		SendPacket(&data);
 
 		//stop player from moving
@@ -1079,94 +1087,69 @@ void WorldSession::HandleUpdateAccountData(WorldPacket & recv_data)
 {
 	LOG_DETAIL("WORLD: Received CMSG_UPDATE_ACCOUNT_DATA");
 
-	uint32 uiID;
-    uint32 timestamp;
-	if(!sWorld.m_useAccountData)
+	uint32 timestamp, type, decompressedSize, compressedSize;
+
+	if (!sWorld.m_useAccountData)
 		return;
 
-	recv_data >> uiID;
-	recv_data >> timestamp; // what do we do with this? :D
+	recv_data >> decompressedSize;
+	recv_data >> timestamp;
+	recv_data >> compressedSize;
 
-	if(uiID > 8)
+	if (decompressedSize == 0)                               // erase
 	{
-		// Shit..
-		LOG_ERROR("WARNING: Accountdata > 8 (%d) was requested to be updated by %s of account %d!", uiID, GetPlayer()->GetName(), this->GetAccountId());
-		return;
-	}
+		type = recv_data.ReadBits(3);
+		recv_data.rfinish();
 
-	uint32 uiDecompressedSize;
-	recv_data >> uiDecompressedSize;
-	uLongf uid = uiDecompressedSize;
+		SetAccountData(type, "", 0, decompressedSize);
 
-	// client wants to 'erase' current entries
-	if(uiDecompressedSize == 0)
-	{
-		SetAccountData(uiID, NULL, false, 0);
-		WorldPacket rdata(SMSG_UPDATE_ACCOUNT_DATA_COMPLETE, 4 + 4); //VLack: seen this in a 3.1.1 packet dump as response
-		rdata << uint32(uiID);
-		rdata << uint32(0);
-		SendPacket(&rdata);
+		WorldPacket data(SMSG_UPDATE_ACCOUNT_DATA_COMPLETE, 4 + 4);
+		data << uint32(type);
+		data << uint32(0);
+		SendPacket(&data);
+
 		return;
 	}
 
-	/*
-	if(uiDecompressedSize>100000)
+	if (decompressedSize > 0xFFFF)
 	{
-		Disconnect();
-		return;
-	}
-	*/
-
-	if(uiDecompressedSize >= 65534)
-	{
-		// BLOB fields can't handle any more than this.
+		recv_data.rfinish();                   // unnneded warning spam in this case
+		LOG_ERROR("UAD: Account data packet too big, size %u", decompressedSize);
 		return;
 	}
 
-	size_t ReceivedPackedSize = recv_data.size() - 8;
-	char* data = new char[uiDecompressedSize + 1];
-	memset(data, 0, uiDecompressedSize + 1);	/* fix umr here */
+	ByteBuffer dest;
+	dest.resize(decompressedSize);
 
-	if(uiDecompressedSize > ReceivedPackedSize) // if packed is compressed
+	uLongf realSize = decompressedSize;
+	//if (uncompress(dest.contents(), &realSize, recv_data.contents() + recv_data.rpos(), recv_data.size() - recv_data.rpos()) != Z_OK)
+	//{
+	//	recv_data.rfinish();                   // unnneded warning spam in this case
+	//	LOG_ERROR("UAD: Failed to decompress account data");
+	//	return;
+	//}
+
+	type = recv_data.ReadBits(3);
+	if (type > NUM_ACCOUNT_DATA_TYPES)
 	{
-		int32 ZlibResult;
-
-		ZlibResult = uncompress((uint8*)data, &uid, recv_data.contents() + 8, (uLong)ReceivedPackedSize);
-
-		switch(ZlibResult)
-		{
-			case Z_OK:				  //0 no error decompression is OK
-				SetAccountData(uiID, data, false, uiDecompressedSize);
-				LOG_DETAIL("WORLD: Successfully decompressed account data %d for %s, and updated storage array.", uiID, GetPlayer()->GetName());
-				break;
-
-			case Z_ERRNO:			   //-1
-			case Z_STREAM_ERROR:		//-2
-			case Z_DATA_ERROR:		  //-3
-			case Z_MEM_ERROR:		   //-4
-			case Z_BUF_ERROR:		   //-5
-			case Z_VERSION_ERROR:	   //-6
-				{
-					delete [] data;
-					LOG_ERROR("WORLD WARNING: Decompression of account data %d for %s FAILED.", uiID, GetPlayer()->GetName());
-					break;
-				}
-
-			default:
-				delete [] data;
-				LOG_ERROR("WORLD WARNING: Decompression gave a unknown error: %x, of account data %d for %s FAILED.", ZlibResult, uiID, GetPlayer()->GetName());
-				break;
-		}
+		sLog.outError("type larger that NUM_ACCOUNT_DATA_TYPES Type : %u", type);
+		return;
 	}
-	else
-	{
-		memcpy(data, recv_data.contents() + 8, uiDecompressedSize);
-		SetAccountData(uiID, data, false, uiDecompressedSize);
-	}
-	WorldPacket rdata(SMSG_UPDATE_ACCOUNT_DATA_COMPLETE, 4 + 4); //VLack: seen this in a 3.1.1 packet dump as response
-	rdata << uint32(uiID);
-	rdata << uint32(0);
-	SendPacket(&rdata);
+
+	recv_data.rfinish();
+
+	char* adataa;
+	std::string adata;
+	dest >> adata;
+	adata = adataa;
+
+
+	SetAccountData(type, adataa, timestamp, decompressedSize);
+
+	WorldPacket data(SMSG_UPDATE_ACCOUNT_DATA_COMPLETE, 4 + 4);
+	data << uint32(type);
+	data << uint32(0);
+	SendPacket(&data);
 }
 
 void WorldSession::HandleRequestAccountData(WorldPacket & recv_data)
@@ -2583,7 +2566,18 @@ void WorldSession::HandleTimeSyncRespOpcode(WorldPacket & recv_data) // 4.3.4 (c
 	uint32 counter, clientTicks;
 	recv_data >> counter >> clientTicks;
 
-	// do something with this...
+	if (counter != _player->m_timeSyncQueue.front())
+		LOG_ERROR("Wrong time sync counter from player %s (cheater?)", _player->GetName());
+
+	LOG_DEBUG("Time sync received: counter %u, client ticks %u, time since last sync %u", counter, clientTicks, clientTicks - _player->m_timeSyncClient);
+
+	uint32 ourTicks = clientTicks + (getMSTime() - _player->m_timeSyncServer);
+
+	// diff should be small
+	LOG_DEBUG("Our ticks: %u, diff %u, latency %u", ourTicks, ourTicks - clientTicks, GetLatency());
+
+	_player->m_timeSyncClient = clientTicks;
+	_player->m_timeSyncQueue.pop();
 }
 
 void WorldSession::HandleObjectUpdateFailedOpcode(WorldPacket& recvPacket)
@@ -2608,12 +2602,5 @@ void WorldSession::HandleObjectUpdateFailedOpcode(WorldPacket& recvPacket)
 	recvPacket.ReadByteSeq(guid[3]);
 	recvPacket.ReadByteSeq(guid[4]);
 
-	LOG_ERROR("FAILED TO UPDATE OBJECT : %u", guid);
-
-		if (_player->GetGUID() == guid)
-		{
-			LogoutPlayer(true);
-		    return;
-		}
-	
+	LOG_ERROR("FAILED TO UPDATE OBJECT : %u", guid);	
 }

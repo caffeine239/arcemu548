@@ -183,13 +183,10 @@ void WorldSession::HandleSwapItemOpcode(WorldPacket & recv_data)
 void WorldSession::HandleSwapInvItemOpcode(WorldPacket & recv_data)
 {
 	CHECK_INWORLD_RETURN
-
-	CHECK_PACKET_SIZE(recv_data, 2);
 	WorldPacket data;
-	int8 srcslot = 0, dstslot = 0;
-	int8 error = 0;
+	uint8 srcslot, dstslot;
 
-	recv_data >> dstslot >> srcslot;
+	recv_data >> srcslot >> dstslot;
 
 	LOG_DETAIL("ITEM: swap, src slot: %u dst slot: %u", (uint32)srcslot, (uint32)dstslot);
 
@@ -229,7 +226,7 @@ void WorldSession::HandleSwapInvItemOpcode(WorldPacket & recv_data)
 		return;
 	}
 
-	if((error = _player->GetItemInterface()->CanEquipItemInSlot2(INVENTORY_SLOT_NOT_SET, dstslot, srcitem, skip_combat, false))  != 0)
+	/*if((error = _player->GetItemInterface()->CanEquipItemInSlot2(INVENTORY_SLOT_NOT_SET, dstslot, srcitem, skip_combat, false))  != 0)
 	{
 		if(dstslot < INVENTORY_KEYRING_END)
 		{
@@ -259,7 +256,7 @@ void WorldSession::HandleSwapInvItemOpcode(WorldPacket & recv_data)
 				return;
 			}
 		}
-	}
+	}*/
 
 	if(srcitem->IsContainer())
 	{

@@ -1868,13 +1868,13 @@ void Player::smsg_InitialSpells()
 
 	data.FlushBits();
 
-	SpellSet::iterator sitr;
+	SpellSet::const_iterator sitr;
 	for (sitr = mSpells.begin(); sitr != mSpells.end(); ++sitr)
 	{
-		// todo: check out when we should send 0x0 and when we should send 0xeeee
-		// this is not slot, values is always eeee or 0, seems to be cooldown
-		data << uint32(*sitr);				   // spell id
-		//data << uint16(0x0000);
+
+		data << uint32(*sitr);
+
+		++spellCount;
 	}
 
 	data.PutBits(bitPos, spellCount, 22);
@@ -7738,6 +7738,7 @@ void Player::ProcessPendingUpdates()
 		// while we said 350 before, I'm gonna make it 500 :D
 		//if(c < (size_t)sWorld.compression_threshold || !CompressAndSendUpdateBuffer((uint32)c, update_buffer))
 		{
+			sLog.outError("Sending SMSG_UPDATE_OBJECT 1 ");
 			// send uncompressed packet -> because we failed
 			m_session->OutPacket(SMSG_UPDATE_OBJECT, (uint16)c, update_buffer);
 		}
@@ -7751,7 +7752,7 @@ void Player::ProcessPendingUpdates()
 		*(uint16*)&update_buffer[c] = (uint16)GetMapId();
 		c += 2;
 
-		*(uint32*)&update_buffer[c] = ((mOutOfRangeIds.size() > 0) ? (mUpdateCount + 1) : mUpdateCount);
+		*(uint32*)&update_buffer[c] = ((mUpdateCount + mOutOfRangeIdCount) ? 0 : 1);
 		c += 4;
 
 		//update_buffer[c] = 1;																			   ++c;
@@ -7766,6 +7767,7 @@ void Player::ProcessPendingUpdates()
 		// while we said 350 before, I'm gonna make it 500 :D
 		//if(c < (size_t)sWorld.compression_threshold || !CompressAndSendUpdateBuffer((uint32)c, update_buffer))
 		{
+			sLog.outError("Sending SMSG_UPDATE_OBJECT 2 ");
 			// send uncompressed packet -> because we failed
 			m_session->OutPacket(SMSG_UPDATE_OBJECT, (uint16)c, update_buffer);
 		}
@@ -7780,7 +7782,7 @@ void Player::ProcessPendingUpdates()
 	while (delayedPackets.size())
 	{
 		pck = delayedPackets.next();
-		//printf("Delayed packet opcode %u sent.\n", pck->GetOpcode());
+		printf("Delayed packet opcode %u sent.\n", pck->GetOpcode());
 		m_session->SendPacket(pck);
 		delete pck;
 	}
@@ -7852,6 +7854,7 @@ bool Player::CompressAndSendUpdateBuffer(uint32 size, const uint8* update_buffer
 	*(uint32*)&buffer[0] = size;
 
 	// send it
+	sLog.outError("Sending SMSG_UPDATE_OBJECT 3 ");
 	m_session->OutPacket(SMSG_UPDATE_OBJECT /*| 0x8000*/, (uint16)stream.total_out + 4, buffer); // 0x8000 - compression flag
 
 	// cleanup memory
@@ -10402,14 +10405,16 @@ void Player::_AddSkillLine(uint32 SkillLine, uint32 Curr_sk, uint32 Max_sk)
 //!!! todo: update skill fields, so we can get skill_langs to work !!!
 void Player::_UpdateSkillFields()
 {
-	uint32 f = PLAYER_SKILL_RANK_0;     // field
-	uint32 m = PLAYER_SKILL_MAX_RANK_0; // maximum (not used currently)
+	sLog.outError("UpdateSkillFields updating....");
+	uint16 f = PLAYER_SKILL_RANK_0;     // field
+	uint16 m = PLAYER_SKILL_MAX_RANK_0; // maximum (not used currently)
 
 	/* Set the valid skills */
 	for (SkillMap::iterator itr = m_skills.begin(); itr != m_skills.end();)
 	{
 		if (!itr->first)
 		{
+			sLog.outError("UpdateSkillFields itr->first....");
 			SkillMap::iterator it2 = itr++;
 			m_skills.erase(it2);
 			continue;
@@ -10418,6 +10423,7 @@ void Player::_UpdateSkillFields()
 		ARCEMU_ASSERT(f <= PLAYER_CHARACTER_POINTS);
 		if (itr->second.Skill->type == SKILL_TYPE_PROFESSION)
 		{
+			sLog.outError("UpdateSkillFields itr->second.Skill->type == SKILL_TYPE_PROFESSION....");
 			SetUInt32Value(f++, itr->first | 0x10000);
 #ifdef ENABLE_ACHIEVEMENTS
 			m_achievementMgr.UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_REACH_SKILL_LEVEL, itr->second.Skill->id, itr->second.CurrentValue, 0);
@@ -10444,11 +10450,11 @@ void Player::_UpdateSkillFields()
 	}
 
 	/* Null out the rest of the fields */
-	for (; f < PLAYER_CHARACTER_POINTS; ++f)
-	{
-		if (m_uint32Values[f] != 0)
-			SetUInt32Value(f, 0);
-	}
+	//for (; f < PLAYER_CHARACTER_POINTS; ++f)
+	//{
+	//	if (m_uint32Values[f] != 0)
+	//		SetUInt32Value(f, 0);
+	//}
 }
 
 bool Player::_HasSkillLine(uint32 SkillLine)
@@ -10593,6 +10599,7 @@ void Player::_UpdateMaxSkillCounts()
 		}
 		else if (itr->second.Skill->type == SKILL_TYPE_LANGUAGE)
 		{
+			sLog.outError("itr->second.Skill->type == SKILL_TYPE_LANGUAGE");
 			new_max = 300;
 		}
 		else if (itr->second.Skill->type == SKILL_TYPE_PROFESSION || itr->second.Skill->type == SKILL_TYPE_SECONDARY)

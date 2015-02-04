@@ -21,12 +21,13 @@
 #include "StdAfx.h"
 void WorldSession::HandleAreaTriggerOpcode(WorldPacket & recv_data)
 {
-	CHECK_INWORLD_RETURN
+	uint32 triggerId;
+	uint8 unk1, unk2;
+	recv_data >> triggerId;
+	unk1 = recv_data.ReadBit();
+	unk2 = recv_data.ReadBit();
 
-	CHECK_PACKET_SIZE(recv_data, 4);
-	uint32 id ;
-	recv_data >> id;
-	_HandleAreaTriggerOpcode(id);
+	Player* player = GetPlayer();
 }
 
 enum AreaTriggerFailures
@@ -115,7 +116,7 @@ uint32 CheckTriggerPrerequisites(AreaTrigger* pAreaTrigger, WorldSession* pSessi
 
 void WorldSession::_HandleAreaTriggerOpcode(uint32 id)
 {
-	LOG_DEBUG("AreaTrigger: %u", id);
+	LOG_ERROR("AreaTrigger: %u", id);
 
 	// Are we REALLY here?
 	if(!_player->IsInWorld())

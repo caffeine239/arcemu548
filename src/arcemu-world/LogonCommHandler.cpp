@@ -38,8 +38,11 @@ LogonCommHandler::LogonCommHandler()
 
 	// player limit
 	pLimit = Config.MainConfig.GetIntDefault("Server", "PlayerLimit", 500);
-	if(pLimit == 0) pLimit = 1;
-	server_population = 0;
+	if (pLimit == 0) pLimit = 1;
+	{
+		sLog.outError("Server limit = %u", pLimit);
+		server_population = 0;
+	}
 
 	// cleanup
 	servers.clear();

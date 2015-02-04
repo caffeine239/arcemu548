@@ -210,13 +210,12 @@ void Player::SendItemPushResult(bool created, bool recieved, bool sendtoset, boo
 
 }
 
-void Player::SendSetProficiency(uint8 ItemClass, uint32 Proficiency) // should work, 4.3.4 15595
+void Player::SendSetProficiency(uint8 ItemClass, uint32 Proficiency)
 {
-	WorldPacket data(SMSG_SET_PROFICIENCY, 1 + 4); // lol? size was 40 in wotlk, now is 5
+	WorldPacket data(SMSG_SET_PROFICIENCY, 4 + 1);
 
-	data << uint8(ItemClass);
 	data << uint32(Proficiency);
-
+	data << uint8(ItemClass);
 	m_session->SendPacket(&data);
 }
 
@@ -591,10 +590,9 @@ void Player::SendInitialLogonPackets()
 
 	smsg_InitialSpells(); // not sure if updated (15595)
 
-	// 15595
-	//data.Initialize(SMSG_SEND_UNLEARN_SPELLS, 4);  // size: 4
 	WorldPacket datat(SMSG_SEND_UNLEARN_SPELLS, 4);
-	datat << uint32(0);                            // count, for(count) uint32;
+	datat.WriteBits(0, 22); // Count
+	datat.FlushBits();                            // count, for(count) uint32;
 	GetSession()->SendPacket(&datat);
 
 	SendInitialActions(); // 15595 not sure

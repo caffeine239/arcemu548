@@ -783,7 +783,7 @@ public:
 	ActionButton mActions[PLAYER_ACTION_BUTTON_COUNT];
 
 private:
-	uint32 tp;
+	uint32 tp;	
 };
 
 //====================================================================
@@ -2438,6 +2438,10 @@ private:
 	void RemoveGarbageItems();
 
 	uint32 ChampioningFactionID;
+	std::queue<uint32> m_timeSyncQueue;
+	uint32 m_timeSyncTimer;
+	uint32 m_timeSyncClient;
+	uint32 m_timeSyncServer;
 
 public:
 	void SetChampioningFaction(uint32 f) { ChampioningFactionID = f; }

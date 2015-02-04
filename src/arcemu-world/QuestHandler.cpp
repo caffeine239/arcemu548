@@ -25,34 +25,59 @@ void WorldSession::HandleQuestgiverStatusQueryOpcode(WorldPacket & recv_data)
 {
 	CHECK_INWORLD_RETURN
 
-	LOG_DEBUG("WORLD: Received CMSG_QUESTGIVER_STATUS_QUERY.");
+	ObjectGuid guid;
+
+	guid[4] = recv_data.ReadBit();
+	guid[3] = recv_data.ReadBit();
+	guid[2] = recv_data.ReadBit();
+	guid[1] = recv_data.ReadBit();
+	guid[0] = recv_data.ReadBit();
+	guid[5] = recv_data.ReadBit();
+	guid[7] = recv_data.ReadBit();
+	guid[6] = recv_data.ReadBit();
+
+	recv_data.ReadByteSeq(guid[5]);
+	recv_data.ReadByteSeq(guid[7]);
+	recv_data.ReadByteSeq(guid[4]);
+	recv_data.ReadByteSeq(guid[0]);
+	recv_data.ReadByteSeq(guid[2]);
+	recv_data.ReadByteSeq(guid[1]);
+	recv_data.ReadByteSeq(guid[6]);
+	recv_data.ReadByteSeq(guid[3]);
+
+	LOG_ERROR("WORLD: questgiver GUID %u", Arcemu::Util::GUID_LOPART(guid));
+
+	uint32 questStatus = 0;
+	uint32 defstatus = 0;
 
 	if(_player->IsInBg())
 		return; //Added in 3.0.2, quests can be shared anywhere besides a BG
-
-	uint64 guid;
-	WorldPacket data(SMSG_QUESTGIVER_STATUS, 12);
+		
 	Object* qst_giver = NULL;
 
-	recv_data >> guid;
 	uint32 guidtype = GET_TYPE_FROM_GUID(guid);
 	if(guidtype == HIGHGUID_TYPE_UNIT)
 	{
-		Creature* quest_giver = _player->GetMapMgr()->GetCreature(GET_LOWGUID_PART(guid));
-		if(quest_giver)
+		Creature* quest_giver = _player->GetMapMgr()->GetCreature(Arcemu::Util::GUID_LOPART(guid));
+		if (quest_giver)
+		{
 			qst_giver = quest_giver;
+		}
 		else
+		{
+			LOG_ERROR("!if (quest_giver)");
 			return;
+		}
 
 		if(!quest_giver->isQuestGiver())
 		{
-			LOG_DEBUG("WORLD: Creature is not a questgiver.");
+			LOG_ERROR("WORLD: Creature is not a questgiver.");
 			return;
 		}
 	}
 	else if(guidtype == HIGHGUID_TYPE_ITEM)
 	{
-		Item* quest_giver = GetPlayer()->GetItemInterface()->GetItemByGUID(guid);
+		Item* quest_giver = GetPlayer()->GetItemInterface()->GetItemByGUID(Arcemu::Util::GUID_LOPART(guid));
 		if(quest_giver)
 			qst_giver = quest_giver;
 		else
@@ -60,7 +85,7 @@ void WorldSession::HandleQuestgiverStatusQueryOpcode(WorldPacket & recv_data)
 	}
 	else if(guidtype == HIGHGUID_TYPE_GAMEOBJECT)
 	{
-		GameObject* quest_giver = _player->GetMapMgr()->GetGameObject(GET_LOWGUID_PART(guid));
+		GameObject* quest_giver = _player->GetMapMgr()->GetGameObject(Arcemu::Util::GUID_LOPART(guid));
 		if(quest_giver)
 			qst_giver = quest_giver;
 		else
@@ -69,11 +94,30 @@ void WorldSession::HandleQuestgiverStatusQueryOpcode(WorldPacket & recv_data)
 
 	if(!qst_giver)
 	{
-		LOG_DEBUG("WORLD: Invalid questgiver GUID " I64FMT ".", guid);
+		LOG_ERROR("WORLD: Invalid questgiver GUID %u ", Arcemu::Util::GUID_LOPART(guid));
 		return;
 	}
 
-	data << guid << sQuestMgr.CalcStatus(qst_giver, GetPlayer());
+	WorldPacket data(SMSG_QUESTGIVER_STATUS, 1 + 8 + 4);
+
+	data.WriteBit(guid[1]);
+	data.WriteBit(guid[7]);
+	data.WriteBit(guid[4]);
+	data.WriteBit(guid[2]);
+	data.WriteBit(guid[5]);
+	data.WriteBit(guid[3]);
+	data.WriteBit(guid[6]);
+	data.WriteBit(guid[0]);
+
+	data.WriteByteSeq(guid[7]);
+	data << uint32(questStatus);
+	data.WriteByteSeq(guid[4]);
+	data.WriteByteSeq(guid[6]);
+	data.WriteByteSeq(guid[1]);
+	data.WriteByteSeq(guid[5]);
+	data.WriteByteSeq(guid[2]);
+	data.WriteByteSeq(guid[0]);
+	data.WriteByteSeq(guid[3]);
 	SendPacket(&data);
 }
 

@@ -914,6 +914,24 @@ enum School
     SCHOOL_COUNT
 };
 
+enum UnitMoveType
+{
+	MOVE_WALK = 0,
+	MOVE_RUN = 1,
+	MOVE_RUN_BACK = 2,
+	MOVE_SWIM = 3,
+	MOVE_SWIM_BACK = 4,
+	MOVE_TURN_RATE = 5,
+	MOVE_FLIGHT = 6,
+	MOVE_FLIGHT_BACK = 7,
+	MOVE_PITCH_RATE = 8
+};
+
+#define MAX_MOVE_TYPE     9
+
+extern float baseMoveSpeed[MAX_MOVE_TYPE];
+extern float playerBaseMoveSpeed[MAX_MOVE_TYPE];
+
 #define UNIT_SUMMON_SLOTS 6
 
 typedef std::list<struct ProcTriggerSpellOnSpell> ProcTriggerSpellOnSpellList;
@@ -1166,6 +1184,9 @@ class SERVER_DECL Unit : public Object
 		//
 		/////////////////////////////////////////////////////////////////
 		void RemoveAllAreaAuraByOther();
+		bool IsSplineEnabled() const;
+		bool HasUnitMovementFlag(uint32 f) const { return (m_movementInfo.flags & f) == f; }
+		uint16 HasExtraUnitMovementFlag(uint16 f) const { return m_movementInfo.flags2 & f; }
 
 
 		void EventRemoveAura(uint32 SpellId) { RemoveAura(SpellId); }
@@ -1243,6 +1264,9 @@ class SERVER_DECL Unit : public Object
 		uint32 m_triggerSpell;
 		uint32 m_triggerDamage;
 		uint32 m_canMove;
+
+		float GetSpeed(UnitMoveType mtype) const;
+		bool IsControlledByPlayer() const { return m_ControlledByPlayer; }
 
 		SummonHandler summonhandler;
 
@@ -1546,6 +1570,9 @@ class SERVER_DECL Unit : public Object
 		//Combat Mod Results:
 		int32 m_CombatResult_Dodge;
 		int32 m_CombatResult_Parry; //is not implented yet
+
+		float m_speed_rate[MAX_MOVE_TYPE];
+		bool m_ControlledByPlayer;
 
 		// aurastate counters
 		int8 asc_frozen;

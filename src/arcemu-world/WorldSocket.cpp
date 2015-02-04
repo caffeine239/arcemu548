@@ -289,21 +289,6 @@ void WorldSocket::OnConnect()
 	SendPacket(&packet);
 }
 
-void WorldSocket::OnConnectTwo()
-{
-	WorldPacket packet(SMSG_AUTH_CHALLENGE, 37);
-
-	packet << uint16(0);
-
-	for (int i = 0; i < 8; i++)
-		packet << uint32(0);
-
-	packet << uint8(1);
-	packet << uint32(mSeed);
-
-	SendPacket(&packet);
-}
-
 void WorldSocket::_HandleAuthSession(WorldPacket* recvPacket)
 {
     WorldPacket addonsData;
@@ -742,8 +727,6 @@ void WorldSocket::OnRead()
 
 		if (mRemaining > 0)
 		{
-			// Copy from packet buffer into our actual buffer.
-			///Read(mRemaining, (uint8*)Packet->contents());
 			readBuffer.Read((uint8*)Packet->contents(), mRemaining);
 		}
 
@@ -752,29 +735,51 @@ void WorldSocket::OnRead()
 		// Check for packets that we handle
 		switch (Packet->GetOpcode())
 		{
-		case CMSG_PING:
-		{
-			_HandlePing(Packet);
-			delete Packet;
-		}
-		break;
-		case MSG_WOW_CONNECTION:
-		{
-			//printf("Client to server\n");
-			HandleWoWConnection(Packet);      // new 4.x
-		}
-		break;
-		case CMSG_AUTH_SESSION:
-		{
-			_HandleAuthSession(Packet);
-		}
-		break;
-		default:
-		{
-			if (mSession) mSession->QueuePacket(Packet);
-			else delete Packet;
-		}
-		break;
+			case CMSG_PING:
+			{
+				_HandlePing(Packet);
+				delete Packet;
+			}
+				break;
+			case CMSG_LOG_DISCONNECT:
+			{
+				Packet->rfinish();
+
+				if (mSession)
+				{
+					mSession->SetSocket(0);
+					mSession = NULL;
+				}
+
+				if (mRequestID != 0)
+				{
+					sLogonCommHandler.UnauthedSocketClose(mRequestID);
+					mRequestID = 0;
+				}
+
+				if (mQueued)
+				{
+					sWorld.RemoveQueuedSocket(this);	// Remove from queued sockets.
+					mQueued = false;
+				}
+			}
+				break;
+			case MSG_WOW_CONNECTION:
+			{
+				HandleWoWConnection(Packet);
+			}
+				break;
+			case CMSG_AUTH_SESSION:
+			{
+				_HandleAuthSession(Packet);
+			}
+				break;
+			default:
+			{
+				if (mSession) mSession->QueuePacket(Packet);
+				else delete Packet;
+			}
+				break;
 		}
 	}
 }
@@ -788,13 +793,22 @@ void WorldSocket::HandleWoWConnection(WorldPacket* recvPacket)
 
 	if (ClientToServerMsg != "D OF WARCRAFT CONNECTION - CLIENT TO SERVER")
 	{
-		LOG_ERROR("Wasn't as expected, returning... \n");
+		LOG_ERROR("You will never connect with that packet... \n");
 		return;
 	}
 	else
 	{
-		// cause we love having a hundred functions
-		OnConnectTwo();
+		WorldPacket packet(SMSG_AUTH_CHALLENGE, 37);
+
+		packet << uint16(0);
+
+		for (int i = 0; i < 8; i++)
+			packet << uint32(0);
+
+		packet << uint8(1);
+		packet << uint32(mSeed);
+
+		SendPacket(&packet);
 	}
 }
 

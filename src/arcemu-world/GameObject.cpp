@@ -21,7 +21,9 @@
 #include "StdAfx.h"
 GameObject::GameObject(uint64 guid)
 {
+	m_objectType |= TYPE_GAMEOBJECT;
 	m_objectTypeId = TYPEID_GAMEOBJECT;
+	m_updateFlag = (UPDATEFLAG_HAS_POSITION | UPDATEFLAG_ROTATION);
 	m_valuesCount = GAMEOBJECT_END;
 	m_uint32Values = _fields;
 	memset(m_uint32Values, 0, (GAMEOBJECT_END)*sizeof(uint32));

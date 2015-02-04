@@ -24,6 +24,7 @@
 class Unit;
 class Group;
 
+
 enum HIGHGUID_TYPE
 {
     HIGHGUID_TYPE_ITEM           = 0x470,                       // blizz 4000
@@ -56,54 +57,42 @@ enum HIGHGUID_TYPE
 
 enum TYPE
 {
-    TYPE_OBJECT		 = 1,
-    TYPE_ITEM		   = 2,
-    TYPE_CONTAINER	  = 4,
-    TYPE_UNIT		   = 8,
-    TYPE_PLAYER		 = 16,
-    TYPE_GAMEOBJECT	 = 32,
-    TYPE_DYNAMICOBJECT  = 64,
-    TYPE_CORPSE		 = 128,
-    TYPE_AIGROUP		= 256,
-    TYPE_AREATRIGGER	= 512,
+	TYPE_OBJECT = 0x0001,
+	TYPE_ITEM = 0x0002,
+	TYPE_CONTAINER = 0x0006,                       // TYPEMASK_ITEM | 0x0004
+	TYPE_UNIT = 0x0008,                       // creature
+	TYPE_PLAYER = 0x0010,
+	TYPE_GAMEOBJECT = 0x0020,
+	TYPE_DYNAMICOBJECT = 0x0040,
+	TYPE_CORPSE = 0x0080,
+	TYPE_AREATRIGGER = 0x0100,
+	TYPE_SEER = TYPE_PLAYER | TYPE_UNIT | TYPE_DYNAMICOBJECT
 };
 
 enum TYPEID
 {
-    TYPEID_OBJECT		= 0,
-    TYPEID_ITEM		  = 1,
-    TYPEID_CONTAINER	 = 2,
-    TYPEID_UNIT		  = 3,
-    TYPEID_PLAYER		= 4,
-    TYPEID_GAMEOBJECT	= 5,
-    TYPEID_DYNAMICOBJECT = 6,
-    TYPEID_CORPSE		= 7,
-    TYPEID_AIGROUP	   = 8,
-    TYPEID_AREATRIGGER   = 9,
+	TYPEID_OBJECT = 0,
+	TYPEID_ITEM = 1,
+	TYPEID_CONTAINER = 2,
+	TYPEID_UNIT = 3,
+	TYPEID_PLAYER = 4,
+	TYPEID_GAMEOBJECT = 5,
+	TYPEID_DYNAMICOBJECT = 6,
+	TYPEID_CORPSE = 7,
+	TYPEID_AREATRIGGER = 8,
+	TYPEID_SCENEOBJECT = 9
 };
+
+#define NUM_CLIENT_OBJECT_TYPES             10
+
+uint32 GuidHigh2TypeId(uint32 guid_hi);
 
 enum OBJECT_UPDATE_TYPE
 {
-    UPDATETYPE_VALUES = 0,
-    //  8 bytes - GUID
-    //  Goto Update Block
-    UPDATETYPE_MOVEMENT = 1,
-    //  8 bytes - GUID
-    //  Goto Position Update
-    UPDATETYPE_CREATE_OBJECT = 2,
-    //  8 bytes - GUID
-    //  1 byte - Object Type (*)
-    //  Goto Position Update
-    //  Goto Update Block
-    UPDATETYPE_CREATE_YOURSELF = 3, // Looks like 3 & 4 do the same thing
-    //  4 bytes - Count
-    //  Loop Count Times:
-    //  8 bytes - GUID
-    UPDATETYPE_OUT_OF_RANGE_OBJECTS = 4 // <- this is correct, not sure about 3
-                                      //  4 bytes - Count
-                                      //  Loop Count Times:
-                                      //  8 bytes - GUID
-
+	UPDATETYPE_VALUES = 0,
+	UPDATETYPE_CREATE_OBJECT = 1,
+	UPDATETYPE_CREATE_OBJECT2 = 2,
+	UPDATETYPE_OUT_OF_RANGE_OBJECTS = 3,
 };
 
 enum PHASECOMMANDS
@@ -141,6 +130,239 @@ struct TransporterInfo{
 	}
 };
 
+struct MovementInfo2
+{
+	// common
+	uint64 guid;
+	uint32 flags;
+	uint16 flags2;
+	float x;
+	float y;
+	float z;
+	float o;
+	uint32 time;
+	// transport
+	uint64 t_guid;
+	float t_x;
+	float t_y;
+	float t_z;
+	float t_o;
+	int8 t_seat;
+	uint32 t_time;
+	uint32 t_time2;
+	uint32 t_time3;
+	// swimming/flying
+	float pitch;
+	// falling
+	uint32 fallTime;
+	// jumping
+	float j_zspeed, j_cosAngle, j_sinAngle, j_xyspeed;
+	// spline
+	float splineElevation;
+
+	MovementInfo2()
+	{
+		float x = 0.0f;
+		float y = 0.0f;
+		float z = 0.0f;
+		float o = 0.0f;
+		guid = 0;
+		flags = 0;
+		flags2 = 0;
+		time = t_time = t_time2 = t_time3 = fallTime = 0;
+		splineElevation = 0;
+		pitch = j_zspeed = j_sinAngle = j_cosAngle = j_xyspeed = 0.0f;
+		t_guid = 0;
+		t_x = 0.0f;
+		t_y = 0.0f;
+		t_z = 0.0f;
+		t_o = 0.0f;
+		t_seat = -1;
+	}
+
+	uint32 GetMovementFlags() const { return flags; }
+	void SetMovementFlags(uint32 flag) { flags = flag; }
+	void AddMovementFlag(uint32 flag) { flags |= flag; }
+	void RemoveMovementFlag(uint32 flag) { flags &= ~flag; }
+	bool HasMovementFlag(uint32 flag) const { return flags & flag; }
+
+	uint16 GetExtraMovementFlags() const { return flags2; }
+	void AddExtraMovementFlag(uint16 flag) { flags2 |= flag; }
+	bool HasExtraMovementFlag(uint16 flag) const { return flags2 & flag; }
+
+	void SetFallTime(uint32 time) { fallTime = time; }
+
+	void OutDebug();
+};
+
+struct Position
+{
+	struct PositionXYZStreamer
+	{
+		explicit PositionXYZStreamer(Position& pos) : m_pos(&pos) { }
+		Position* m_pos;
+	};
+
+	struct PositionXYZOStreamer
+	{
+		explicit PositionXYZOStreamer(Position& pos) : m_pos(&pos) { }
+		Position* m_pos;
+	};
+
+	float m_positionX;
+	float m_positionY;
+	float m_positionZ;
+	// Better to limit access to m_orientation field, but this will be hard to achieve with many scripts using array initialization for this structure
+	//private:
+	float m_orientation;
+	//public:
+
+	bool operator==(Position const &a);
+
+	inline bool operator!=(Position const &a)
+	{
+		return !(operator==(a));
+	}
+
+	void Relocate(float x, float y)
+	{
+		m_positionX = x; m_positionY = y;
+	}
+	void Relocate(float x, float y, float z)
+	{
+		m_positionX = x; m_positionY = y; m_positionZ = z;
+	}
+	void Relocate(float x, float y, float z, float orientation)
+	{
+		m_positionX = x; m_positionY = y; m_positionZ = z; SetOrientation(orientation);
+	}
+	void Relocate(Position const &pos)
+	{
+		m_positionX = pos.m_positionX; m_positionY = pos.m_positionY; m_positionZ = pos.m_positionZ; SetOrientation(pos.m_orientation);
+	}
+	void Relocate(Position const* pos)
+	{
+		m_positionX = pos->m_positionX; m_positionY = pos->m_positionY; m_positionZ = pos->m_positionZ; SetOrientation(pos->m_orientation);
+	}
+	void RelocateOffset(Position const &offset);
+	void SetOrientation(float orientation)
+	{
+		m_orientation = NormalizeOrientation(orientation);
+	}
+
+	float GetPositionX() const { return m_positionX; }
+	float GetPositionY() const { return m_positionY; }
+	float GetPositionZ() const { return m_positionZ; }
+	float GetOrientation() const { return m_orientation; }
+
+	void GetPosition(float &x, float &y) const
+	{
+		x = m_positionX; y = m_positionY;
+	}
+	void GetPosition(float &x, float &y, float &z) const
+	{
+		x = m_positionX; y = m_positionY; z = m_positionZ;
+	}
+	void GetPosition(float &x, float &y, float &z, float &o) const
+	{
+		x = m_positionX; y = m_positionY; z = m_positionZ; o = m_orientation;
+	}
+	void GetPosition(Position* pos) const
+	{
+		if (pos)
+			pos->Relocate(m_positionX, m_positionY, m_positionZ, m_orientation);
+	}
+
+	Position::PositionXYZStreamer PositionXYZStream()
+	{
+		return PositionXYZStreamer(*this);
+	}
+	Position::PositionXYZOStreamer PositionXYZOStream()
+	{
+		return PositionXYZOStreamer(*this);
+	}
+
+	bool IsPositionValid() const;
+
+	float GetExactDist2dSq(float x, float y) const
+	{
+		float dx = m_positionX - x; float dy = m_positionY - y; return dx*dx + dy*dy;
+	}
+	float GetExactDist2d(const float x, const float y) const
+	{
+		return sqrt(GetExactDist2dSq(x, y));
+	}
+	float GetExactDist2dSq(Position const* pos) const
+	{
+		float dx = m_positionX - pos->m_positionX; float dy = m_positionY - pos->m_positionY; return dx*dx + dy*dy;
+	}
+	float GetExactDist2d(Position const* pos) const
+	{
+		return sqrt(GetExactDist2dSq(pos));
+	}
+	float GetExactDistSq(float x, float y, float z) const
+	{
+		float dz = m_positionZ - z; return GetExactDist2dSq(x, y) + dz*dz;
+	}
+	float GetExactDist(float x, float y, float z) const
+	{
+		return sqrt(GetExactDistSq(x, y, z));
+	}
+	float GetExactDistSq(Position const* pos) const
+	{
+		float dx = m_positionX - pos->m_positionX; float dy = m_positionY - pos->m_positionY; float dz = m_positionZ - pos->m_positionZ; return dx*dx + dy*dy + dz*dz;
+	}
+	float GetExactDist(Position const* pos) const
+	{
+		return sqrt(GetExactDistSq(pos));
+	}
+
+	void GetPositionOffsetTo(Position const & endPos, Position & retOffset) const;
+
+	float GetAngle(Position const* pos) const;
+	float GetAngle(float x, float y) const;
+	float GetRelativeAngle(Position const* pos) const
+	{
+		return GetAngle(pos) - m_orientation;
+	}
+	float GetRelativeAngle(float x, float y) const { return GetAngle(x, y) - m_orientation; }
+	void GetSinCos(float x, float y, float &vsin, float &vcos) const;
+
+	bool IsInDist2d(float x, float y, float dist) const
+	{
+		return GetExactDist2dSq(x, y) < dist * dist;
+	}
+	bool IsInDist2d(Position const* pos, float dist) const
+	{
+		return GetExactDist2dSq(pos) < dist * dist;
+	}
+	bool IsInDist(float x, float y, float z, float dist) const
+	{
+		return GetExactDistSq(x, y, z) < dist * dist;
+	}
+	bool IsInDist(Position const* pos, float dist) const
+	{
+		return GetExactDistSq(pos) < dist * dist;
+	}
+	bool HasInArc(float arcangle, Position const* pos, float border = 2.0f) const;
+	//bool HasInLine(WorldObject const* target, float width) const;
+	std::string ToString() const;
+
+	// modulos a radian orientation to the range of 0..2PI
+	static float NormalizeOrientation(float o)
+	{
+		// fmod only supports positive numbers. Thus we have
+		// to emulate negative numbers
+		if (o < 0)
+		{
+			float mod = o *-1;
+			mod = fmod(mod, 2.0f * static_cast<float>(M_PI));
+			mod = -mod + 2.0f * static_cast<float>(M_PI);
+			return mod;
+		}
+		return fmod(o, 2.0f * static_cast<float>(M_PI));
+	}
+};
 
 class WorldPacket;
 class ByteBuffer;
@@ -249,6 +471,8 @@ class SERVER_DECL Object : public EventableObject
 		uint32 GetHighGUID() { return m_uint32Values[ HIGHGUID ]; }
 		void SetLowGUID(uint32 val) { m_uint32Values[ LOWGUID ] = val; }
 		void SetHighGUID(uint32 val) { m_uint32Values[ HIGHGUID ] = val; }
+		const ByteBuffer& GetPackGUID() const { return m_PackGUID; }
+		uint32 GetGUIDHigh() const { return Arcemu::Util::GUID_HIPART(GetUInt64Value(0)); }
 
 		const WoWGuid & GetNewGUID() const { return m_wowGuid; }
 		uint32 GetEntry() { return m_uint32Values[ OBJECT_FIELD_ENTRY ]; }
@@ -649,6 +873,7 @@ class SERVER_DECL Object : public EventableObject
 		float m_base_walkSpeed;
 
 		TransporterInfo transporter_info;
+		MovementInfo2 m_movementInfo;
 
 		uint32 m_phase; //This stores the phase, if two objects have the same bit set, then they can see each other. The default phase is 0x1.
 
@@ -684,6 +909,7 @@ class SERVER_DECL Object : public EventableObject
 		// Object activation
 	private:
 		bool Active;
+		ByteBuffer m_PackGUID;
 	public:
 		bool IsActive() { return Active; }
 		virtual bool CanActivate();
@@ -725,7 +951,9 @@ class SERVER_DECL Object : public EventableObject
 		//! WoWGuid class
 		WoWGuid m_wowGuid;
 		//! Type id.
+		uint16 m_objectType;
 		uint8 m_objectTypeId;
+		uint16 m_updateFlag;
 		//! Zone id.
 		uint32 m_zoneId;
 		//! Continent/map id.
