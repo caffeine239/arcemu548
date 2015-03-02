@@ -24,6 +24,7 @@
 
 
 #include "StdAfx.h"
+#include "MovementStructures.h"
 
 float baseMoveSpeed[MAX_MOVE_TYPE] =
 {
@@ -435,6 +436,19 @@ Unit::Unit()
 	m_noFallDamage = false;
 	z_axisposition = 0.0f;
 	m_safeFall     = 0;
+}
+
+void Unit::Init()
+{
+	Object::Init();
+
+	//m_AuraInterface.Init(this);
+
+	m_aiInterface = new AIInterface();
+	m_aiInterface->Init(TO_UNIT(this), AITYPE_AGRO, MOVEMENTTYPE_NONE);
+
+	CombatStatus.SetUnit(TO_UNIT(this));
+	SetFlag(UNIT_FIELD_FLAGS_2, 0x00000800);
 }
 
 Unit::~Unit()
@@ -4193,19 +4207,48 @@ void Unit::smsg_AttackStop(Unit* pVictim)
 	if(!pVictim)
 		return;
 
-	WorldPacket data(SMSG_ATTACKSTOP, 24);
-	if(IsPlayer())
-	{
-		data << pVictim->GetNewGUID();
-		data << uint8(0);
-		data << uint32(0);
-		TO< Player* >(this)->GetSession()->SendPacket(&data);
-		data.clear();
-	}
+	WorldPacket data(SMSG_ATTACKSTOP, 8 + 8);
 
-	data << GetNewGUID();
-	data << pVictim->GetNewGUID();
-	data << uint32(0);
+	ObjectGuid attackerGuid = GetGUID();
+	ObjectGuid victimGuid = pVictim ? pVictim->GetGUID() : 0;
+
+	data.WriteBit(victimGuid[5]);
+	data.WriteBit(victimGuid[6]);
+	data.WriteBit(attackerGuid[3]);
+	data.WriteBit(attackerGuid[6]);
+	data.WriteBit(attackerGuid[7]);
+	data.WriteBit(attackerGuid[2]);
+	data.WriteBit(attackerGuid[5]);
+	data.WriteBit(victimGuid[4]);
+	data.WriteBit(1);
+	data.WriteBit(victimGuid[3]);
+	data.WriteBit(victimGuid[0]);
+	data.WriteBit(victimGuid[2]);
+	data.WriteBit(victimGuid[7]);
+	data.WriteBit(attackerGuid[4]);
+	data.WriteBit(attackerGuid[1]);
+	data.WriteBit(attackerGuid[0]);
+	data.WriteBit(victimGuid[1]);
+
+	data.FlushBits();
+
+	data.WriteByteSeq(victimGuid[0]);
+	data.WriteByteSeq(victimGuid[3]);
+	data.WriteByteSeq(victimGuid[5]);
+	data.WriteByteSeq(victimGuid[2]);
+	data.WriteByteSeq(attackerGuid[0]);
+	data.WriteByteSeq(attackerGuid[6]);
+	data.WriteByteSeq(attackerGuid[3]);
+	data.WriteByteSeq(victimGuid[4]);
+	data.WriteByteSeq(attackerGuid[1]);
+	data.WriteByteSeq(attackerGuid[4]);
+	data.WriteByteSeq(victimGuid[6]);
+	data.WriteByteSeq(attackerGuid[5]);
+	data.WriteByteSeq(attackerGuid[7]);
+	data.WriteByteSeq(attackerGuid[2]);
+	data.WriteByteSeq(victimGuid[1]);
+	data.WriteByteSeq(victimGuid[7]);
+
 	SendMessageToSet(&data, true);
 	// stop swinging, reset pvp timeout
 
@@ -4243,15 +4286,46 @@ void Unit::smsg_AttackStop(uint64 victimGuid)
 void Unit::smsg_AttackStart(Unit* pVictim)
 {
 	// Send out ATTACKSTART
-	WorldPacket data(SMSG_ATTACKSTART, 16);
-	data << GetGUID();
-	data << pVictim->GetGUID();
-	SendMessageToSet(&data, false);
-	LOG_DEBUG("WORLD: Sent SMSG_ATTACKSTART");
+	WorldPacket data(SMSG_ATTACKSTART, 8 + 8);
 
-	// FLAGS changed so other players see attack animation
-	//    addUnitFlag(UNIT_FLAG_COMBAT);
-	//    setUpdateMaskBit(UNIT_FIELD_FLAGS );
+	ObjectGuid attackerGuid = pVictim->GetGUID();
+	ObjectGuid victimGuid = GetGUID();
+
+	data.WriteBit(victimGuid[7]);
+	data.WriteBit(attackerGuid[7]);
+	data.WriteBit(attackerGuid[3]);
+	data.WriteBit(victimGuid[3]);
+	data.WriteBit(victimGuid[5]);
+	data.WriteBit(attackerGuid[4]);
+	data.WriteBit(attackerGuid[1]);
+	data.WriteBit(victimGuid[4]);
+	data.WriteBit(attackerGuid[0]);
+	data.WriteBit(victimGuid[6]);
+	data.WriteBit(attackerGuid[5]);
+	data.WriteBit(victimGuid[2]);
+	data.WriteBit(attackerGuid[6]);
+	data.WriteBit(victimGuid[1]);
+	data.WriteBit(attackerGuid[2]);
+	data.WriteBit(victimGuid[0]);
+
+	data.WriteByteSeq(attackerGuid[5]);
+	data.WriteByteSeq(attackerGuid[0]);
+	data.WriteByteSeq(victimGuid[5]);
+	data.WriteByteSeq(attackerGuid[4]);
+	data.WriteByteSeq(attackerGuid[6]);
+	data.WriteByteSeq(victimGuid[6]);
+	data.WriteByteSeq(victimGuid[1]);
+	data.WriteByteSeq(victimGuid[0]);
+	data.WriteByteSeq(attackerGuid[7]);
+	data.WriteByteSeq(victimGuid[4]);
+	data.WriteByteSeq(attackerGuid[2]);
+	data.WriteByteSeq(victimGuid[3]);
+	data.WriteByteSeq(victimGuid[7]);
+	data.WriteByteSeq(victimGuid[2]);
+	data.WriteByteSeq(attackerGuid[3]);
+	data.WriteByteSeq(attackerGuid[1]);
+
+	SendMessageToSet(&data, true);
 	if(IsPlayer())
 	{
 		Player* pThis = TO< Player* >(this);
@@ -7711,35 +7785,66 @@ void Unit::RemoveReflect(uint32 spellid, bool apply)
 }
 
 void Unit::SetPower(uint32 type, int32 value)
-{
-	uint32 maxpower = GetUInt32Value(UNIT_FIELD_MAXPOWER + 1 + type);
+{	
+	uint32 maxpower = GetUInt32Value(UNIT_FIELD_MAXPOWER + type);
 
-	if(value < 0)
+	if (value < 0)
 		value = 0;
-	else if(value > (int32)maxpower)
+	else if (value >(int32)maxpower)
 		value = maxpower;
 
-	SetUInt32Value(UNIT_FIELD_POWER + 1 + type, value);
+	SetUInt32Value(UNIT_FIELD_POWER + type, value);
 }
 
 // DISABLED - NOT UPDATED
 void Unit::SendPowerUpdate(bool self)
 {
-	/*uint32 amount = GetUInt32Value(UNIT_FIELD_POWER1 + GetPowerType()); //save the amount, so we send the same to the player and everyone else
+	uint32 amount = GetUInt32Value(UNIT_FIELD_POWER + GetPowerType());
 
-	WorldPacket data(SMSG_POWER_UPDATE, 14);
-	FastGUIDPack(data, GetGUID());
-	data << (uint8)GetPowerType();
-	data << amount;
-//	This was added in revision 1726.  Is it necessary?  To me, it seems to just be sending the packet twice.
-//	If it is needed for something, put it back in I guess.
-//	CopyAndSendDelayedPacket(&data);
-	SendMessageToSet(&data, self);
+	ObjectGuid guid = GetGUID();
 
-	//VLack: On 3.1.3, create and send a field update packet to everyone else, as this is the only way to update their GUI with the power values.
-	WorldPacket* pkt = BuildFieldUpdatePacket(UNIT_FIELD_POWER1 + GetPowerType(), amount);
+	WorldPacket data(SMSG_POWER_UPDATE, 8 + 4 + 1 + 4);
+	data.WriteBit(guid[4]);
+	data.WriteBit(guid[6]);
+	data.WriteBit(guid[7]);
+	data.WriteBit(guid[5]);
+	data.WriteBit(guid[2]);
+	data.WriteBit(guid[3]);
+	data.WriteBit(guid[0]);
+	data.WriteBit(guid[1]);
+	data.WriteBits(1, 21); // 1 update
+
+	data.WriteByteSeq(guid[7]);
+	data.WriteByteSeq(guid[0]);
+	data.WriteByteSeq(guid[5]);
+	data.WriteByteSeq(guid[3]);
+	data.WriteByteSeq(guid[1]);
+	data.WriteByteSeq(guid[2]);
+	data.WriteByteSeq(guid[4]);
+
+	data << uint8(GetPowerType());
+	data << int32(amount);
+
+	data.WriteByteSeq(guid[6]);
+
+	SendMessageToSet(&data, GetTypeId() == TYPEID_PLAYER);
+
+	WorldPacket* pkt = BuildFieldUpdatePacket(UNIT_FIELD_POWER + GetPowerType(), amount);
 	SendMessageToSet(pkt, false);
-	delete pkt;*/
+	delete pkt;
+
+	/*uint32 updateCount = 1;
+    uint8 PowerType = (power == -1 ? GetPowerType() : power);
+
+    WorldPacket data(SMSG_POWER_UPDATE, 20);
+    data << GetNewGUID();
+    data << uint32(updateCount); // iteration count
+    for (int32 i = 0; i < updateCount; ++i)
+    {
+        data << uint8(PowerType);
+        data << GetUInt32Value(UNIT_FIELD_POWER1+PowerType);
+    }
+    SendMessageToSet(&data, true);*/
 }
 
 // DISABLED - NOT UPDATED
@@ -8372,3 +8477,239 @@ float Unit::GetSpeed(UnitMoveType mtype) const
 {
 	return m_speed_rate[mtype] * (IsControlledByPlayer() ? playerBaseMoveSpeed[mtype] : baseMoveSpeed[mtype]);
 }
+
+bool Unit::IsSplineEnabled() const
+{
+	return NULL;
+	//return movespline->Initialized();
+}
+
+void Unit::WriteMovementInfo(WorldPacket& data, Movement::ExtraMovementStatusElement* extras /*= NULL*/)
+{
+		MovementInfo3 const& mi = m_movementInfo;
+
+		bool hasMovementFlags = GetUnitMovementFlags() != 0;
+		bool hasMovementFlags2 = GetExtraUnitMovementFlags() != 0;
+		bool hasTimestamp = true;
+		bool hasOrientation = !G3D::fuzzyEq(GetOrientation(), 0.0f);
+		bool hasTransportData = false; // GetTransGUID() != 0;
+		bool hasSpline = IsSplineEnabled();
+
+		bool hasTransportTime2 = hasTransportData && m_movementInfo.transport.time2 != 0;
+		bool hasTransportTime3 = false;
+		bool hasPitch = HasUnitMovementFlag(MovementFlags(MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING)) || HasExtraUnitMovementFlag(MOVEFLAG2_ALLOW_PITCHING);
+		bool hasFallDirection = HasUnitMovementFlag(MOVEMENTFLAG_FALLING);
+		bool hasFallData = hasFallDirection || m_movementInfo.jump.fallTime != 0;
+		bool hasSplineElevation = HasUnitMovementFlag(MOVEMENTFLAG_SPLINE_ELEVATION);
+
+		MovementStatusElements const* sequence = GetMovementStatusElementsSequence(data.GetOpcode());
+		if (!sequence)
+		{
+			LOG_ERROR("Unit::WriteMovementInfo: No movement sequence found for opcode %s", data.GetOpcode());
+			return;
+		}
+
+		ObjectGuid guid = GetGUID();
+		ObjectGuid tguid = hasTransportData;// ? GetTransGUID() : 0;
+
+		for (; *sequence != MSEEnd; ++sequence)
+		{
+			MovementStatusElements const& element = *sequence;
+
+			switch (element)
+			{
+			case MSEHasGuidByte0:
+			case MSEHasGuidByte1:
+			case MSEHasGuidByte2:
+			case MSEHasGuidByte3:
+			case MSEHasGuidByte4:
+			case MSEHasGuidByte5:
+			case MSEHasGuidByte6:
+			case MSEHasGuidByte7:
+				data.WriteBit(guid[element - MSEHasGuidByte0]);
+				break;
+			case MSEHasTransportGuidByte0:
+			case MSEHasTransportGuidByte1:
+			case MSEHasTransportGuidByte2:
+			case MSEHasTransportGuidByte3:
+			case MSEHasTransportGuidByte4:
+			case MSEHasTransportGuidByte5:
+			case MSEHasTransportGuidByte6:
+			case MSEHasTransportGuidByte7:
+				if (hasTransportData)
+					data.WriteBit(tguid[element - MSEHasTransportGuidByte0]);
+				break;
+			case MSEGuidByte0:
+			case MSEGuidByte1:
+			case MSEGuidByte2:
+			case MSEGuidByte3:
+			case MSEGuidByte4:
+			case MSEGuidByte5:
+			case MSEGuidByte6:
+			case MSEGuidByte7:
+				data.WriteByteSeq(guid[element - MSEGuidByte0]);
+				break;
+			case MSETransportGuidByte0:
+			case MSETransportGuidByte1:
+			case MSETransportGuidByte2:
+			case MSETransportGuidByte3:
+			case MSETransportGuidByte4:
+			case MSETransportGuidByte5:
+			case MSETransportGuidByte6:
+			case MSETransportGuidByte7:
+				if (hasTransportData)
+					data.WriteByteSeq(tguid[element - MSETransportGuidByte0]);
+				break;
+			case MSEHasCounter:
+				data.WriteBit(!m_movementCounter);
+				break;
+			case MSEHasMovementFlags:
+				data.WriteBit(!hasMovementFlags);
+				break;
+			case MSEHasMovementFlags2:
+				data.WriteBit(!hasMovementFlags2);
+				break;
+			case MSEHasTimestamp:
+				data.WriteBit(!hasTimestamp);
+				break;
+			case MSEHasOrientation:
+				data.WriteBit(!hasOrientation);
+				break;
+			case MSEHasTransportData:
+				data.WriteBit(hasTransportData);
+				break;
+			case MSEHasTransportTime2:
+				if (hasTransportData)
+					data.WriteBit(hasTransportTime2);
+				break;
+			case MSEHasTransportTime3:
+				if (hasTransportData)
+					data.WriteBit(hasTransportTime3);
+				break;
+			case MSEHasPitch:
+				data.WriteBit(!hasPitch);
+				break;
+			case MSEHasFallData:
+				data.WriteBit(hasFallData);
+				break;
+			case MSEHasFallDirection:
+				if (hasFallData)
+					data.WriteBit(hasFallDirection);
+				break;
+			case MSEHasSplineElevation:
+				data.WriteBit(!hasSplineElevation);
+				break;
+			case MSEHasSpline:
+				data.WriteBit(hasSpline);
+				break;
+			case MSEMovementFlags:
+				if (hasMovementFlags)
+					data.WriteBits(GetUnitMovementFlags(), 30);
+				break;
+			case MSEMovementFlags2:
+				if (hasMovementFlags2)
+					data.WriteBits(GetExtraUnitMovementFlags(), 13);
+				break;
+			case MSETimestamp:
+				if (hasTimestamp)
+					data << getMSTime();
+				break;
+			case MSEPositionX:
+				data << GetPositionX();
+				break;
+			case MSEPositionY:
+				data << GetPositionY();
+				break;
+			case MSEPositionZ:
+				data << GetPositionZ();
+				break;
+			case MSEOrientation:
+				if (hasOrientation)
+					data << GetOrientation();
+				break;
+			case MSETransportPositionX:
+				if (hasTransportData)
+					//data << GetTransOffsetX();
+				break;
+			case MSETransportPositionY:
+				if (hasTransportData)
+					//data << GetTransOffsetY();
+				break;
+			case MSETransportPositionZ:
+				if (hasTransportData)
+					//data << GetTransOffsetZ();
+				break;
+			case MSETransportOrientation:
+				if (hasTransportData)
+					//data << GetTransOffsetO();
+				break;
+			case MSETransportSeat:
+				if (hasTransportData)
+					//data << GetTransSeat();
+				break;
+			case MSETransportTime:
+				if (hasTransportData)
+					//data << GetTransTime();
+				break;
+			case MSETransportTime2:
+				if (hasTransportData && hasTransportTime2)
+					data << mi.transport.time2;
+				break;
+			case MSETransportTime3:
+				if (hasTransportData && hasTransportTime3)
+					data << mi.transport.time3;
+				break;
+			case MSEPitch:
+				if (hasPitch)
+					data << mi.pitch;
+				break;
+			case MSEFallTime:
+				if (hasFallData)
+					data << mi.jump.fallTime;
+				break;
+			case MSEFallVerticalSpeed:
+				if (hasFallData)
+					data << mi.jump.zspeed;
+				break;
+			case MSEFallCosAngle:
+				if (hasFallData && hasFallDirection)
+					data << mi.jump.cosAngle;
+				break;
+			case MSEFallSinAngle:
+				if (hasFallData && hasFallDirection)
+					data << mi.jump.sinAngle;
+				break;
+			case MSEFallHorizontalSpeed:
+				if (hasFallData && hasFallDirection)
+					data << mi.jump.xyspeed;
+				break;
+			case MSESplineElevation:
+				if (hasSplineElevation)
+					data << mi.splineElevation;
+				break;
+			case MSEForcesCount:
+				data.WriteBits(0, 22);
+				break;
+			case MSECounter:
+				if (m_movementCounter)
+					data << m_movementCounter;
+				m_movementCounter++;
+				break;
+			case MSEZeroBit:
+				data.WriteBit(0);
+				break;
+			case MSEOneBit:
+				data.WriteBit(1);
+				break;
+			case MSEExtraElement:
+				extras->WriteNextElement(data);
+				break;
+			case MSEUintCount:
+				data << uint32(0);
+				break;
+			default:
+				ASSERT(Movement::PrintInvalidSequenceElement(element, __FUNCTION__));
+				break;
+			}
+		}
+	}

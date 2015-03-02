@@ -53,7 +53,7 @@ void Item::Init(uint32 high, uint32 low)
 {
 	///////////////////////////// from virtual_constructor ///////////////
 	memset(m_uint32Values, 0, (ITEM_END) * sizeof(uint32));
-	SetUInt32Value(OBJECT_FIELD_TYPE, TYPE_ITEM | TYPE_OBJECT);
+	//SetUInt32Value(OBJECT_FIELD_TYPE, TYPE_ITEM | TYPE_OBJECT);
 	SetScale(1);   //always 1
 	SetScale(1);   //always 1
 	m_itemProto = NULL;
@@ -77,8 +77,8 @@ void Item::Init(uint32 high, uint32 low)
 	m_extensions = NULL;
 	m_loadedFromDB = false;
 	//////////////////////////////////////////////////////////
-	SetLowGUID(low);
-	SetHighGUID(high);
+	SetUInt32Value(OBJECT_FIELD_TYPE, TYPE_ITEM | TYPE_OBJECT);
+	SetUInt64Value(OBJECT_FIELD_GUID, MAKE_NEW_GUID(low, 0, high));
 	m_wowGuid.Init(GetGUID());
 }
 

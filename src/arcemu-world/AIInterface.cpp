@@ -1771,9 +1771,153 @@ TODO.... as they somehow seemed to be changed long time ago..
 
 *************************************************************************************************************/
 
+enum MonsterMoveType
+{
+	MonsterMoveNormal = 0,
+	MonsterMoveStop = 1,
+	MonsterMoveFacingSpot = 2,
+	MonsterMoveFacingTarget = 3,
+	MonsterMoveFacingAngle = 4
+};
+
 // packet struct not updated, so i disabled it!!
 void AIInterface::SendMoveToPacket()
 {
+	/*WorldPacket data(SMSG_MONSTER_MOVE, 100);
+	ObjectGuid guid = m_Unit->GetGUID();
+	//ObjectGuid transport = m_Unit->GetTransGUID();
+	//MonsterMoveType type = GetMonsterMoveType(moveSpline);
+	//G3D::Vector3 const& firstPoint = moveSpline.spline.getPoint(moveSpline.spline.first());
+
+	data << float(m_Unit->GetPositionZ());
+	data << float(m_Unit->GetPositionX());
+	data << uint32(0); // moveSpline.GetId());
+	data << float(m_Unit->GetPositionY());
+	data << float(0.f); // Most likely transport Y
+	data << float(0.f); // Most likely transport Z
+	data << float(0.f); // Most likely transport X
+
+	data.WriteBit(1); // Parabolic speed // esi+4Ch
+	data.WriteBit(guid[0]);
+	data.WriteBits(0, 3); //Type
+
+	/*if ((m_currentMoveSpline.size() == MonsterMoveFacingTarget)
+	{
+		ObjectGuid targetGuid = moveSpline.facing.target;
+		data.WriteBit(targetGuid[6]);
+		data.WriteBit(targetGuid[4]);
+		data.WriteBit(targetGuid[3]);
+		data.WriteBit(targetGuid[0]);
+		data.WriteBit(targetGuid[5]);
+		data.WriteBit(targetGuid[7]);
+		data.WriteBit(targetGuid[1]);
+		data.WriteBit(targetGuid[2]);
+	}
+
+	data.WriteBit(1);
+	data.WriteBit(1);
+	data.WriteBit(1);
+
+	//uint32 uncompressedSplineCount = moveSpline.splineflags & MoveSplineFlag::UncompressedPath ? moveSpline.splineflags.cyclic ? moveSpline.spline.getPointCount() - 2 : moveSpline.spline.getPointCount() - 3 : 1;
+	data.WriteBits(0, 20); // uncompressedSplineCount, 20);
+
+	data.WriteBit(!0); // moveSpline.splineflags.raw());
+	data.WriteBit(guid[3]);
+	data.WriteBit(1);
+	data.WriteBit(1);
+	data.WriteBit(1);
+	data.WriteBit(!0); // moveSpline.Duration());
+	data.WriteBit(guid[7]);
+	data.WriteBit(guid[4]);
+	data.WriteBit(1);
+	data.WriteBit(guid[5]);
+
+	//int32 compressedSplineCount = moveSpline.splineflags & MoveSplineFlag::UncompressedPath ? 0 : moveSpline.spline.getPointCount() - 3;
+	data.WriteBits(0, 22); // compressedSplineCount, 22); // WP count
+
+	data.WriteBit(guid[6]);
+	data.WriteBit(0); // Fake bit
+
+	//data.WriteBit(transport[7]);
+	//data.WriteBit(transport[1]);
+	//data.WriteBit(transport[3]);
+	//data.WriteBit(transport[0]);
+	//data.WriteBit(transport[6]);
+	//data.WriteBit(transport[4]);
+	//data.WriteBit(transport[5]);
+	//data.WriteBit(transport[2]);
+
+	data.WriteBit(0); // Send no block
+	data.WriteBit(0);
+	data.WriteBit(guid[2]);
+	data.WriteBit(guid[1]);
+
+	data.FlushBits();
+
+	//if (compressedSplineCount)
+		//WriteLinearPath(moveSpline.spline, data);
+
+	data.WriteByteSeq(guid[1]);
+	/*data.WriteByteSeq(transport[6]);
+	data.WriteByteSeq(transport[4]);
+	data.WriteByteSeq(transport[1]);
+	data.WriteByteSeq(transport[7]);
+	data.WriteByteSeq(transport[0]);
+	data.WriteByteSeq(transport[3]);
+	data.WriteByteSeq(transport[5]);
+	data.WriteByteSeq(transport[2]);
+
+	//if (moveSpline.splineflags & MoveSplineFlag::UncompressedPath)
+	//{
+	//	if (moveSpline.splineflags.cyclic)
+	//		WriteUncompressedCyclicPath(moveSpline.spline, data);
+	//	else
+	///		WriteUncompressedPath(moveSpline.spline, data);
+	//}
+	//else
+	//{
+	//	G3D::Vector3 const& point = moveSpline.spline.getPoint(moveSpline.spline.getPointCount() - 2);
+	//	data << point.y << point.x << point.z;
+	//}
+
+	if (m_currentMoveSpline.size() == MonsterMoveFacingTarget)
+	{
+	//	ObjectGuid targetGuid = moveSpline.facing.target;
+	//	data.WriteByteSeq(targetGuid[5]);
+	//	data.WriteByteSeq(targetGuid[7]);
+	//	data.WriteByteSeq(targetGuid[0]);
+	//	data.WriteByteSeq(targetGuid[4]);
+	//	data.WriteByteSeq(targetGuid[3]);
+	//	data.WriteByteSeq(targetGuid[2]);
+	//	data.WriteByteSeq(targetGuid[6]);
+	//	data.WriteByteSeq(targetGuid[1]);
+	}
+
+	data.WriteByteSeq(guid[5]);
+
+	//if (m_currentMoveSpline.size() == MonsterMoveFacingAngle)
+		//data << float(splinestart.setoff);
+
+	data.WriteByteSeq(guid[3]);
+
+	//if (moveSpline.splineflags.raw())
+	//	data << uint32(moveSpline.splineflags.raw());
+
+	data.WriteByteSeq(guid[6]);
+
+	//if (type == MonsterMoveFacingPoint)
+		//data << moveSpline.facing.f.x << moveSpline.facing.f.y << moveSpline.facing.f.z;
+
+	data.WriteByteSeq(guid[0]);
+	data.WriteByteSeq(guid[7]);
+	data.WriteByteSeq(guid[2]);
+	data.WriteByteSeq(guid[4]);*/
+
+	//if (moveSpline.Duration())
+		//data << uint32(moveSpline.Duration());
+
+	//m_Unit->SendMessageToSet(&data, true);
+
 	/*WorldPacket data(SMSG_MONSTER_MOVE, 100);
 
 	data << m_Unit->GetNewGUID();

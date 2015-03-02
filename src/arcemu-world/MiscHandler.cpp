@@ -944,10 +944,29 @@ void WorldSession::HandleZoneUpdateOpcode(WorldPacket & recv_data)
 
 void WorldSession::HandleSetSelectionOpcode(WorldPacket & recv_data)
 {
-	CHECK_INWORLD_RETURN
+	ObjectGuid guid;
 
-	uint64 guid;
-	recv_data >> guid;
+	guid[7] = recv_data.ReadBit();
+	guid[6] = recv_data.ReadBit();
+	guid[5] = recv_data.ReadBit();
+	guid[4] = recv_data.ReadBit();
+	guid[3] = recv_data.ReadBit();
+	guid[2] = recv_data.ReadBit();
+	guid[1] = recv_data.ReadBit();
+	guid[0] = recv_data.ReadBit();
+
+	recv_data.ReadByteSeq(guid[0]);
+	recv_data.ReadByteSeq(guid[7]);
+	recv_data.ReadByteSeq(guid[3]);
+	recv_data.ReadByteSeq(guid[5]);
+	recv_data.ReadByteSeq(guid[1]);
+	recv_data.ReadByteSeq(guid[4]);
+	recv_data.ReadByteSeq(guid[6]);
+	recv_data.ReadByteSeq(guid[2]);
+
+
+	sLog.outError("Setting %u as target.", Arcemu::Util::GUID_LOPART(guid));
+
 	_player->SetSelection(guid);
 
 	if(_player->m_comboPoints)
@@ -956,7 +975,7 @@ void WorldSession::HandleSetSelectionOpcode(WorldPacket & recv_data)
 	_player->SetTargetGUID(guid);
 	if(guid == 0) // deselected target
 	{
-
+		sLog.outError("bad guid");
 		if(_player->IsInWorld())
 			_player->CombatStatusHandler_ResetPvPTimeout();
 	}
@@ -1430,13 +1449,6 @@ void WorldSession::HandleGameObjectUse(WorldPacket & recv_data)
 	{
 		case GAMEOBJECT_TYPE_CHAIR:
 			{
-
-				/*WorldPacket data(MSG_MOVE_HEARTBEAT, 66);
-				data << plyr->GetNewGUID();
-				data << uint8(0);
-				data << uint64(0);
-				data << obj->GetPositionX() << obj->GetPositionY() << obj->GetPositionZ() << obj->GetOrientation();
-				plyr->SendMessageToSet(&data, true);*/
 				plyr->SafeTeleport(plyr->GetMapId(), plyr->GetInstanceID(), obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ(), obj->GetOrientation());
 				plyr->SetStandState(STANDSTATE_SIT_MEDIUM_CHAIR);
 				plyr->m_lastRunSpeed = 0; //counteract mount-bug; reset speed to zero to force update SetPlayerSpeed in next line.

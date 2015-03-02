@@ -240,7 +240,7 @@ extern SERVER_DECL SessionLogWriter* Player_Log;
 #include "Shaman.h"
 #include "Monk.h"
 
-#include "MovementHandler.h"
+#include "MovementStructures.h"
 
 #endif
 

@@ -24,8 +24,17 @@
 class UpdateMask
 {
 		uint32* mUpdateMask;
+		uint8* _bits;
 		uint32 mCount; // in values
 		uint32 mBlocks; // in uint32 blocks
+
+		typedef uint32 ClientUpdateMaskType;
+
+		enum UpdateMaskCount
+		{
+			CLIENT_UPDATE_MASK_BITS = sizeof(ClientUpdateMaskType) * 8,
+		};
+
 
 	public:
 		UpdateMask() : mUpdateMask(0), mCount(0), mBlocks(0) { }
@@ -56,6 +65,19 @@ class UpdateMask
 			ARCEMU_ASSERT(index < mCount);
 			return (((uint8*)mUpdateMask)[ index >> 3 ] & (1 << (index & 0x7))) != 0;
 			//actually int->bool conversion is not needed here
+		}
+
+		void AppendToPacket(ByteBuffer* data)
+		{
+			for (uint32 i = 0; i < GetBlockCount(); ++i)
+			{
+				ClientUpdateMaskType maskPart = 0;
+				for (uint32 j = 0; j < CLIENT_UPDATE_MASK_BITS; ++j)
+					if (_bits[CLIENT_UPDATE_MASK_BITS * i + j])
+						maskPart |= 1 << j;
+
+				*data << maskPart;
+			}
 		}
 
 		uint32 GetUpdateBlockCount() const

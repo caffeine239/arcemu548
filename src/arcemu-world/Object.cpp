@@ -115,10 +115,13 @@ Object::~Object()
 	sEventMgr.RemoveEvents(this);
 }
 
+void Object::Init()
+{
+
+}
 
 void Object::_Create(uint32 mapid, float x, float y, float z, float ang)
 {
-	sLog.outError(" _Create");
 	m_mapId = mapid;
 	m_position.ChangeCoords(x, y, z, ang);
 	m_spawnLocation.ChangeCoords(x, y, z, ang);
@@ -137,31 +140,31 @@ uint32 Object::BuildCreateUpdateBlockForPlayer(ByteBuffer* data, Player* target)
 		flags |= UPDATEFLAG_SELF;
 
 	switch (m_objectTypeId)
-	{		
+	{
 	case TYPEID_PLAYER:
 	case TYPEID_UNIT:
 	case TYPEID_DYNAMICOBJECT:
 	case TYPEID_AREATRIGGER:
 		updateType = UPDATETYPE_CREATE_OBJECT;
 		break;
-	//case HIGHGUID_TYPE_UNIT:
-	//case TYPEID_UNIT:
-	//{
-	//	if (TempSummon const* summon = ToUnit()->ToTempSummon())
-	//		if (IS_PLAYER_GUID(summon->GetSummonerGUID()))
-	//			updateType = UPDATETYPE_CREATE_OBJECT;
+		//case HIGHGUID_TYPE_UNIT:
+		//case TYPEID_UNIT:
+		//{
+		//	if (TempSummon const* summon = ToUnit()->ToTempSummon())
+		//		if (IS_PLAYER_GUID(summon->GetSummonerGUID()))
+		//			updateType = UPDATETYPE_CREATE_OBJECT;
 
-	//	break;
-	//}
-	//case HIGHGUID_TYPE_CORPSE:
-	//{
-	//	if (IS_PLAYER_GUID(ToCorpse()->GetOwnerGUID()))
-	//		updateType = UPDATETYPE_CREATE_OBJECT2;
-	//	break;
-	//}
+		//	break;
+		//}
+		//case HIGHGUID_TYPE_CORPSE:
+		//{
+		//	if (IS_PLAYER_GUID(ToCorpse()->GetOwnerGUID()))
+		//		updateType = UPDATETYPE_CREATE_OBJECT2;
+		//	break;
+		//}
 	case TYPEID_GAMEOBJECT:
-	{		
-			updateType = UPDATETYPE_CREATE_OBJECT2;
+	{
+		updateType = UPDATETYPE_CREATE_OBJECT2;
 		break;
 	}
 	default:
@@ -213,117 +216,6 @@ uint32 Object::BuildCreateUpdateBlockForPlayer(ByteBuffer* data, Player* target)
 	*data << uint8(0);
 	// update count: 1 ;)
 	return 1;
-
-	/*uint16 flags = 0; // updateflags
-	uint32 flags2 = 0; // flags2 will be 0, values will change in _BuildMovementUpdate
-
-	uint8 updatetype = UPDATETYPE_CREATE_OBJECT;
-		
-	switch (m_objectTypeId)
-	{
-	case TYPEID_CORPSE:
-	case TYPEID_DYNAMICOBJECT:
-	case TYPEID_AREATRIGGER:
-		flags = UPDATEFLAG_HAS_POSITION; // UPDATEFLAG_HAS_STATIONARY_POSITION
-		updatetype = 2;
-		break;
-
-	case TYPEID_GAMEOBJECT:
-		flags = UPDATEFLAG_HAS_POSITION | UPDATEFLAG_ROTATION;
-		updatetype = 2;
-		break;
-
-	case TYPEID_UNIT:
-	case TYPEID_PLAYER:
-		flags = UPDATEFLAG_LIVING;
-		updatetype = 2;
-		break;
-	}
-
-
-	if(IsGameObject())
-	{
-			switch( GetByte(GAMEOBJECT_BYTES_1, GAMEOBJECT_BYTES_TYPE_ID) )
-	switch(m_uint32Values[GAMEOBJECT_BYTES_1])
-	{
-	case GAMEOBJECT_TYPE_MO_TRANSPORT:
-	{
-	if(GetTypeFromGUID() != HIGHGUID_TYPE_TRANSPORTER)
-	return 0;   // bad transporter
-	else
-	flags = 0x0352;
-	}
-	break;
-
-	case GAMEOBJECT_TYPE_TRANSPORT: // 1
-	{
-	flags |= 0x0002 | 0x0040 | 0x0200; // UPDATEFLAG_TRANSPORT | UPDATEFLAG_HAS_STATIONARY_POSITION | UPDATEFLAG_ROTATION
-	}
-	break;
-
-	case GAMEOBJECT_TYPE_TRAP:
-	case GAMEOBJECT_TYPE_DUEL_ARBITER:
-	case GAMEOBJECT_TYPE_FLAGSTAND:
-	case GAMEOBJECT_TYPE_FLAGDROP:
-	updatetype = 2; // UPDATETYPE_CREATE_OBJECT2
-	break;
-
-	default:
-	break;
-	}
-	//The above 3 checks FAIL to identify transports, thus their flags remain 0x58, and this is BAAAAAAD! Later they don't get position x,y,z,o updates, so they appear randomly by a client-calculated path, they always face north, etc... By: VLack
-	if(flags != 0x0352 && IsGameObject() && TO< GameObject* >(this)->GetInfo()->Type == GAMEOBJECT_TYPE_TRANSPORT && !(TO< GameObject* >(this)->GetOverrides() & GAMEOBJECT_OVERRIDE_PARENTROT))
-	flags = 0x0352;
-	}
-
-	if(GetTypeFromGUID() == HIGHGUID_TYPE_VEHICLE)
-	{
-	flags |= UPDATEFLAG_VEHICLE;
-	updatetype = 2; // UPDATETYPE_CREATE_OBJECT_SELF
-	}
-
-	uint32 valCount = m_valuesCount;
-
-	if (target == this)
-	{
-		// player creating self
-		flags |= UPDATEFLAG_SELF;  // UPDATEFLAG_SELF
-		updatetype = 2; // UPDATEFLAG_CREATE_OBJECT_SELF
-	}
-	else if (GetTypeId() == TYPEID_PLAYER)
-		valCount = PLAYER_FAKE_INEBRIATION;
-		
-	
-
-	if (IsUnit())
-	{
-		if (TO_UNIT(this)->GetTargetGUID())
-			flags |= UPDATEFLAG_HAS_TARGET; // UPDATEFLAG_HAS_ATTACKING_TARGET
-	}
-
-	// build our actual update
-	*data << updatetype;
-
-	// we shouldn't be here, under any circumstances, unless we have a wowguid..
-	ASSERT(m_wowGuid.GetNewGuidLen());
-	*data << m_wowGuid;
-
-	*data << m_objectTypeId;
-
-	_BuildMovementUpdate(data, flags, flags2, target);
-
-	// we have dirty data, or are creating for ourself.
-	UpdateMask updateMask;
-	updateMask.SetCount(valCount);
-	_SetCreateBits(&updateMask, target);
-
-	// this will cache automatically if needed
-	_BuildValuesUpdate(data, &updateMask, target);
-
-	/// @TODO Implement dynamic update fields
-	*data << uint8(0);
-	// update count: 1 ;)
-	return 1;*/
 }
 
 WorldPacket* Object::BuildFieldUpdatePacket(uint32 index, uint32 value)
@@ -490,7 +382,7 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 
 	if (flags & UPDATEFLAG_LIVING)  // UPDATEFLAG_LIVING
 	{
-		
+
 		uint32 movementFlags = 0;
 		uint16 movementFlagsExtra = 0;
 		Unit const* self = TO_UNIT(this);
@@ -498,11 +390,10 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 		movementFlags = self->m_movementInfo.GetMovementFlags();
 		movementFlagsExtra = self->m_movementInfo.GetExtraMovementFlags();
 		hasFallDirection = self->HasUnitMovementFlag(MOVEMENTFLAG_FALLING);
-		haveFallData = hasFallDirection || self->m_movementInfo.fallTime != 0;
+		haveFallData = hasFallDirection || self->m_movementInfo.jump.fallTime != 0;
 		hasPitch = self->HasUnitMovementFlag(MovementFlags(MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING)) || self->HasExtraUnitMovementFlag(MOVEFLAG2_ALLOW_PITCHING);
 		hasSplineElevation = self->HasUnitMovementFlag(MOVEMENTFLAG_SPLINE_ELEVATION);
 
-		sLog.outError("hasFallDirection == %u AND haveFallData == %u", hasFallDirection, haveFallData);
 		if (pThis && pThis->transporter_info.guid != 0)
 			flags2 |= MOVEMENTFLAG_DISABLE_GRAVITY; // MOVEMENTFLAG_DISABLE_GRAVITY
 		else if (uThis != NULL && transporter_info.guid != 0 && uThis->transporter_info.guid != 0)
@@ -523,7 +414,7 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 		data->WriteBit(guid[2]);
 		data->WriteBit(0);
 		data->WriteBit(!hasPitch);
-		data->WriteBit(self->m_movementInfo.t_guid);
+		data->WriteBit(self->m_movementInfo.transport.guid);
 		data->WriteBit(0);
 
 		data->WriteBit(!self->m_movementInfo.time);
@@ -595,13 +486,13 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 		{
 			if (hasFallDirection)
 			{
-				*data << float(self->m_movementInfo.j_xyspeed);
-				*data << float(self->m_movementInfo.j_cosAngle);
-				*data << float(self->m_movementInfo.j_sinAngle);
+				*data << float(self->m_movementInfo.jump.xyspeed);
+				*data << float(self->m_movementInfo.jump.cosAngle);
+				*data << float(self->m_movementInfo.jump.sinAngle);
 			}
 
-			*data << uint32(self->m_movementInfo.fallTime);
-			*data << float(self->m_movementInfo.j_zspeed);
+			*data << uint32(self->m_movementInfo.jump.fallTime);
+			*data << float(self->m_movementInfo.jump.zspeed);
 		}
 
 		data->WriteByteSeq(guid[1]);
@@ -686,7 +577,6 @@ void Object::_BuildMovementUpdate(ByteBuffer* data, uint16 flags, uint32 flags2,
 		if (IsGameObject())
 			*data << TO< GameObject* >(this)->m_rotation;
 	}
-	sLog.outError("Flags == %u Flags2 == %u", flags, flags2);
 }
 
 
@@ -873,19 +763,6 @@ void Object::_BuildValuesUpdate(ByteBuffer* data, UpdateMask* updateMask, Player
 	}
 }
 
-void Object::BuildHeartBeatMsg(WorldPacket* data) const
-{
-	data->Initialize(MSG_MOVE_HEARTBEAT);
-
-	*data << GetGUID();
-
-	*data << uint32(0); // flags
-	//	*data << uint32(0); // mysterious value #1
-	*data << getMSTime();
-	*data << m_position;
-	*data << m_position.o;
-}
-
 bool Object::SetPosition(const LocationVector & v, bool allowPorting /* = false */)
 {
 	bool updateMap = false, result = true;
@@ -911,30 +788,51 @@ bool Object::SetPosition(const LocationVector & v, bool allowPorting /* = false 
 	return result;
 }
 
+bool Object::SetPosition2(const Position &pos, bool allowPorting /* = false */)
+{
+	return SetPosition(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), pos.GetOrientation(), allowPorting);
+}
+
 bool Object::SetPosition(float newX, float newY, float newZ, float newOrientation, bool allowPorting)
 {
-	bool updateMap = false, result = true;
-
-	ARCEMU_ASSERT(!isnan(newX) && !isnan(newY) && !isnan(newOrientation));
-
-	//It's a good idea to push through EVERY transport position change, no matter how small they are. By: VLack aka. VLsoft
-	if (IsGameObject() && TO< GameObject* >(this)->GetInfo()->Type == GAMEOBJECT_TYPE_TRANSPORT)
-		updateMap = true;
-
-	//if (m_position.x != newX || m_position.y != newY)
-	//updateMap = true;
-	if (m_lastMapUpdatePosition.Distance2DSq(newX, newY) > 4.0f)		/* 2.0f */
-		updateMap = true;
-
-	m_position.ChangeCoords(newX, newY, newZ, newOrientation);
-
-	if (!allowPorting && newZ < -500)
+	/*if (!allowPorting && newZ < -500)
 	{
 		m_position.z = 500;
 		LOG_ERROR("setPosition: fell through map; height ported");
 
-		result = false;
+		return false;
 	}
+
+	bool updateMap = false;
+	bool turn = (GetOrientation() != newOrientation);
+	bool relocated = (allowPorting || GetPositionX() != newX || GetPositionY() != newY || GetPositionZ() != newZ);
+
+	if (IsGameObject() && TO< GameObject* >(this)->GetInfo()->Type == GAMEOBJECT_TYPE_TRANSPORT)
+		updateMap = true;
+
+	if (m_lastMapUpdatePosition.Distance2DSq(newX, newY) > 4.0f)		/* 2.0f
+		updateMap = true;
+
+	if (turn)
+		//RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TURNING);
+
+		if (relocated)
+		{
+			//RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_MOVE);
+			m_position.ChangeCoords(newX, newY, newZ, newOrientation);
+		}
+		else if (turn)
+		{
+			Unit *u = static_cast< Unit* >(this);
+			if (u->GetVehicleComponent() != NULL)
+			{
+				u->GetVehicleComponent()->MovePassengers(newX, newY, newZ, newOrientation);
+			}
+			//UpdateOrientation(orientation);
+		}
+
+	// code block for underwater state update
+	//UpdateUnderwaterState(GetMap(), x, y, z);
 
 	if (IsInWorld() && updateMap)
 	{
@@ -946,11 +844,47 @@ bool Object::SetPosition(float newX, float newY, float newZ, float newOrientatio
 			TO< Player* >(this)->GetGroup()->HandlePartialChange(PARTY_UPDATE_FLAG_POSITION, TO< Player* >(this));
 		}
 	}
+	m_lastMapUpdatePosition.ChangeCoords(newX, newY, newZ, newOrientation);
+	return (relocated || turn);*/
+
+	bool updateMap = false, result = true;
+
+	ARCEMU_ASSERT(!isnan(newX) && !isnan(newY) && !isnan(newOrientation));
+
+	//It's a good idea to push through EVERY transport position change, no matter how small they are. By: VLack aka. VLsoft
+	if (IsGameObject() && TO< GameObject* >(this)->GetInfo()->Type == GAMEOBJECT_TYPE_TRANSPORT)
+	updateMap = true;
+
+	//if (m_position.x != newX || m_position.y != newY)
+	//updateMap = true;
+	if (m_lastMapUpdatePosition.Distance2DSq(newX, newY) > 4.0f)		/* 2.0f*/
+	updateMap = true;
+
+	m_position.ChangeCoords(newX, newY, newZ, newOrientation);
+
+	if (!allowPorting && newZ < -500)
+	{
+	m_position.z = 500;
+	LOG_ERROR("setPosition: fell through map; height ported");
+
+	result = false;
+	}
+
+	if (IsInWorld() && updateMap)
+	{
+	m_lastMapUpdatePosition.ChangeCoords(newX, newY, newZ, newOrientation);
+	m_mapMgr->ChangeObjectLocation(this);
+
+	if (IsPlayer() && TO< Player* >(this)->GetGroup() && TO< Player* >(this)->m_last_group_position.Distance2DSq(m_position) > 25.0f)       // distance of 5.0
+	{
+	TO< Player* >(this)->GetGroup()->HandlePartialChange(PARTY_UPDATE_FLAG_POSITION, TO< Player* >(this));
+	}
+	}
 
 	if (IsUnit()){
-		Unit *u = static_cast< Unit* >(this);
-		if (u->GetVehicleComponent() != NULL)
-			u->GetVehicleComponent()->MovePassengers(newX, newY, newZ, newOrientation);
+	Unit *u = static_cast< Unit* >(this);
+	if (u->GetVehicleComponent() != NULL)
+	u->GetVehicleComponent()->MovePassengers(newX, newY, newZ, newOrientation);
 	}
 
 	return result;
@@ -2039,50 +1973,82 @@ void Object::SendAttackerStateUpdate(Object* Caster, Object* Target, dealdamage*
 	if (!Caster || !Target || !Dmg)
 		return;
 
-	WorldPacket data(SMSG_ATTACKERSTATEUPDATE, 70);
+	ObjectGuid guid = GetGUID();
+	uint32 count = 1;
+	uint32 counter = 0;
+	size_t maxsize = 4 + 5 + 5 + 4 + 4 + 1 + 4 + 4 + 4 + 4 + 4 + 1 + 4 + 4 + 4 + 4 + 4 * 12;
+	WorldPacket data(SMSG_ATTACKERSTATEUPDATE, maxsize);    // we guess size
 
 	uint32 Overkill = 0;
 
 	if (Damage > Target->GetUInt32Value(UNIT_FIELD_MAXHEALTH))
 		Overkill = Damage - Target->GetUInt32Value(UNIT_FIELD_HEALTH);
 
-	data << uint32(HitStatus);
-	data << Caster->GetNewGUID();
-	data << Target->GetNewGUID();
+	bool hasUnkFlags = HitStatus & HITINFO_UNK26;
+	uint32 unkCounter = 0;
 
-	data << uint32(Damage);						// Realdamage
-	data << uint32(Overkill);					// Overkill
-	data << uint8(1);					// Damage type counter / swing type
+	data.WriteBit(hasUnkFlags);
 
-	data << uint32(g_spellSchoolConversionTable[Dmg->school_type]);				    // Damage school
-	data << float(Dmg->full_damage);	// Damage float
-	data << uint32(Dmg->full_damage);	// Damage amount
-
-	if (HitStatus & HITSTATUS_ABSORBED)
+	if (hasUnkFlags)
 	{
-		data << uint32(Abs);				// Damage absorbed
+		data.WriteBits(unkCounter, 21);
+		data.FlushBits();
+
+		data << uint32(0);
+
+		for (uint32 i = 0; i < unkCounter; ++i)
+		{
+			data << uint32(0);
+			data << uint32(0);
+		}
+
+		data << uint32(0);
+		data << uint32(0);
 	}
 
-	if (HitStatus & HITSTATUS_RESIST)
+	// Needs to be flushed because data.wpos() wouldnt return the correct placeholder
+	data.FlushBits();
+
+	size_t size = data.wpos();
+	data << uint32(0);                                      // Placeholder
+
+	data << uint32(HitStatus);
+	data.append(Caster->GetNewGUID());
+	data.append(Target->GetNewGUID());
+	data << uint32(Dmg->full_damage);                     // Full damage
+	data << uint32(Overkill < 0 ? 0 : Overkill);            // Overkill
+	data << uint8(count);                                   // Sub damage count
+
+	for (uint32 i = 0; i < count; ++i)
 	{
-		data << uint32(Dmg->resisted_damage);	// Damage resisted
+		data << uint32(g_spellSchoolConversionTable[Dmg->school_type]);				    // Damage school
+		data << float(Dmg->full_damage);	// Damage float
+		data << uint32(Dmg->full_damage);	// Damage amount
+	}
+
+	if (HitStatus & (HITINFO_FULL_ABSORB | HITINFO_PARTIAL_ABSORB))
+	{
+		for (uint32 i = 0; i < count; ++i)
+			data << uint32(Abs);             // Absorb
+	}
+
+	if (HitStatus & (HITINFO_FULL_RESIST | HITINFO_PARTIAL_RESIST))
+	{
+		for (uint32 i = 0; i < count; ++i)
+			data << uint32(Dmg->resisted_damage);             // Resist
 	}
 
 	data << uint8(VState);
-	data << uint32(0);				// can be 0,1000 or -1
-	data << uint32(0);
+	data << uint32(0);                                      // Unknown attackerstate
+	data << uint32(0);                                      // Melee spellid
 
-	if (HitStatus & HITSTATUS_BLOCK)
-	{
-		data << uint32(BlockedDamage);		// Damage amount blocked
-	}
+	if (HitStatus & HITINFO_BLOCK)
+		data << uint32(BlockedDamage);
 
+	if (HitStatus & HITINFO_RAGE_GAIN)
+		data << uint32(0);
 
-	if (HitStatus & HITSTATUS_UNK2)
-	{
-		data << uint32(0);				// unknown
-	}
-
+	//! Probably used for debugging purposes, as it is not known to appear on retail servers
 	if (HitStatus & HITSTATUS_UNK)
 	{
 		data << uint32(0);
@@ -2094,11 +2060,15 @@ void Object::SendAttackerStateUpdate(Object* Caster, Object* Target, dealdamage*
 		data << float(0);
 		data << float(0);
 		data << float(0);
-
-		data << float(0);   // Found in loop
-		data << float(0);	// Found in loop
+		data << float(0);
+		data << float(0);
 		data << uint32(0);
 	}
+
+	if (HitStatus & (HITINFO_BLOCK | HITINFO_UNK12))
+		data << float(0);
+
+	data.put(size, data.wpos() - size - 4); // Blizz - Weird and Lazy people....
 
 	SendMessageToSet(&data, Caster->IsPlayer());
 }
@@ -2516,10 +2486,10 @@ void Object::SetMapCell(MapCell* cell)
 
 void Object::SendAIReaction(uint32 reaction)
 {
-	WorldPacket data(SMSG_AI_REACTION, 12);
-	data << uint64(GetGUID());
-	data << uint32(reaction);
-	SendMessageToSet(&data, false);
+	//WorldPacket data(SMSG_AI_REACTION, 12);
+	//data << uint64(GetGUID());
+	//data << uint32(reaction);
+	//SendMessageToSet(&data, false);
 }
 
 void Object::SendDestroyObject()

@@ -22,6 +22,7 @@
 #define _PLAYER_H
 
 #include "PlayerCache.h"
+#include "MovementStructures.h"
 
 struct BGScore;
 #ifdef ENABLE_ACHIEVEMENTS
@@ -1837,6 +1838,9 @@ public:
 	void SetAreaID(uint32 area) { m_AreaID = area; }
 	bool IsInCity();
 
+	void SendDirectMessage(WorldPacket* data);
+	void ReadMovementInfo(WorldPacket& data, MovementInfo3* mi, Movement::ExtraMovementStatusElement* extras = NULL);
+
 	// Instance IDs
 
 	uint32 GetPersistentInstanceId(uint32 mapId, uint32 difficulty)
@@ -2241,13 +2245,17 @@ protected:
 	void _SetUpdateBits(UpdateMask* updateMask, Player* target) const;
 
 	/* Update system components */
-	ByteBuffer bUpdateBuffer;
-	ByteBuffer bCreationBuffer;
-	uint32 mUpdateCount;
-	uint32 mCreationCount;
-	uint32 mOutOfRangeIdCount;
-	ByteBuffer mOutOfRangeIds;
-	SplineMap _splineMap;
+	ByteBuffer			bUpdateBuffer;
+	uint32				mUpdateCount;
+    ByteBuffer			bCreationBuffer;
+    uint32				mCreationCount;
+	ByteBuffer			mOutOfRangeIds;
+	uint32				mOutOfRangeIdCount;
+	std::set<uint64>	mCreateGUIDS;	//if you create then destroy something in the same packet then client will show the object forever
+	std::set<uint64>	mDestroyGUIDS;  //if you destroy then create the same object in 1 packet there is a chance client will bug out
+//	bool				CreateDestroyConflictDetected;	//this leaves a bad non interactable object on the map client side
+//	bool				DestroyCreateConflictDetected;	//this can be handled by the client. No biggie here
+	SplineMap			_splineMap;
 	/* End update system */
 
 	void _LoadTutorials(QueryResult* result);
@@ -2392,6 +2400,7 @@ public:
 	bool m_passOnLoot;
 	uint32 m_tradeSequence;
 	bool m_changingMaps;
+	Unit* m_mover;
 
 	void PlaySound(uint32 sound_id);
 

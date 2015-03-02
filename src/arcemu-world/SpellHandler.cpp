@@ -24,32 +24,374 @@ void WorldSession::HandleUseItemOpcode(WorldPacket & recvPacket)
 {
 	CHECK_INWORLD_RETURN
 
-	typedef std::list<Aura*> AuraList;
+	Player* pUser = _player;
+	Unit* mover = _player->m_mover;
 
-	Player* p_User = GetPlayer();
-	LOG_DETAIL("WORLD: got use Item packet, data length = %i", recvPacket.size());
-	int8 tmp1, slot;
-	uint8 unk; //Alice : added in 3.0.2
-	uint64 item_guid;
-	uint8 cn;
+	
+	uint8 bagIndex, slot;
+	uint8 castCount = 0;
+	uint8 castFlags = 0;
 	uint32 spellId = 0;
-	uint32 glyphIndex;
-	bool found = false;
+	uint32 glyphIndex = 0;
+	uint32 targetMask = 0;
+	uint32 targetStringLength = 0;
+	float elevation = 0.0f;
+	float missileSpeed = 0.0f;
+	ObjectGuid itemGuid = 0;
+	ObjectGuid targetGuid = 0;
+	ObjectGuid itemTargetGuid = 0;
+	ObjectGuid destTransportGuid = 0;
+	ObjectGuid srcTransportGuid = 0;
+	Position srcPos;
+	Position destPos;
+	std::string targetString;
 
-	recvPacket >> tmp1;
-	recvPacket >> slot;
-	recvPacket >> cn;
-	recvPacket >> spellId;
-	recvPacket >> item_guid;
-	recvPacket >> glyphIndex;
-	recvPacket >> unk;
+	// Movement data
+	MovementInfo3 movementInfo;
+	ObjectGuid movementTransportGuid = 0;
+	ObjectGuid movementGuid = 0;
+	bool hasTransport = false;
+	bool hasTransportTime2 = false;
+	bool hasTransportTime3 = false;
+	bool hasFallData = false;
+	bool hasFallDirection = false;
+	bool hasTimestamp = false;
+	bool hasSplineElevation = false;
+	bool hasPitch = false;
+	bool hasOrientation = false;
+	bool hasUnkMovementField = false;
+	bool found = false;
+	uint32 unkMovementLoopCounter = 0;
+	Unit* caster = mover;
+
+	recvPacket >> slot >> bagIndex;
+
+	bool hasElevation = !recvPacket.ReadBit();
+	itemGuid[6] = recvPacket.ReadBit();
+	bool hasTargetString = !recvPacket.ReadBit();
+	itemGuid[1] = recvPacket.ReadBit();
+	bool hasCastFlags = !recvPacket.ReadBit();
+	bool hasDestLocation = recvPacket.ReadBit();
+	itemGuid[2] = recvPacket.ReadBit();
+	itemGuid[7] = recvPacket.ReadBit();
+	itemGuid[0] = recvPacket.ReadBit();
+	bool hasTargetMask = !recvPacket.ReadBit();
+	bool hasMissileSpeed = !recvPacket.ReadBit();
+	bool hasMovement = recvPacket.ReadBit();
+	bool hasCastCount = !recvPacket.ReadBit();
+	bool hasSpellId = !recvPacket.ReadBit();
+	recvPacket.ReadBit();
+	bool hasGlyphIndex = !recvPacket.ReadBit();
+	recvPacket.ReadBit();
+	itemGuid[4] = recvPacket.ReadBit();
+	bool hasSrcLocation = recvPacket.ReadBit();
+	itemGuid[3] = recvPacket.ReadBit();
+	itemGuid[5] = recvPacket.ReadBit();
+	uint8 researchDataCount = recvPacket.ReadBits(2);
+
+	for (uint8 i = 0; i < researchDataCount; ++i)
+		recvPacket.ReadBits(2);
+
+	if (hasMovement)
+	{
+		hasPitch = !recvPacket.ReadBit();
+		hasTransport = recvPacket.ReadBit();
+		recvPacket.ReadBit();
+
+		if (hasTransport)
+		{
+			movementTransportGuid[7] = recvPacket.ReadBit();
+			movementTransportGuid[2] = recvPacket.ReadBit();
+			movementTransportGuid[4] = recvPacket.ReadBit();
+			movementTransportGuid[5] = recvPacket.ReadBit();
+			movementTransportGuid[6] = recvPacket.ReadBit();
+			movementTransportGuid[0] = recvPacket.ReadBit();
+			movementTransportGuid[1] = recvPacket.ReadBit();
+			hasTransportTime3 = recvPacket.ReadBit();
+			movementTransportGuid[4] = recvPacket.ReadBit();
+			hasTransportTime2 = recvPacket.ReadBit();
+		}
+
+		movementGuid[6] = recvPacket.ReadBit();
+		movementGuid[2] = recvPacket.ReadBit();
+		movementGuid[1] = recvPacket.ReadBit();
+		unkMovementLoopCounter = recvPacket.ReadBits(22);
+		recvPacket.ReadBit();
+		bool hasMovementFlags2 = !recvPacket.ReadBit();
+		hasFallData = recvPacket.ReadBit();
+		movementGuid[5] = recvPacket.ReadBit();
+		hasSplineElevation = !recvPacket.ReadBit();
+		recvPacket.ReadBit();
+		movementGuid[7] = recvPacket.ReadBit();
+		movementGuid[0] = recvPacket.ReadBit();
+
+		if (hasFallData)
+			hasFallDirection = recvPacket.ReadBit();
+
+		hasOrientation = !recvPacket.ReadBit();
+		movementGuid[4] = recvPacket.ReadBit();
+		movementGuid[3] = recvPacket.ReadBit();
+		hasTimestamp = !recvPacket.ReadBit();
+		hasUnkMovementField = !recvPacket.ReadBit();
+		bool hasMovementFlags = !recvPacket.ReadBit();
+
+		if (hasMovementFlags2)
+			movementInfo.flags2 = recvPacket.ReadBits(13);
+
+		if (hasMovement)
+			movementInfo.flags = recvPacket.ReadBits(30);
+	}
+
+	if (hasSrcLocation)
+	{
+		srcTransportGuid[3] = recvPacket.ReadBit();
+		srcTransportGuid[1] = recvPacket.ReadBit();
+		srcTransportGuid[7] = recvPacket.ReadBit();
+		srcTransportGuid[4] = recvPacket.ReadBit();
+		srcTransportGuid[2] = recvPacket.ReadBit();
+		srcTransportGuid[0] = recvPacket.ReadBit();
+		srcTransportGuid[6] = recvPacket.ReadBit();
+		srcTransportGuid[5] = recvPacket.ReadBit();
+	}
+
+	if (hasDestLocation)
+	{
+		destTransportGuid[2] = recvPacket.ReadBit();
+		destTransportGuid[4] = recvPacket.ReadBit();
+		destTransportGuid[1] = recvPacket.ReadBit();
+		destTransportGuid[7] = recvPacket.ReadBit();
+		destTransportGuid[6] = recvPacket.ReadBit();
+		destTransportGuid[0] = recvPacket.ReadBit();
+		destTransportGuid[3] = recvPacket.ReadBit();
+		destTransportGuid[5] = recvPacket.ReadBit();
+	}
+
+	if (hasTargetString)
+		targetStringLength = recvPacket.ReadBits(7);
+
+	itemTargetGuid[1] = recvPacket.ReadBit();
+	itemTargetGuid[0] = recvPacket.ReadBit();
+	itemTargetGuid[5] = recvPacket.ReadBit();
+	itemTargetGuid[3] = recvPacket.ReadBit();
+	itemTargetGuid[6] = recvPacket.ReadBit();
+	itemTargetGuid[4] = recvPacket.ReadBit();
+	itemTargetGuid[7] = recvPacket.ReadBit();
+	itemTargetGuid[2] = recvPacket.ReadBit();
+
+	targetGuid[4] = recvPacket.ReadBit();
+	targetGuid[5] = recvPacket.ReadBit();
+	targetGuid[0] = recvPacket.ReadBit();
+	targetGuid[1] = recvPacket.ReadBit();
+	targetGuid[3] = recvPacket.ReadBit();
+	targetGuid[7] = recvPacket.ReadBit();
+	targetGuid[6] = recvPacket.ReadBit();
+	targetGuid[2] = recvPacket.ReadBit();
+
+	if (hasCastFlags)
+		castFlags = recvPacket.ReadBits(5);
+
+	if (hasTargetMask)
+		targetMask = recvPacket.ReadBits(20);
+
+	recvPacket.ReadByteSeq(itemGuid[0]);
+	recvPacket.ReadByteSeq(itemGuid[5]);
+	recvPacket.ReadByteSeq(itemGuid[6]);
+	recvPacket.ReadByteSeq(itemGuid[3]);
+	recvPacket.ReadByteSeq(itemGuid[4]);
+	recvPacket.ReadByteSeq(itemGuid[2]);
+	recvPacket.ReadByteSeq(itemGuid[1]);
+
+	for (uint8 i = 0; i < researchDataCount; ++i)
+	{
+		recvPacket.read<uint32>();
+		recvPacket.read<uint32>();
+	}
+
+	recvPacket.ReadByteSeq(itemGuid[7]);
+
+	if (hasMovement)
+	{
+		for (uint8 i = 0; i != unkMovementLoopCounter; i++)
+			recvPacket.read<uint32>();
+
+		if (hasTransport)
+		{
+			recvPacket >> movementInfo.transport.pos.m_positionY;
+			recvPacket >> movementInfo.transport.pos.m_positionZ;
+			recvPacket.ReadByteSeq(movementTransportGuid[1]);
+
+			if (hasTransportTime3)
+				recvPacket >> movementInfo.transport.time3;
+
+			recvPacket.ReadByteSeq(movementTransportGuid[7]);
+			recvPacket.ReadByteSeq(movementTransportGuid[5]);
+			recvPacket.ReadByteSeq(movementTransportGuid[2]);
+			recvPacket.ReadByteSeq(movementTransportGuid[4]);
+			recvPacket >> movementInfo.transport.pos.m_positionX;
+			movementInfo.transport.pos.SetOrientation(recvPacket.read<float>());
+			recvPacket.ReadByteSeq(movementTransportGuid[0]);
+			recvPacket >> movementInfo.transport.seat;
+			recvPacket >> movementInfo.transport.time;
+			recvPacket.ReadByteSeq(movementTransportGuid[6]);
+			recvPacket.ReadByteSeq(movementTransportGuid[3]);
+
+			if (hasTransportTime2)
+				recvPacket >> movementInfo.transport.time2;
+		}
+
+		if (hasFallData)
+		{
+			recvPacket >> movementInfo.jump.zspeed;
+
+			if (hasFallDirection)
+			{
+				recvPacket >> movementInfo.jump.sinAngle;
+				recvPacket >> movementInfo.jump.cosAngle;
+				recvPacket >> movementInfo.jump.xyspeed;
+			}
+
+			recvPacket >> movementInfo.jump.fallTime;
+		}
+		recvPacket.ReadByteSeq(movementTransportGuid[3]);
+		recvPacket.ReadByteSeq(movementTransportGuid[7]);
+		recvPacket.ReadByteSeq(movementTransportGuid[6]);
+		recvPacket.ReadByteSeq(movementTransportGuid[1]);
+		recvPacket >> movementInfo.pos.m_positionY;
+
+		if (hasSplineElevation)
+			recvPacket >> movementInfo.splineElevation;
+
+		if (hasUnkMovementField)
+			recvPacket.read<uint32>();
+
+		if (hasOrientation)
+			movementInfo.pos.SetOrientation(recvPacket.read<float>());
+
+		recvPacket.ReadByteSeq(movementTransportGuid[2]);
+		recvPacket >> movementInfo.pos.m_positionZ;
+
+		if (hasTimestamp)
+			recvPacket >> movementInfo.time;
+
+		recvPacket >> movementInfo.pos.m_positionX;
+		recvPacket.ReadByteSeq(movementTransportGuid[5]);
+		recvPacket.ReadByteSeq(movementTransportGuid[0]);
+
+		if (hasPitch)
+			movementInfo.pitch = G3D::wrap(recvPacket.read<float>(), float(-M_PI), float(M_PI));
+
+		recvPacket.ReadByteSeq(movementTransportGuid[4]);
+	}
+
+	if (hasDestLocation)
+	{
+		float x, y, z;
+
+		recvPacket.ReadByteSeq(destTransportGuid[7]);
+		recvPacket >> x;
+		recvPacket.ReadByteSeq(destTransportGuid[0]);
+		recvPacket.ReadByteSeq(destTransportGuid[6]);
+		recvPacket.ReadByteSeq(destTransportGuid[1]);
+		recvPacket.ReadByteSeq(destTransportGuid[3]);
+		recvPacket >> y;
+		recvPacket.ReadByteSeq(destTransportGuid[5]);
+		recvPacket >> z;
+		recvPacket.ReadByteSeq(destTransportGuid[4]);
+		recvPacket.ReadByteSeq(destTransportGuid[2]);
+
+		destPos.Relocate(x, y, z);
+	}
+	//else
+	//{
+		//destTransportGuid = caster->GetTransGUID();
+
+		//if (destTransportGuid)
+		//	destPos.Relocate(caster-> GetTransOffsetX(), caster->GetTransOffsetY(), caster->GetTransOffsetZ(), caster->GetTransOffsetO());
+		//else
+			//destPos.Relocate(caster);
+	//}
+
+	recvPacket.ReadByteSeq(targetGuid[6]);
+	recvPacket.ReadByteSeq(targetGuid[7]);
+	recvPacket.ReadByteSeq(targetGuid[2]);
+	recvPacket.ReadByteSeq(targetGuid[0]);
+	recvPacket.ReadByteSeq(targetGuid[3]);
+	recvPacket.ReadByteSeq(targetGuid[4]);
+	recvPacket.ReadByteSeq(targetGuid[1]);
+	recvPacket.ReadByteSeq(targetGuid[5]);
+	if (hasSrcLocation)
+	{
+		float x, y, z;
+
+		recvPacket.ReadByteSeq(srcTransportGuid[7]);
+		recvPacket >> x;
+		recvPacket.ReadByteSeq(srcTransportGuid[1]);
+		recvPacket.ReadByteSeq(srcTransportGuid[5]);
+		recvPacket.ReadByteSeq(srcTransportGuid[4]);
+		recvPacket >> z;
+		recvPacket.ReadByteSeq(srcTransportGuid[6]);
+		recvPacket.ReadByteSeq(srcTransportGuid[0]);
+		recvPacket.ReadByteSeq(srcTransportGuid[3]);
+		recvPacket >> y;
+		recvPacket.ReadByteSeq(srcTransportGuid[2]);
+
+		srcPos.Relocate(x, y, z);
+	}
+	//else
+	//{
+	//	srcTransportGuid = caster->GetTransGUID();
+	//	if (srcTransportGuid)
+	//		srcPos.Relocate(caster->GetTransOffsetX(), caster->GetTransOffsetY(), caster->GetTransOffsetZ(), caster->GetTransOffsetO());
+	//	else
+	//		srcPos.Relocate(caster);
+	//}
+
+	if (hasSpellId)
+	{
+		recvPacket >> spellId;
+	}
+
+	recvPacket.ReadByteSeq(itemTargetGuid[1]);
+	recvPacket.ReadByteSeq(itemTargetGuid[4]);
+	recvPacket.ReadByteSeq(itemTargetGuid[3]);
+	recvPacket.ReadByteSeq(itemTargetGuid[6]);
+	recvPacket.ReadByteSeq(itemTargetGuid[2]);
+	recvPacket.ReadByteSeq(itemTargetGuid[0]);
+	recvPacket.ReadByteSeq(itemTargetGuid[7]);
+	recvPacket.ReadByteSeq(itemTargetGuid[5]);
+
+	if (hasTargetString)
+		targetString = recvPacket.ReadString(targetStringLength);
+
+	if (hasElevation)
+		recvPacket >> elevation;
+
+	if (hasGlyphIndex)
+		recvPacket >> glyphIndex;
+
+	if (hasMissileSpeed)
+		recvPacket >> missileSpeed;
+
+	if (hasCastCount)
+		recvPacket >> castCount;
+
+	if (glyphIndex >= 6)
+	{
+		//pUser->SendEquipError(EQUIP_ERR_ITEM_NOT_FOUND, NULL, NULL);
+		return;
+	}
 
 	Item* tmpItem = NULL;
-	tmpItem = p_User->GetItemInterface()->GetInventoryItem(tmp1, slot);
-	if(!tmpItem)
-		tmpItem = p_User->GetItemInterface()->GetInventoryItem(slot);
-	if(!tmpItem)
+	tmpItem = pUser->GetItemInterface()->GetInventoryItem(bagIndex, slot);
+	if (!tmpItem)
+	{
+		tmpItem = pUser->GetItemInterface()->GetInventoryItem(slot);
+	}
+
+	if (!tmpItem)
+	{
 		return;
+	}
 	ItemPrototype* itemProto = tmpItem->GetProto();
 
 	// only some consumable items can be used in arenas
@@ -61,32 +403,39 @@ void WorldSession::HandleUseItemOpcode(WorldPacket & recvPacket)
 		GetPlayer()->GetItemInterface()->BuildInventoryChangeError(tmpItem, NULL, INV_ERR_NOT_DURING_ARENA_MATCH);
 		return;
 	}
-
 	if(tmpItem->IsSoulbound())     // SouldBind item will be used after SouldBind()
 	{
-		if(sScriptMgr.CallScriptedItem(tmpItem, _player))
+		if (sScriptMgr.CallScriptedItem(tmpItem, _player))
+		{
 			return;
+		}
 	}
 
-	if(_player->getDeathState() == CORPSE)
+	if (_player->getDeathState() == CORPSE)
+	{
 		return;
+	}
 
-	if(itemProto->Bonding == ITEM_BIND_ON_USE)
-		tmpItem->SoulBind();
+	//if(itemProto->Bonding == ITEM_BIND_ON_USE)
+		//tmpItem->SoulBind();
 
-	if(sScriptMgr.CallScriptedItem(tmpItem, _player))
+	if (sScriptMgr.CallScriptedItem(tmpItem, _player))
+	{
 		return;
-
-	if(itemProto->InventoryType != 0 && !_player->GetItemInterface()->IsEquipped(itemProto->ItemId))  //Equipable items cannot be used before they're equipped. Prevents exploits
+	}
+	if (itemProto->InventoryType != 0 && !_player->GetItemInterface()->IsEquipped(itemProto->ItemId))  //Equipable items cannot be used before they're equipped. Prevents exploits
+	{
 		return;//Prevents exploits such as keeping an on-use trinket in your bag and using WPE to use it from your bag in mid-combat.
-
+	}
 	if(itemProto->QuestId)
 	{
 		// Item Starter
 		Quest* qst = QuestStorage.LookupEntry(itemProto->QuestId);
 		if(!qst)
+		{
 			return;
-
+		}
+			
 		WorldPacket data;
 		sQuestMgr.BuildQuestDetails(&data, qst, tmpItem, 0, language, _player);
 		SendPacket(&data);
@@ -120,38 +469,36 @@ void WorldSession::HandleUseItemOpcode(WorldPacket & recvPacket)
 		Anticheat_Log->writefromsession(this, "Itemid: %lu", itemProto->ItemId);
 		Anticheat_Log->writefromsession(this, "Spellid: %lu", spellId);
 		Anticheat_Log->writefromsession(this, "Player was disconnected");
-
 		return;
 	}
 
 	SpellCastTargets targets(recvPacket, _player->GetGUID());
-
 	SpellEntry* spellInfo = dbcSpell.LookupEntryForced(spellId);
 	if(spellInfo == NULL)
 	{
-		LOG_ERROR("WORLD: unknown spell id %i", spellId);
+		sLog.outError("WORLD: unknown spell id %i", spellId);
 		return;
 	}
 
 	if(spellInfo->AuraInterruptFlags & AURA_INTERRUPT_ON_STAND_UP)
 	{
-		if(p_User->CombatStatus.IsInCombat() || p_User->IsMounted())
+		if(pUser->CombatStatus.IsInCombat() || pUser->IsMounted())
 		{
 			_player->GetItemInterface()->BuildInventoryChangeError(tmpItem, NULL, INV_ERR_CANT_DO_IN_COMBAT);
 			return;
 		}
 
-		if(p_User->GetStandState() != 1)
-			p_User->SetStandState(STANDSTATE_SIT);
+		if(pUser->GetStandState() != 1)
+			pUser->SetStandState(STANDSTATE_SIT);
 		// loop through the auras and removing existing eating spells
 	}
 	else   // cebernic: why not stand up
 	{
-		if(!p_User->CombatStatus.IsInCombat() && !p_User->IsMounted())
+		if(!pUser->CombatStatus.IsInCombat() && !pUser->IsMounted())
 		{
-			if(p_User->GetStandState())
+			if(pUser->GetStandState())
 			{
-				p_User->SetStandState(STANDSTATE_STAND);
+				pUser->SetStandState(STANDSTATE_STAND);
 			}
 		}
 	}
@@ -159,8 +506,8 @@ void WorldSession::HandleUseItemOpcode(WorldPacket & recvPacket)
 	// cebernic: remove stealth on using item
 	if(!(spellInfo->AuraInterruptFlags & ATTRIBUTESEX_NOT_BREAK_STEALTH))
 	{
-		if(p_User->IsStealth())
-			p_User->RemoveAllAuraType(SPELL_AURA_MOD_STEALTH);
+		if(pUser->IsStealth())
+			pUser->RemoveAllAuraType(SPELL_AURA_MOD_STEALTH);
 	}
 
 	if(itemProto->RequiredLevel)
@@ -198,14 +545,14 @@ void WorldSession::HandleUseItemOpcode(WorldPacket & recvPacket)
 
 	if(!_player->Cooldown_CanCast(spellInfo))
 	{
-		_player->SendCastResult(spellInfo->Id, SPELL_FAILED_NOT_READY, cn, 0);
+		_player->SendCastResult(spellInfo->Id, SPELL_FAILED_NOT_READY, castCount, 0);
 		return;
 	}
 
 
 	if(_player->m_currentSpell)
 	{
-		_player->SendCastResult(spellInfo->Id, SPELL_FAILED_SPELL_IN_PROGRESS, cn, 0);
+		_player->SendCastResult(spellInfo->Id, SPELL_FAILED_SPELL_IN_PROGRESS, castCount, 0);
 		return;
 	}
 
@@ -215,7 +562,7 @@ void WorldSession::HandleUseItemOpcode(WorldPacket & recvPacket)
 		{
 			if(_player->GetGUID() != targets.m_unitTarget)
 			{
-				_player->SendCastResult(spellInfo->Id, SPELL_FAILED_BAD_TARGETS, cn, 0);
+				_player->SendCastResult(spellInfo->Id, SPELL_FAILED_BAD_TARGETS, castCount, 0);
 				return;
 			}
 		}
@@ -224,20 +571,19 @@ void WorldSession::HandleUseItemOpcode(WorldPacket & recvPacket)
 
 			if(!_player->GetSummon() || _player->GetSummon()->GetEntry() != (uint32)itemProto->ForcedPetId)
 			{
-				_player->SendCastResult(spellInfo->Id, SPELL_FAILED_SPELL_IN_PROGRESS, cn, 0);
+				_player->SendCastResult(spellInfo->Id, SPELL_FAILED_SPELL_IN_PROGRESS, castCount, 0);
 				return;
 			}
 		}
 	}
-
+	
 	Spell* spell = sSpellFactoryMgr.NewSpell(_player, spellInfo, false, NULL);
-	spell->extra_cast_number = cn;
+	spell->extra_cast_number = castCount;
 	spell->i_caster = tmpItem;
 	spell->m_glyphslot = glyphIndex;
 
 	//GetPlayer()->setCurrentSpell(spell);
 	spell->prepare(&targets);
-
 #ifdef ENABLE_ACHIEVEMENTS
 	_player->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_USE_ITEM, itemProto->ItemId, 0, 0);
 #endif
@@ -326,10 +672,345 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket & recvPacket)
 {
 	CHECK_INWORLD_RETURN
 
-	uint32 spellId;
-	uint8 cn, unk; //Alice : Added to 3.0.2
+	// ignore for remote control state (for player case)
+	Unit* mover = _player->m_mover;
+	//if (mover != _player && mover->GetTypeId() == TYPEID_PLAYER)
+	//{
+	//	recvPacket.rfinish(); // prevent spam at ignore packet
+	//	return;
+	//}
 
-	recvPacket >> cn >> spellId  >> unk;
+	uint8 castCount = 0;
+	uint8 castFlags = 0;
+	uint32 spellId = 0;
+	uint32 glyphIndex = 0;
+	uint32 targetMask = 0;
+	uint32 targetStringLength = 0;
+	float elevation = 0.0f;
+	float missileSpeed = 0.0f;
+	ObjectGuid targetGuid = 0;
+	ObjectGuid itemTargetGuid = 0;
+	ObjectGuid destTransportGuid = 0;
+	ObjectGuid srcTransportGuid = 0;
+	Position srcPos;
+	Position destPos;
+	std::string targetString;
+
+	// Movement data
+	MovementInfo3 movementInfo;
+	ObjectGuid movementTransportGuid = 0;
+	ObjectGuid movementGuid = 0;
+	bool hasTransport = false;
+	bool hasTransportTime2 = false;
+	bool hasTransportTime3 = false;
+	bool hasFallData = false;
+	bool hasFallDirection = false;
+	bool hasTimestamp = false;
+	bool hasSplineElevation = false;
+	bool hasPitch = false;
+	bool hasOrientation = false;
+	bool hasUnkMovementField = false;
+	uint32 unkMovementLoopCounter = 0;
+	Unit* caster = mover;
+
+	recvPacket.ReadBit(); // Fake bit
+	bool hasTargetString = !recvPacket.ReadBit();
+	recvPacket.ReadBit(); // Fake Bit
+	bool hasCastCount = !recvPacket.ReadBit();
+	bool hasSrcLocation = recvPacket.ReadBit();
+	bool hasDestLocation = recvPacket.ReadBit();
+	bool hasSpellId = !recvPacket.ReadBit();
+	uint8 researchDataCount = recvPacket.ReadBits(2);
+	bool hasTargetMask = !recvPacket.ReadBit();
+	bool hasMissileSpeed = !recvPacket.ReadBit();
+
+	for (uint8 i = 0; i < researchDataCount; ++i)
+		recvPacket.ReadBits(2);
+
+	bool hasGlyphIndex = !recvPacket.ReadBit();
+	bool hasMovement = recvPacket.ReadBit();
+	bool hasElevation = !recvPacket.ReadBit();
+	bool hasCastFlags = !recvPacket.ReadBit();
+
+	targetGuid[5] = recvPacket.ReadBit();
+	targetGuid[4] = recvPacket.ReadBit();
+	targetGuid[2] = recvPacket.ReadBit();
+	targetGuid[7] = recvPacket.ReadBit();
+	targetGuid[1] = recvPacket.ReadBit();
+	targetGuid[6] = recvPacket.ReadBit();
+	targetGuid[3] = recvPacket.ReadBit();
+	targetGuid[0] = recvPacket.ReadBit();
+
+	if (hasDestLocation)
+	{
+		destTransportGuid[1] = recvPacket.ReadBit();
+		destTransportGuid[3] = recvPacket.ReadBit();
+		destTransportGuid[5] = recvPacket.ReadBit();
+		destTransportGuid[0] = recvPacket.ReadBit();
+		destTransportGuid[2] = recvPacket.ReadBit();
+		destTransportGuid[6] = recvPacket.ReadBit();
+		destTransportGuid[7] = recvPacket.ReadBit();
+		destTransportGuid[4] = recvPacket.ReadBit();
+	}
+
+
+	if (hasMovement)
+	{
+		unkMovementLoopCounter = recvPacket.ReadBits(22);
+		recvPacket.ReadBit();
+		movementGuid[4] = recvPacket.ReadBit();
+		hasTransport = recvPacket.ReadBit();
+
+		if (hasTransport)
+		{
+			hasTransportTime2 = recvPacket.ReadBit();
+			movementTransportGuid[7] = recvPacket.ReadBit();
+			movementTransportGuid[4] = recvPacket.ReadBit();
+			movementTransportGuid[1] = recvPacket.ReadBit();
+			movementTransportGuid[0] = recvPacket.ReadBit();
+			movementTransportGuid[6] = recvPacket.ReadBit();
+			movementTransportGuid[3] = recvPacket.ReadBit();
+			movementTransportGuid[5] = recvPacket.ReadBit();
+			hasTransportTime3 = recvPacket.ReadBit();
+			movementTransportGuid[2] = recvPacket.ReadBit();
+		}
+
+		recvPacket.ReadBit();
+		movementGuid[7] = recvPacket.ReadBit();
+		hasOrientation = !recvPacket.ReadBit();
+		movementGuid[6] = recvPacket.ReadBit();
+		hasSplineElevation = !recvPacket.ReadBit();
+		hasPitch = !recvPacket.ReadBit();
+		movementGuid[0] = recvPacket.ReadBit();
+		recvPacket.ReadBit();
+		bool hasMovementFlags = !recvPacket.ReadBit();
+		hasTimestamp = !recvPacket.ReadBit();
+		hasUnkMovementField = !recvPacket.ReadBit();
+
+		if (hasMovementFlags)
+			movementInfo.flags = recvPacket.ReadBits(30);
+
+		movementGuid[1] = recvPacket.ReadBit();
+		movementGuid[3] = recvPacket.ReadBit();
+		movementGuid[2] = recvPacket.ReadBit();
+		movementGuid[5] = recvPacket.ReadBit();
+		hasFallData = recvPacket.ReadBit();
+
+		if (hasFallData)
+			hasFallDirection = recvPacket.ReadBit();
+
+		bool hasMovementFlags2 = !recvPacket.ReadBit();
+
+		if (hasMovementFlags2)
+			movementInfo.flags2 = recvPacket.ReadBits(13);
+	}
+
+	itemTargetGuid[1] = recvPacket.ReadBit();
+	itemTargetGuid[0] = recvPacket.ReadBit();
+	itemTargetGuid[7] = recvPacket.ReadBit();
+	itemTargetGuid[4] = recvPacket.ReadBit();
+	itemTargetGuid[6] = recvPacket.ReadBit();
+	itemTargetGuid[5] = recvPacket.ReadBit();
+	itemTargetGuid[3] = recvPacket.ReadBit();
+	itemTargetGuid[2] = recvPacket.ReadBit();
+
+	if (hasSrcLocation)
+	{
+		srcTransportGuid[4] = recvPacket.ReadBit();
+		srcTransportGuid[5] = recvPacket.ReadBit();
+		srcTransportGuid[3] = recvPacket.ReadBit();
+		srcTransportGuid[0] = recvPacket.ReadBit();
+		srcTransportGuid[7] = recvPacket.ReadBit();
+		srcTransportGuid[1] = recvPacket.ReadBit();
+		srcTransportGuid[6] = recvPacket.ReadBit();
+		srcTransportGuid[2] = recvPacket.ReadBit();
+	}
+
+	if (hasTargetMask)
+		targetMask = recvPacket.ReadBits(20);
+
+	if (hasCastFlags)
+		castFlags = recvPacket.ReadBits(5);
+
+	if (hasTargetString)
+		targetStringLength = recvPacket.ReadBits(7);
+
+	for (uint8 i = 0; i < researchDataCount; ++i)
+	{
+		recvPacket.read<uint32>();
+		recvPacket.read<uint32>();
+	}
+
+	if (hasMovement)
+	{
+		recvPacket >> movementInfo.pos.m_positionX;
+		recvPacket.ReadByteSeq(movementGuid[0]);
+
+		if (hasTransport)
+		{
+			recvPacket.ReadByteSeq(movementTransportGuid[2]);
+			recvPacket >> movementInfo.transport.seat;
+			recvPacket.ReadByteSeq(movementTransportGuid[3]);
+			recvPacket.ReadByteSeq(movementTransportGuid[7]);
+			recvPacket >> movementInfo.transport.pos.m_positionX;
+			recvPacket.ReadByteSeq(movementTransportGuid[5]);
+
+			if (hasTransportTime3)
+				recvPacket >> movementInfo.transport.time3;
+
+			recvPacket >> movementInfo.transport.pos.m_positionZ;
+			recvPacket >> movementInfo.transport.pos.m_positionY;
+
+			recvPacket.ReadByteSeq(movementTransportGuid[6]);
+			recvPacket.ReadByteSeq(movementTransportGuid[1]);
+			movementInfo.transport.pos.SetOrientation(recvPacket.read<float>());
+
+			recvPacket.ReadByteSeq(movementTransportGuid[4]);
+
+			if (hasTransportTime2)
+				recvPacket >> movementInfo.transport.time2;
+
+			recvPacket.ReadByteSeq(movementTransportGuid[0]);
+			recvPacket >> movementInfo.transport.time;
+
+		}
+
+		recvPacket.ReadByteSeq(movementGuid[5]);
+
+		if (hasFallData)
+		{
+			recvPacket >> movementInfo.jump.fallTime;
+			recvPacket >> movementInfo.jump.zspeed;
+
+			if (hasFallDirection)
+			{
+				recvPacket >> movementInfo.jump.sinAngle;
+				recvPacket >> movementInfo.jump.xyspeed;
+				recvPacket >> movementInfo.jump.cosAngle;
+			}
+		}
+
+		if (hasSplineElevation)
+			recvPacket >> movementInfo.splineElevation;
+
+		recvPacket.ReadByteSeq(movementGuid[6]);
+
+		if (hasUnkMovementField)
+			recvPacket.read<uint32>();
+
+		recvPacket.ReadByteSeq(movementGuid[4]);
+
+		if (hasOrientation)
+			movementInfo.pos.SetOrientation(recvPacket.read<float>());
+
+		if (hasTimestamp)
+			recvPacket >> movementInfo.time;
+
+		recvPacket.ReadByteSeq(movementGuid[1]);
+
+		if (hasPitch)
+			movementInfo.pitch = G3D::wrap(recvPacket.read<float>(), float(-M_PI), float(M_PI));
+
+		recvPacket.ReadByteSeq(movementGuid[3]);
+
+		for (uint8 i = 0; i != unkMovementLoopCounter; i++)
+			recvPacket.read<uint32>();
+
+		recvPacket >> movementInfo.pos.m_positionY;
+		recvPacket.ReadByteSeq(movementGuid[7]);
+		recvPacket >> movementInfo.pos.m_positionZ;
+		recvPacket.ReadByteSeq(movementGuid[2]);
+	}
+
+	recvPacket.ReadByteSeq(itemTargetGuid[4]);
+	recvPacket.ReadByteSeq(itemTargetGuid[2]);
+	recvPacket.ReadByteSeq(itemTargetGuid[1]);
+	recvPacket.ReadByteSeq(itemTargetGuid[5]);
+	recvPacket.ReadByteSeq(itemTargetGuid[7]);
+	recvPacket.ReadByteSeq(itemTargetGuid[3]);
+	recvPacket.ReadByteSeq(itemTargetGuid[6]);
+	recvPacket.ReadByteSeq(itemTargetGuid[0]);
+
+	if (hasDestLocation)
+	{
+		float x, y, z;
+		recvPacket.ReadByteSeq(destTransportGuid[2]);
+		recvPacket >> x;
+		recvPacket.ReadByteSeq(destTransportGuid[4]);
+		recvPacket.ReadByteSeq(destTransportGuid[1]);
+		recvPacket.ReadByteSeq(destTransportGuid[0]);
+		recvPacket.ReadByteSeq(destTransportGuid[3]);
+		recvPacket >> y;
+		recvPacket.ReadByteSeq(destTransportGuid[7]);
+		recvPacket >> z;
+		recvPacket.ReadByteSeq(destTransportGuid[5]);
+		recvPacket.ReadByteSeq(destTransportGuid[6]);
+		destPos.Relocate(x, y, z);
+	}
+	//else
+	//{
+	//	destTransportGuid = caster->GetTransGUID();
+	//	if (destTransportGuid)
+	//		destPos.Relocate(caster->GetTransOffsetX(), caster->GetTransOffsetY(), caster->GetTransOffsetZ(), caster->GetTransOffsetO());
+	//	else
+	//		destPos.Relocate(caster);
+	//}
+
+	recvPacket.ReadByteSeq(targetGuid[3]);
+	recvPacket.ReadByteSeq(targetGuid[4]);
+	recvPacket.ReadByteSeq(targetGuid[7]);
+	recvPacket.ReadByteSeq(targetGuid[6]);
+	recvPacket.ReadByteSeq(targetGuid[2]);
+	recvPacket.ReadByteSeq(targetGuid[0]);
+	recvPacket.ReadByteSeq(targetGuid[1]);
+	recvPacket.ReadByteSeq(targetGuid[5]);
+
+	if (hasSrcLocation)
+	{
+		float x, y, z;
+		recvPacket >> y;
+		recvPacket.ReadByteSeq(srcTransportGuid[5]);
+		recvPacket.ReadByteSeq(srcTransportGuid[1]);
+		recvPacket.ReadByteSeq(srcTransportGuid[7]);
+		recvPacket.ReadByteSeq(srcTransportGuid[6]);
+		recvPacket >> x;
+		recvPacket.ReadByteSeq(srcTransportGuid[3]);
+		recvPacket.ReadByteSeq(srcTransportGuid[2]);
+		recvPacket.ReadByteSeq(srcTransportGuid[0]);
+		recvPacket.ReadByteSeq(srcTransportGuid[4]);
+		recvPacket >> z;
+		srcPos.Relocate(x, y, z);
+	}
+	//else
+	//{
+	//	srcTransportGuid = caster->GetTransGUID();
+	//	if (srcTransportGuid)
+	//		srcPos.Relocate(caster->GetTransOffsetX(), caster->GetTransOffsetY(), caster->GetTransOffsetZ(), caster->GetTransOffsetO());
+	//	else
+	//		srcPos.Relocate(caster);
+	//}
+
+	if (hasTargetString)
+		targetString = recvPacket.ReadString(targetStringLength);
+
+	if (hasMissileSpeed)
+		recvPacket >> missileSpeed;
+
+	if (hasElevation)
+		recvPacket >> elevation;
+
+	if (hasCastCount)
+		recvPacket >> castCount;
+
+	if (hasSpellId)
+		recvPacket >> spellId;
+
+	if (hasGlyphIndex)
+		recvPacket >> glyphIndex;
+
+	sLog.outError("WORLD: got cast spell packet, castCount: %u, spellId: %u, castFlags: %u, data length = %u", castCount, spellId, castFlags, (uint32)recvPacket.size());
+
+	
 	// check for spell id
 	SpellEntry* spellInfo = dbcSpell.LookupEntryForced(spellId);
 
@@ -426,7 +1107,7 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket & recvPacket)
 			else
 			{
 				// send the error message
-				_player->SendCastResult(spellInfo->Id, SPELL_FAILED_SPELL_IN_PROGRESS, cn, 0);
+				_player->SendCastResult(spellInfo->Id, SPELL_FAILED_SPELL_IN_PROGRESS, castCount, 0);
 				return;
 			}
 		}
@@ -439,14 +1120,15 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket & recvPacket)
 			if(targets.m_unitTarget && targets.m_unitTarget != _player->GetGUID())
 			{
 				// send the error message
-				_player->SendCastResult(spellInfo->Id, SPELL_FAILED_BAD_TARGETS, cn, 0);
+				_player->SendCastResult(spellInfo->Id, SPELL_FAILED_BAD_TARGETS, castCount, 0);
 				return;
 			}
 		}
 
 		Spell* spell = sSpellFactoryMgr.NewSpell(GetPlayer(), spellInfo, false, NULL);
-		spell->extra_cast_number = cn;
+		spell->extra_cast_number = castCount;
 		spell->prepare(&targets);
+		sLog.outError("end of spell cast");
 	}
 }
 

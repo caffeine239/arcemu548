@@ -188,7 +188,7 @@ void WorldSession::HandleSwapInvItemOpcode(WorldPacket & recv_data)
 
 	recv_data >> srcslot >> dstslot;
 
-	LOG_DETAIL("ITEM: swap, src slot: %u dst slot: %u", (uint32)srcslot, (uint32)dstslot);
+	LOG_ERROR("ITEM: swap, src slot: %u dst slot: %u", (uint32)srcslot, (uint32)dstslot);
 
 	if(dstslot == srcslot) // player trying to add item to the same slot
 	{

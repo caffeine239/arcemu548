@@ -955,7 +955,7 @@ void WorldSession::InitPacketHandlerTable()
 
 	// Item / Vendors
 	WorldPacketHandlers[CMSG_SWAP_INV_ITEM].handler =
-	    &WorldSession::HandleSwapInvItemOpcode;
+		&WorldSession::HandleSwapInvItemOpcode;
 	WorldPacketHandlers[CMSG_SWAP_ITEM].handler =
 	    &WorldSession::HandleSwapItemOpcode;
 	WorldPacketHandlers[CMSG_DESTROYITEM].handler =

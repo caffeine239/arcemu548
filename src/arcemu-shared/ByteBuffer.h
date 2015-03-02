@@ -476,6 +476,7 @@ class SERVER_DECL ByteBuffer
 		const uint8* contents() const { return &_storage[0]; };
 
 		ARCEMU_INLINE size_t size() const { return _storage.size(); };
+		ARCEMU_INLINE size_t wsize() const { return _wpos; };
 		ARCEMU_INLINE bool empty() const { return _storage.empty(); }
 
 		// one should never use resize probably

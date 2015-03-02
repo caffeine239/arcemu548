@@ -196,6 +196,7 @@ class SERVER_DECL GameObject : public Object
 		void EventCloseDoor();
 		void EventCastSpell(uint32 guid, uint32 sp, bool triggered);
 		void SetRotation(float rad);
+		uint64 GetRotation() const { return m_rotation; }
 		uint64 m_rotation;
 		void UpdateRotation();
 
@@ -312,6 +313,7 @@ class SERVER_DECL GameObject : public Object
 
 		void SetType(uint8 type) { SetByte(GAMEOBJECT_BYTES_1, 1, type); }
 		uint8 GetType() { return GetByte(GAMEOBJECT_BYTES_1, 1); }
+		GAMEOBJECT_TYPES GetGoType() const { return GAMEOBJECT_TYPES(GetByteValue(GAMEOBJECT_BYTES_1, 1)); }
 		
 		void SetFlags( uint32 flags ){ SetUInt32Value( GAMEOBJECT_FLAGS, flags ); }		
 		uint32 GetFlags(){ return GetUInt32Value( GAMEOBJECT_FLAGS ); }
@@ -402,7 +404,7 @@ class SERVER_DECL GameObject : public Object
 		//
 		//
 		////////////////////////////////////////////////////////////////////////////////////////////////////////
-		void ReStock();
+		void ReStock();		
 
 	protected:
 

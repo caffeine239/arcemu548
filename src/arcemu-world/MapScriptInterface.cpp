@@ -118,6 +118,7 @@ Creature* MapScriptInterface::SpawnCreature(uint32 Entry, float cX, float cY, fl
 	CreatureInfo* info = CreatureNameStorage.LookupEntry(Entry);
 	if(proto == NULL || info == NULL)
 	{
+		sLog.outError("if(proto == NULL || info == NULL)");
 		return 0;
 	}
 
@@ -171,6 +172,7 @@ Creature* MapScriptInterface::SpawnCreature(CreatureSpawn* sp, bool AddToWorld)
 	CreatureInfo* info = CreatureNameStorage.LookupEntry(sp->entry);
 	if(proto == NULL || info == NULL)
 	{
+		sLog.outError("MapScriptInterface::SpawnCreatureif(proto == NULL || info == NULL)");
 		return 0;
 	}
 

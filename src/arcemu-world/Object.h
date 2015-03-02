@@ -27,25 +27,25 @@ class Group;
 
 enum HIGHGUID_TYPE
 {
-    HIGHGUID_TYPE_ITEM           = 0x470,                       // blizz 4000
-    HIGHGUID_TYPE_CONTAINER      = 0x470,                       // blizz 4000
-    HIGHGUID_TYPE_PLAYER         = 0x000,                       // blizz 0000
-    HIGHGUID_TYPE_GAMEOBJECT     = 0xF11,                       // blizz F110
-    HIGHGUID_TYPE_TRANSPORTER    = 0xF12,                       // blizz F120 (for GAMEOBJECT_TYPE_TRANSPORT)
-    HIGHGUID_TYPE_UNIT           = 0xF13,                       // blizz F130
-    HIGHGUID_TYPE_PET            = 0xF14,                       // blizz F140
-    HIGHGUID_TYPE_VEHICLE        = 0xF15,                       // blizz F550
-    HIGHGUID_TYPE_DYNAMICOBJECT  = 0xF10,                       // blizz F100
-    HIGHGUID_TYPE_CORPSE         = 0xF50,                      // blizz F100
-    HIGHGUID_TYPE_AREATRIGGER    = 0xF102,                      // blizz F100
-    HIGHGUID_TYPE_BATTLEGROUND   = 0x1F1,                       // new 4.x
-    HIGHGUID_TYPE_MO_TRANSPORT   = 0x1FC,                       // blizz 1FC0 (for GAMEOBJECT_TYPE_MO_TRANSPORT)
-    HIGHGUID_TYPE_GROUP          = 0x1F5,                        // hmm?
-    HIGHGUID_TYPE_GUILD          = 0x1FF7,                        // new 4.x
-	HIGHGUID_TYPE_WAYPOINT	     = 0x10000000,
-//===============================================
-    HIGHGUID_TYPE_MASK				= 0xFFF00000,
-    LOWGUID_ENTRY_MASK				= 0x00FFFFFF,
+	HIGHGUID_TYPE_PLAYER = 0x0000,
+	HIGHGUID_TYPE_WAYPOINT = 0x1000,
+	HIGHGUID_TYPE_ITEM = 0x4000,
+	HIGHGUID_TYPE_CONTAINER = 0x4000,
+	HIGHGUID_TYPE_GAMEOBJECT = 0xF110,
+	HIGHGUID_TYPE_TRANSPORTER = 0xF120,
+	HIGHGUID_TYPE_CREATURE = 0xF130,
+	HIGHGUID_TYPE_UNIT = 0xF130,
+	HIGHGUID_TYPE_PET = 0xF140,
+	HIGHGUID_TYPE_VEHICLE = 0xF150,
+	HIGHGUID_TYPE_DYNAMICOBJECT = 0xF100,
+	HIGHGUID_TYPE_CORPSE = 0xF101,
+	HIGHGUID_TYPE_AREATRIGGER = 0xF102,
+	HIGHGUID_TYPE_MO_TRANSPORT = 0x1FC0,
+	HIGHGUID_TYPE_GROUP = 0x1F50,
+	HIGHGUID_TYPE_GUILD = 0x1FF6,
+	//===============================================
+	HIGHGUID_TYPE_MASK = 0xFFFF0000,
+	LOWGUID_ENTRY_MASK = 0x0000FFFF,
 };
 
 #define GET_TYPE_FROM_GUID(x) ( Arcemu::Util::GUID_HIPART( (x) ) & HIGHGUID_TYPE_MASK )
@@ -130,70 +130,6 @@ struct TransporterInfo{
 	}
 };
 
-struct MovementInfo2
-{
-	// common
-	uint64 guid;
-	uint32 flags;
-	uint16 flags2;
-	float x;
-	float y;
-	float z;
-	float o;
-	uint32 time;
-	// transport
-	uint64 t_guid;
-	float t_x;
-	float t_y;
-	float t_z;
-	float t_o;
-	int8 t_seat;
-	uint32 t_time;
-	uint32 t_time2;
-	uint32 t_time3;
-	// swimming/flying
-	float pitch;
-	// falling
-	uint32 fallTime;
-	// jumping
-	float j_zspeed, j_cosAngle, j_sinAngle, j_xyspeed;
-	// spline
-	float splineElevation;
-
-	MovementInfo2()
-	{
-		float x = 0.0f;
-		float y = 0.0f;
-		float z = 0.0f;
-		float o = 0.0f;
-		guid = 0;
-		flags = 0;
-		flags2 = 0;
-		time = t_time = t_time2 = t_time3 = fallTime = 0;
-		splineElevation = 0;
-		pitch = j_zspeed = j_sinAngle = j_cosAngle = j_xyspeed = 0.0f;
-		t_guid = 0;
-		t_x = 0.0f;
-		t_y = 0.0f;
-		t_z = 0.0f;
-		t_o = 0.0f;
-		t_seat = -1;
-	}
-
-	uint32 GetMovementFlags() const { return flags; }
-	void SetMovementFlags(uint32 flag) { flags = flag; }
-	void AddMovementFlag(uint32 flag) { flags |= flag; }
-	void RemoveMovementFlag(uint32 flag) { flags &= ~flag; }
-	bool HasMovementFlag(uint32 flag) const { return flags & flag; }
-
-	uint16 GetExtraMovementFlags() const { return flags2; }
-	void AddExtraMovementFlag(uint16 flag) { flags2 |= flag; }
-	bool HasExtraMovementFlag(uint16 flag) const { return flags2 & flag; }
-
-	void SetFallTime(uint32 time) { fallTime = time; }
-
-	void OutDebug();
-};
 
 struct Position
 {
@@ -213,9 +149,9 @@ struct Position
 	float m_positionY;
 	float m_positionZ;
 	// Better to limit access to m_orientation field, but this will be hard to achieve with many scripts using array initialization for this structure
-	//private:
+private:
 	float m_orientation;
-	//public:
+public:
 
 	bool operator==(Position const &a);
 
@@ -364,6 +300,92 @@ struct Position
 	}
 };
 
+struct MovementInfo3
+{
+	// common
+	uint64 guid;
+	uint32 flags;
+	uint16 flags2;
+	Position pos;
+	uint32 time;
+
+	// transport
+	struct TransportInfo
+	{
+		void Reset()
+		{
+			guid = 0;
+			pos.Relocate(0.0f, 0.0f, 0.0f, 0.0f);
+			seat = -1;
+			time = 0;
+			time2 = 0;
+			time3 = 0;
+		}
+
+		uint64 guid;
+		Position pos;
+		int8 seat;
+		uint32 time;
+		uint32 time2;
+		uint32 time3;
+	} transport;
+
+	// swimming/flying
+	float pitch;
+
+	// jumping
+	struct JumpInfo
+	{
+		void Reset()
+		{
+			fallTime = 0;
+			zspeed = sinAngle = cosAngle = xyspeed = 0.0f;
+		}
+
+		uint32 fallTime;
+
+		float zspeed, sinAngle, cosAngle, xyspeed;
+
+	} jump;
+
+	// spline
+	float splineElevation;
+
+	MovementInfo3() :
+		guid(0), flags(0), flags2(0), time(0), pitch(0.0f), splineElevation(0.0f)
+	{
+		pos.Relocate(0.0f, 0.0f, 0.0f, 0.0f);
+		transport.Reset();
+		jump.Reset();
+	}
+
+	uint32 GetMovementFlags() const { return flags; }
+	void SetMovementFlags(uint32 flag) { flags = flag; }
+	void AddMovementFlag(uint32 flag) { flags |= flag; }
+	void RemoveMovementFlag(uint32 flag) { flags &= ~flag; }
+	bool HasMovementFlag(uint32 flag) const { return flags & flag; }
+
+	uint16 GetExtraMovementFlags() const { return flags2; }
+	void SetExtraMovementFlags(uint16 flag) { flags2 = flag; }
+	void AddExtraMovementFlag(uint16 flag) { flags2 |= flag; }
+	void RemoveExtraMovementFlag(uint16 flag) { flags2 &= ~flag; }
+	bool HasExtraMovementFlag(uint16 flag) const { return flags2 & flag; }
+
+	void SetFallTime(uint32 time) { jump.fallTime = time; }
+
+	void ResetTransport()
+	{
+		transport.Reset();
+	}
+
+	void ResetJump()
+	{
+		jump.Reset();
+	}
+
+	void OutDebug();
+};
+
 class WorldPacket;
 class ByteBuffer;
 class WorldSession;
@@ -392,6 +414,8 @@ class SERVER_DECL Object : public EventableObject
 		typedef std::map<string, void*> ExtensionSet;
 
 		virtual ~Object();
+
+		virtual void Init();
 
 		virtual void Update(uint32 time) { }
 
@@ -466,6 +490,9 @@ class SERVER_DECL Object : public EventableObject
 
 		//! Guid always comes first
 		const uint64 & GetGUID() const { return GetUInt64Value(OBJECT_FIELD_GUID); }
+
+		ARCEMU_INLINE const uint64& GetGUID2() const { return *((uint64*)m_uint32Values); }
+
 		void SetGUID(uint64 GUID) { SetUInt64Value(OBJECT_FIELD_GUID, GUID);  }
 		const uint32 GetLowGUID() const { return m_uint32Values[ LOWGUID ]; }
 		uint32 GetHighGUID() { return m_uint32Values[ HIGHGUID ]; }
@@ -509,10 +536,10 @@ class SERVER_DECL Object : public EventableObject
 		void BuildFieldUpdatePacket(ByteBuffer* buf, uint32 Index, uint32 Value);
 
 		virtual void DealDamage(Unit* pVictim, uint32 damage, uint32 targetEvent, uint32 unitEvent, uint32 spellId, bool no_remove_auras = false);
-
-		void BuildHeartBeatMsg(WorldPacket* data) const;
-
+		
 		bool SetPosition(float newX, float newY, float newZ, float newOrientation, bool allowPorting = false);
+
+		bool SetPosition2(const Position &pos, bool allowPorting = false);
 		bool SetPosition(const LocationVector & v, bool allowPorting = false);
 
 		const float & GetPositionX() const { return m_position.x; }
@@ -581,6 +608,8 @@ class SERVER_DECL Object : public EventableObject
 			return *p;
 		}
 
+		bool isType(uint16 mask) const { return (mask & m_objectType); }
+
 		//! Get float property
 		const float & GetFloatValue(uint32 index) const
 		{
@@ -602,6 +631,13 @@ class SERVER_DECL Object : public EventableObject
 			ARCEMU_ASSERT(i < m_valuesCount);
 			ARCEMU_ASSERT(i1 < 4);
 			return ((uint8*)m_uint32Values)[i * 4 + i1];
+		}
+
+		uint8 GetByteValue(uint16 index, uint8 offset) const
+		{
+			ASSERT(index < m_valuesCount);
+			ASSERT(offset < 4);
+			return *(((uint8*)&m_uint32Values[index]) + offset);
 		}
 
 		void  SetByteFlag(uint16 index, uint8 offset, uint8 newFlag);
@@ -873,7 +909,7 @@ class SERVER_DECL Object : public EventableObject
 		float m_base_walkSpeed;
 
 		TransporterInfo transporter_info;
-		MovementInfo2 m_movementInfo;
+		MovementInfo3 m_movementInfo;
 
 		uint32 m_phase; //This stores the phase, if two objects have the same bit set, then they can see each other. The default phase is 0x1.
 
@@ -933,6 +969,25 @@ class SERVER_DECL Object : public EventableObject
 		uint32 GetTeam();
 		//! Objects directly cannot be in a group.
 		virtual Group* GetGroup() { return NULL; }
+
+		Player* ToPlayer() { if (GetTypeId() == TYPEID_PLAYER) return reinterpret_cast<Player*>(this); else return NULL; }
+		Player const* ToPlayer() const { if (GetTypeId() == TYPEID_PLAYER) return reinterpret_cast<Player const*>(this); else return NULL; }
+
+		Creature* ToCreature() { if (GetTypeId() == TYPEID_UNIT) return reinterpret_cast<Creature*>(this); else return NULL; }
+		Creature const* ToCreature() const { if (GetTypeId() == TYPEID_UNIT) return reinterpret_cast<Creature const*>(this); else return NULL; }
+
+		Unit* ToUnit() { if (isType(TYPE_UNIT)) return reinterpret_cast<Unit*>(this); else return NULL; }
+		Unit const* ToUnit() const { if (isType(TYPE_UNIT)) return reinterpret_cast<Unit const*>(this); else return NULL; }
+
+		GameObject* ToGameObject() { if (GetTypeId() == TYPEID_GAMEOBJECT) return reinterpret_cast<GameObject*>(this); else return NULL; }
+		GameObject const* ToGameObject() const { if (GetTypeId() == TYPEID_GAMEOBJECT) return reinterpret_cast<GameObject const*>(this); else return NULL; }
+
+		//Corpse* ToCorpse() { if (GetTypeId() == TYPEID_CORPSE) return reinterpret_cast<Corpse*>(this); else return NULL; }
+		//Corpse const* ToCorpse() const { if (GetTypeId() == TYPEID_CORPSE) return reinterpret_cast<Corpse const*>(this); else return NULL; }
+
+		DynamicObject* ToDynObject() { if (GetTypeId() == TYPEID_DYNAMICOBJECT) return reinterpret_cast<DynamicObject*>(this); else return NULL; }
+		DynamicObject const* ToDynObject() const { if (GetTypeId() == TYPEID_DYNAMICOBJECT) return reinterpret_cast<DynamicObject const*>(this); else return NULL; }
+
 
 	protected:
 		Object();

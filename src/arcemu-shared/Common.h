@@ -26,6 +26,21 @@
 #define REPACK_AUTHOR "Trelorn"
 #define REPACK_WEBSITE "www.google.com"*/
 
+#if (!defined( WIN32 ) && !defined( WIN64 ) )
+#ifdef USING_BIG_ENDIAN
+//#define GUID_HIPART(x) (*((uint32*)&(x)))
+//#define GUID_LOPART(x) (*(((uint32*)&(x))+1))
+#define GUID_LOPART2(x) ( ( x >> 32 ) )
+#define GUID_HIPART2(x) ( ( x & 0x00000000ffffffff ) )
+#else
+#define GUID_HIPART2(x) ( ( x >> 32 ) )
+#define GUID_LOPART2(x) ( ( x & 0x00000000ffffffff ) )
+#endif
+#else
+#define GUID_HIPART2(x) (*(((uint32*)&(x))+1))
+#define GUID_LOPART2(x) (*((uint32*)&(x)))
+#endif
+
 #ifdef WIN32
 #pragma warning(disable:4996)
 #define _CRT_SECURE_NO_DEPRECATE 1
@@ -409,6 +424,7 @@ Scripting system exports/imports
 #include "Threading/AtomicCounter.h"
 #include "Threading/AtomicBoolean.h"
 #include "Threading/ConditionVariable.h"
+#include "SimpleVect.h"
 
 #include "CRefcounter.h"
 
@@ -443,6 +459,38 @@ Scripting system exports/imports
 #pragma float_control(push)
 #pragma float_control(precise, on)
 #endif
+
+#define GUID_HIPAR_TESTT(x) (uint32)( ( uint64(x) >> 48 ) & 0x0000FFFF )
+inline uint64 MAKE_NEW_GUID(uint32 l, uint32 e, uint32 h);
+#define _GUID_ENPART_2(x) (uint32)0
+#define _GUID_ENPART_3(x) (uint32)((uint64(x) >> 24) & 0x0000000000FFFFFF)
+#define _GUID_LOPART_2(x) (uint32)(uint64(x)         & 0x00000000FFFFFFFF)
+#define _GUID_LOPART_3(x) (uint32)(uint64(x)         & 0x0000000000FFFFFF)
+
+inline bool IsGuidHaveEnPart(uint64 guid)
+{
+	switch (GUID_HIPAR_TESTT(guid))
+	{
+	case 0xF110:
+	case 0xF120:
+	case 0xF130:
+	case 0xF140:
+	case 0xF150:
+	case 0x1FC0:
+		return true;
+	default:
+		return false;
+	}
+}
+
+#define GUID_ENPART_TEST(x) (IsGuidHaveEnPart(x) ? _GUID_ENPART_3(x) : _GUID_ENPART_2(x))
+#define GUID_LOPART_TEST(x) (IsGuidHaveEnPart(x) ? _GUID_LOPART_3(x) : _GUID_LOPART_2(x))
+//#define MAKE_NEW_GUID(l, e, h)   uint64(uint64(l) | (uint64(IsGuidHaveEnPart(h) ? e : 0) << 24) | (uint64(h) << 48))
+
+uint64 MAKE_NEW_GUID(uint32 l, uint32 e, uint32 h)
+{
+	return uint64(uint64(l) | (uint64(e) << 32) | (uint64(h) << ((h == 0xF0C0 || h == 0xF102) ? 48 : 52)));
+}
 
 // fast int abs
 static inline int int32abs(const int value)

@@ -21,12 +21,6 @@
 #include "StdAfx.h"
 #include "git_version.h"
 
-inline uint64 MAKE_NEW_GUID(uint32 l, uint32 e, uint32 h);
-
-uint64 MAKE_NEW_GUID(uint32 l, uint32 e, uint32 h)
-{
-	return uint64(uint64(l) | (uint64(e) << 32) | (uint64(h) << ((h == 0xF0C0 || h == 0xF102) ? 48 : 52)));
-}
 
 LoginErrorCode VerifyName(const char* name, size_t nlen)
 {
@@ -1019,6 +1013,8 @@ void WorldSession::FullLogin(Player* plr)
 	sHookInterface.OnFullLogin(_player);
 
 	objmgr.AddPlayer(_player);
+
+	_player->GetItemInterface()->SwapItemSlots(15, 15);
 }
 
 bool ChatHandler::HandleRenameCommand(const char* args, WorldSession* m_session)

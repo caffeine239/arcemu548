@@ -30,12 +30,6 @@ UpdateMask Player::m_visibleUpdateMask;
 #define SHIELD 27759
 static uint32 TonkSpecials[4] = { FLAMETHROWER, MACHINEGUN, DROPMINE, SHIELD };
 
-inline uint64 MAKE_NEW_GUID(uint32 l, uint32 e, uint32 h);
-
-uint64 MAKE_NEW_GUID(uint32 l, uint32 e, uint32 h)
-{
-	return uint64(uint64(l) | (uint64(e) << 32) | (uint64(h) << ((h == 0xF0C0 || h == 0xF102) ? 48 : 52)));
-}
 
 //	 0x3F = 0x01 | 0x02 | 0x04 | 0x08 | 0x10 | 0x20 for 80 level
 //			minor|Major |minor |Major |minor |Major
@@ -1123,7 +1117,6 @@ bool Player::Create(WorldPacket & data)
 	sHookInterface.OnCharacterCreate(this);
 	load_health = GetHealth();
 	load_mana = GetPower(POWER_TYPE_MANA);
-	LOG_ERROR("RETURNING TRUE");
 	return true;
 }
 
@@ -7621,8 +7614,11 @@ void Player::ResetAllCooldowns()
 	}
 }
 
-void Player::PushUpdateData(ByteBuffer* data, uint32 updatecount)
+void Player::PushUpdateData(ByteBuffer *data, uint32 updatecount)
 {
+		if (updatecount == 0)
+			return;
+
 	// imagine the bytebuffer getting appended from 2 threads at once! :D
 	_bufferS.Acquire();
 
@@ -7630,8 +7626,8 @@ void Player::PushUpdateData(ByteBuffer* data, uint32 updatecount)
 	// that will fit into 2^16 bytes ( stupid client limitation on server packets )
 	// so if we get more than 63KB of update data, force an update and then append it
 	// to the clean buffer.
-	if ((data->size() + bUpdateBuffer.size()) >= 63000)
-		ProcessPendingUpdates();
+	//if( (data->wsize() + bUpdateBuffer.wsize() ) >= MAX_SEND_BUFFER_SIZE_TO_SEND )
+	ProcessPendingUpdates();	//avoid deadlocks
 
 	mUpdateCount += updatecount;
 	bUpdateBuffer.append(*data);
@@ -7646,9 +7642,24 @@ void Player::PushUpdateData(ByteBuffer* data, uint32 updatecount)
 	_bufferS.Release();
 }
 
+//!!! if we create and destroy data in the same packet then client will freak out and break combat log
 void Player::PushOutOfRange(const WoWGuid & guid)
 {
-	_bufferS.Acquire();
+		_bufferS.Acquire();
+	//double destroy ?
+	if (mDestroyGUIDS.find(guid.GetOldGuid()) != mDestroyGUIDS.end())
+	{
+		_bufferS.Release();
+		return;
+	}
+	if (mCreateGUIDS.find(guid.GetOldGuid()) != mCreateGUIDS.end())
+	{
+		//		CreateDestroyConflictDetected = true;
+		//try to avoid conflict
+		ProcessPendingUpdates();
+	}
+	mDestroyGUIDS.insert(guid.GetOldGuid());
+
 	mOutOfRangeIds << guid;
 	++mOutOfRangeIdCount;
 
@@ -7661,17 +7672,21 @@ void Player::PushOutOfRange(const WoWGuid & guid)
 	_bufferS.Release();
 }
 
-void Player::PushCreationData(ByteBuffer* data, uint32 updatecount)
+void Player::PushCreationData(ByteBuffer *data, uint32 updatecount)
 {
+	if (updatecount == 0)
+		return;
+
 	// imagine the bytebuffer getting appended from 2 threads at once! :D
 	_bufferS.Acquire();
+
 
 	// unfortunately there is no guarantee that all data will be compressed at a ratio
 	// that will fit into 2^16 bytes ( stupid client limitation on server packets )
 	// so if we get more than 63KB of update data, force an update and then append it
 	// to the clean buffer.
-	if ((data->size() + bCreationBuffer.size() + mOutOfRangeIds.size()) >= 63000)
-		ProcessPendingUpdates();
+	//if( (data->wsize() + bCreationBuffer.wsize() + mOutOfRangeIds.wsize() ) >= MAX_SEND_BUFFER_SIZE_TO_SEND )
+	ProcessPendingUpdates();
 
 	mCreationCount += updatecount;
 	bCreationBuffer.append(*data);
@@ -7687,7 +7702,6 @@ void Player::PushCreationData(ByteBuffer* data, uint32 updatecount)
 
 }
 
-// C9: disabled compression, otherwise it wouldn't work
 void Player::ProcessPendingUpdates()
 {
 	_bufferS.Acquire();
@@ -7734,14 +7748,8 @@ void Player::ProcessPendingUpdates()
 		bCreationBuffer.clear();
 		mCreationCount = 0;
 
-		// compress update packet
-		// while we said 350 before, I'm gonna make it 500 :D
-		//if(c < (size_t)sWorld.compression_threshold || !CompressAndSendUpdateBuffer((uint32)c, update_buffer))
-		{
-			sLog.outError("Sending SMSG_UPDATE_OBJECT 1 ");
-			// send uncompressed packet -> because we failed
-			m_session->OutPacket(SMSG_UPDATE_OBJECT, (uint16)c, update_buffer);
-		}
+		m_session->OutPacket(SMSG_UPDATE_OBJECT, (uint16)c, update_buffer);
+
 	}
 
 	if (bUpdateBuffer.size())
@@ -7752,7 +7760,7 @@ void Player::ProcessPendingUpdates()
 		*(uint16*)&update_buffer[c] = (uint16)GetMapId();
 		c += 2;
 
-		*(uint32*)&update_buffer[c] = ((mUpdateCount + mOutOfRangeIdCount) ? 0 : 1);
+		*(uint32*)&update_buffer[c] = ((mOutOfRangeIds.size() > 0) ? (mUpdateCount + 1) : mUpdateCount);
 		c += 4;
 
 		//update_buffer[c] = 1;																			   ++c;
@@ -7763,26 +7771,18 @@ void Player::ProcessPendingUpdates()
 		bUpdateBuffer.clear();
 		mUpdateCount = 0;
 
-		// compress update packet
-		// while we said 350 before, I'm gonna make it 500 :D
-		//if(c < (size_t)sWorld.compression_threshold || !CompressAndSendUpdateBuffer((uint32)c, update_buffer))
-		{
-			sLog.outError("Sending SMSG_UPDATE_OBJECT 2 ");
-			// send uncompressed packet -> because we failed
-			m_session->OutPacket(SMSG_UPDATE_OBJECT, (uint16)c, update_buffer);
-		}
+		m_session->OutPacket(SMSG_UPDATE_OBJECT, (uint16)c, update_buffer);
+
 	}
 
 	bProcessPending = false;
 	_bufferS.Release();
-	delete[] update_buffer;
 
-	// send any delayed packets
 	WorldPacket* pck;
 	while (delayedPackets.size())
 	{
 		pck = delayedPackets.next();
-		printf("Delayed packet opcode %u sent.\n", pck->GetOpcode());
+		//printf("Delayed packet opcode %u sent.\n", pck->GetOpcode());
 		m_session->SendPacket(pck);
 		delete pck;
 	}
@@ -7854,7 +7854,6 @@ bool Player::CompressAndSendUpdateBuffer(uint32 size, const uint8* update_buffer
 	*(uint32*)&buffer[0] = size;
 
 	// send it
-	sLog.outError("Sending SMSG_UPDATE_OBJECT 3 ");
 	m_session->OutPacket(SMSG_UPDATE_OBJECT /*| 0x8000*/, (uint16)stream.total_out + 4, buffer); // 0x8000 - compression flag
 
 	// cleanup memory
@@ -12106,6 +12105,7 @@ GetSession()->SendPacket(&data);
 
 void Player::UpdatePowerAmm()
 {
+	sLog.outError("Player::UpdatePowerAmm()");
 	WorldPacket data(SMSG_POWER_UPDATE, 5);
 	FastGUIDPack(data, GetGUID());
 	data << uint8(GetPowerType());
@@ -14033,4 +14033,311 @@ void Player::AddVehicleComponent(uint32 creature_entry, uint32 vehicleid){
 void Player::RemoveVehicleComponent(){
 	delete vehicle;
 	vehicle = NULL;
+}
+
+void Player::SendDirectMessage(WorldPacket* data)
+{
+	m_session->SendPacket(data);
+}
+
+void Player::ReadMovementInfo(WorldPacket& data, MovementInfo3* mi, Movement::ExtraMovementStatusElement* extras /*= NULL*/)
+{
+	MovementStatusElements const* sequence = GetMovementStatusElementsSequence(data.GetOpcode());
+	if (!sequence)
+	{
+		LOG_ERROR("Player::ReadMovementInfo: No movement sequence found for opcode %s (0x%04X)", LookupName(data.GetOpcode(), g_worldOpcodeNames), data.GetOpcode());
+		return;
+	}
+
+	bool hasMovementFlags = false;
+	bool hasMovementFlags2 = false;
+	bool hasTimestamp = false;
+	bool hasOrientation = false;
+	bool hasTransportData = false;
+	bool hasTransportTime2 = false;
+	bool hasTransportTime3 = false;
+	bool hasPitch = false;
+	bool hasFallData = false;
+	bool hasFallDirection = false;
+	bool hasSplineElevation = false;
+	bool hasCounter = false;
+	uint32 forcesCount = 0u;
+
+	ObjectGuid guid;
+	ObjectGuid tguid;
+
+	for (; *sequence != MSEEnd; ++sequence)
+	{
+		MovementStatusElements const& element = *sequence;
+
+		switch (element)
+		{
+		case MSEHasGuidByte0:
+		case MSEHasGuidByte1:
+		case MSEHasGuidByte2:
+		case MSEHasGuidByte3:
+		case MSEHasGuidByte4:
+		case MSEHasGuidByte5:
+		case MSEHasGuidByte6:
+		case MSEHasGuidByte7:
+			guid[element - MSEHasGuidByte0] = data.ReadBit();
+			break;
+		case MSEHasTransportGuidByte0:
+		case MSEHasTransportGuidByte1:
+		case MSEHasTransportGuidByte2:
+		case MSEHasTransportGuidByte3:
+		case MSEHasTransportGuidByte4:
+		case MSEHasTransportGuidByte5:
+		case MSEHasTransportGuidByte6:
+		case MSEHasTransportGuidByte7:
+			if (hasTransportData)
+				tguid[element - MSEHasTransportGuidByte0] = data.ReadBit();
+			break;
+		case MSEGuidByte0:
+		case MSEGuidByte1:
+		case MSEGuidByte2:
+		case MSEGuidByte3:
+		case MSEGuidByte4:
+		case MSEGuidByte5:
+		case MSEGuidByte6:
+		case MSEGuidByte7:
+			data.ReadByteSeq(guid[element - MSEGuidByte0]);
+			break;
+		case MSETransportGuidByte0:
+		case MSETransportGuidByte1:
+		case MSETransportGuidByte2:
+		case MSETransportGuidByte3:
+		case MSETransportGuidByte4:
+		case MSETransportGuidByte5:
+		case MSETransportGuidByte6:
+		case MSETransportGuidByte7:
+			if (hasTransportData)
+				data.ReadByteSeq(tguid[element - MSETransportGuidByte0]);
+			break;
+		case MSEHasMovementFlags:
+			hasMovementFlags = !data.ReadBit();
+			break;
+		case MSEHasMovementFlags2:
+			hasMovementFlags2 = !data.ReadBit();
+			break;
+		case MSEHasTimestamp:
+			hasTimestamp = !data.ReadBit();
+			break;
+		case MSEHasOrientation:
+			hasOrientation = !data.ReadBit();
+			break;
+		case MSEHasTransportData:
+			hasTransportData = data.ReadBit();
+			break;
+		case MSEHasTransportTime2:
+			if (hasTransportData)
+				hasTransportTime2 = data.ReadBit();
+			break;
+		case MSEHasTransportTime3:
+			if (hasTransportData)
+				hasTransportTime3 = data.ReadBit();
+			break;
+		case MSEHasPitch:
+			hasPitch = !data.ReadBit();
+			break;
+		case MSEHasFallData:
+			hasFallData = data.ReadBit();
+			break;
+		case MSEHasFallDirection:
+			if (hasFallData)
+				hasFallDirection = data.ReadBit();
+			break;
+		case MSEHasSplineElevation:
+			hasSplineElevation = !data.ReadBit();
+			break;
+		case MSEHasSpline:
+			data.ReadBit();
+			break;
+		case MSEMovementFlags:
+			if (hasMovementFlags)
+				mi->flags = data.ReadBits(30);
+			break;
+		case MSEMovementFlags2:
+			if (hasMovementFlags2)
+				mi->flags2 = data.ReadBits(13);
+			break;
+		case MSETimestamp:
+			if (hasTimestamp)
+				data >> mi->time;
+			break;
+		case MSEPositionX:
+			data >> mi->pos.m_positionX;
+			break;
+		case MSEPositionY:
+			data >> mi->pos.m_positionY;
+			break;
+		case MSEPositionZ:
+			data >> mi->pos.m_positionZ;
+			break;
+		case MSEOrientation:
+			if (hasOrientation)
+				mi->pos.SetOrientation(data.read<float>());
+			break;
+		case MSETransportPositionX:
+			if (hasTransportData)
+				data >> mi->transport.pos.m_positionX;
+			break;
+		case MSETransportPositionY:
+			if (hasTransportData)
+				data >> mi->transport.pos.m_positionY;
+			break;
+		case MSETransportPositionZ:
+			if (hasTransportData)
+				data >> mi->transport.pos.m_positionZ;
+			break;
+		case MSETransportOrientation:
+			if (hasTransportData)
+				mi->transport.pos.SetOrientation(data.read<float>());
+			break;
+		case MSETransportSeat:
+			if (hasTransportData)
+				data >> mi->transport.seat;
+			break;
+		case MSETransportTime:
+			if (hasTransportData)
+				data >> mi->transport.time;
+			break;
+		case MSETransportTime2:
+			if (hasTransportData && hasTransportTime2)
+				data >> mi->transport.time2;
+			break;
+		case MSETransportTime3:
+			if (hasTransportData && hasTransportTime3)
+				data >> mi->transport.time3;
+			break;
+		case MSEPitch:
+			if (hasPitch)
+				mi->pitch = G3D::wrap(data.read<float>(), float(-M_PI), float(M_PI));
+			break;
+		case MSEFallTime:
+			if (hasFallData)
+				data >> mi->jump.fallTime;
+			break;
+		case MSEFallVerticalSpeed:
+			if (hasFallData)
+				data >> mi->jump.zspeed;
+			break;
+		case MSEFallCosAngle:
+			if (hasFallData && hasFallDirection)
+				data >> mi->jump.cosAngle;
+			break;
+		case MSEFallSinAngle:
+			if (hasFallData && hasFallDirection)
+				data >> mi->jump.sinAngle;
+			break;
+		case MSEFallHorizontalSpeed:
+			if (hasFallData && hasFallDirection)
+				data >> mi->jump.xyspeed;
+			break;
+		case MSESplineElevation:
+			if (hasSplineElevation)
+				data >> mi->splineElevation;
+			break;
+		case MSEForcesCount:
+			forcesCount = data.ReadBits(22);
+			break;
+		case MSEForces:
+			for (uint32 i = 0; i < forcesCount; i++)
+				data.read<uint32>();
+			break;
+		case MSEHasCounter:
+			hasCounter = !data.ReadBit();
+			break;
+		case MSECounter:
+			if (hasCounter)
+				data.read<uint32>();
+			break;
+		case MSEZeroBit:
+		case MSEOneBit:
+			data.ReadBit();
+			break;
+		case MSEExtraElement:
+			extras->ReadNextElement(data);
+			break;
+		default:
+			ASSERT(Movement::PrintInvalidSequenceElement(element, __FUNCTION__));
+			break;
+		}
+	}
+
+	mi->guid = guid;
+	mi->transport.guid = tguid;
+
+	//! Anti-cheat checks. Please keep them in seperate if () blocks to maintain a clear overview.
+	//! Might be subject to latency, so just remove improper flags.
+
+/*#define REMOVE_VIOLATING_FLAGS(check, maskToRemove) \
+        if (check) \
+            mi->RemoveMovementFlag((maskToRemove));
+
+
+	/*! This must be a packet spoofing attempt. MOVEMENTFLAG_ROOT sent from the client is not valid
+	in conjunction with any of the moving movement flags such as MOVEMENTFLAG_FORWARD.
+	It will freeze clients that receive this player's movement info.
+	
+
+	REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_ROOT),
+		MOVEMENTFLAG_ROOT);
+
+	//! Cannot hover without SPELL_AURA_HOVER
+	REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_HOVER) && !HasAuraType(SPELL_AURA_HOVER),
+		MOVEMENTFLAG_HOVER);
+
+	//! Cannot ascend and descend at the same time
+	REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_ASCENDING) && mi->HasMovementFlag(MOVEMENTFLAG_DESCENDING),
+		MOVEMENTFLAG_ASCENDING | MOVEMENTFLAG_DESCENDING);
+
+	//! Cannot move left and right at the same time
+	REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_LEFT) && mi->HasMovementFlag(MOVEMENTFLAG_RIGHT),
+		MOVEMENTFLAG_LEFT | MOVEMENTFLAG_RIGHT);
+
+	//! Cannot strafe left and right at the same time
+	REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_STRAFE_LEFT) && mi->HasMovementFlag(MOVEMENTFLAG_STRAFE_RIGHT),
+		MOVEMENTFLAG_STRAFE_LEFT | MOVEMENTFLAG_STRAFE_RIGHT);
+
+	//! Cannot pitch up and down at the same time
+	REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_PITCH_UP) && mi->HasMovementFlag(MOVEMENTFLAG_PITCH_DOWN),
+		MOVEMENTFLAG_PITCH_UP | MOVEMENTFLAG_PITCH_DOWN);
+
+	//! Cannot move forwards and backwards at the same time
+	REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_FORWARD) && mi->HasMovementFlag(MOVEMENTFLAG_BACKWARD),
+		MOVEMENTFLAG_FORWARD | MOVEMENTFLAG_BACKWARD);
+
+	//! Cannot walk on water without SPELL_AURA_WATER_WALK
+	REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_WATERWALKING) && !HasAuraType(SPELL_AURA_WATER_WALK),
+		MOVEMENTFLAG_WATERWALKING);
+
+	//! Cannot feather fall without SPELL_AURA_FEATHER_FALL
+	REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_FALLING_SLOW) && !HasAuraType(SPELL_AURA_FEATHER_FALL),
+		MOVEMENTFLAG_FALLING_SLOW);
+
+	/*! Cannot fly if no fly auras present. Exception is being a GM.
+	Note that we check for account level instead of Player::IsGameMaster() because in some
+	situations it may be feasable to use .gm fly on as a GM without having .gm on,
+	e.g. aerial combat.
+	
+
+	REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_FLYING | MOVEMENTFLAG_CAN_FLY) && ToPlayer()->GetSession()->GetSecurity() == SEC_PLAYER &&
+		!ToPlayer()->m_mover->HasAuraType(SPELL_AURA_FLY) &&
+		!ToPlayer()->m_mover->HasAuraType(SPELL_AURA_MOD_INCREASE_MOUNTED_FLIGHT_SPEED),
+		MOVEMENTFLAG_FLYING | MOVEMENTFLAG_CAN_FLY);
+
+	REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_DISABLE_GRAVITY | MOVEMENTFLAG_CAN_FLY) && mi->HasMovementFlag(MOVEMENTFLAG_FALLING),
+		MOVEMENTFLAG_FALLING);
+
+	REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_FALLING) && (!hasFallData || !hasFallDirection), MOVEMENTFLAG_FALLING);
+
+	REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_SPLINE_ELEVATION) &&
+		(!hasSplineElevation || G3D::fuzzyEq(mi->splineElevation, 0.0f)), MOVEMENTFLAG_SPLINE_ELEVATION);
+
+	// Client first checks if spline elevation != 0, then verifies flag presence
+	if (hasSplineElevation)
+		mi->AddMovementFlag(MOVEMENTFLAG_SPLINE_ELEVATION);
+
+#undef REMOVE_VIOLATING_FLAGS*/
 }

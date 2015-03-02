@@ -1397,6 +1397,7 @@ void MapMgr::AddObject(Object* obj)
 
 Unit* MapMgr::GetUnit(const uint64 & guid)
 {
+	sLog.outError("%u : %u : %u : %u :  %u : %u : %u : %u : %u : %u", GUID_HIPAR_TESTT(guid), Arcemu::Util::GUID_HIPART(guid), GUID_LOPART_TEST(guid), Arcemu::Util::GUID_LOPART(guid), GET_LOWGUID_PART(guid), GET_TYPE_FROM_GUID(guid), guid, (uint64)guid), GET_TYPE_FROM_GUID(guid), GET_LOWGUID_PART(guid);
 	if(guid == 0)
 		return NULL;
 
@@ -1704,7 +1705,7 @@ uint64 MapMgr::GenerateCreatureGUID(uint32 entry)
 
 	CreatureProto *proto = CreatureProtoStorage.LookupEntry( entry );
 	if( ( proto == NULL ) || ( proto->vehicleid == 0 ) )
-		newguid = static_cast< uint64 >( HIGHGUID_TYPE_UNIT ) << 32;
+		newguid = static_cast< uint64 >(0xF13) << 32;
 	else
 		newguid = static_cast< uint64 >( HIGHGUID_TYPE_VEHICLE ) << 32;
 

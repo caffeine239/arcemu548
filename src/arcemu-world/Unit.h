@@ -24,6 +24,8 @@
 class AIInterface;
 class DynamicObject;
 
+#include "MovementStructures.h"
+
 //these refer to visibility ranges. We need to store each stack of the aura and not just visible count.
 #define MAX_POSITIVE_VISUAL_AURAS_START 0 // 
 #define MAX_POSITIVE_VISUAL_AURAS_END 40 // 
@@ -867,6 +869,38 @@ enum HitStatus
     HITSTATUS_UNK2              = 0x00800000
 };
 
+enum HitInfo
+{
+	HITINFO_NORMALSWING = 0x00000000,
+	HITINFO_UNK1 = 0x00000001,               // req correct packet structure
+	HITINFO_AFFECTS_VICTIM = 0x00000002,
+	HITINFO_OFFHAND = 0x00000004,
+	HITINFO_UNK2 = 0x00000008,
+	HITINFO_MISS = 0x00000010,
+	HITINFO_FULL_ABSORB = 0x00000020,
+	HITINFO_PARTIAL_ABSORB = 0x00000040,
+	HITINFO_FULL_RESIST = 0x00000080,
+	HITINFO_PARTIAL_RESIST = 0x00000100,
+	HITINFO_CRITICALHIT = 0x00000200,               // critical hit
+	// 0x00000400
+	// 0x00000800
+	HITINFO_UNK12 = 0x00001000,
+	HITINFO_BLOCK = 0x00002000,               // blocked damage
+	// 0x00004000                                           // Hides worldtext for 0 damage
+	// 0x00008000                                           // Related to blood visual
+	HITINFO_GLANCING = 0x00010000,
+	HITINFO_CRUSHING = 0x00020000,
+	HITINFO_NO_ANIMATION = 0x00040000,
+	// 0x00080000
+	// 0x00100000
+	HITINFO_SWINGNOHITSOUND = 0x00200000,               // unused?
+	// 0x00400000
+	HITINFO_RAGE_GAIN = 0x00800000,
+	HITINFO_FAKE_DAMAGE = 0x01000000, // enables damage animation even if no damage done, set only if no damage
+	HITINFO_UNK25 = 0x02000000,
+	HITINFO_UNK26 = 0x04000000,
+};
+
 enum INVIS_FLAG
 {
     INVIS_FLAG_NORMAL, // players and units with no special invisibility flags
@@ -1007,6 +1041,8 @@ class SERVER_DECL Unit : public Object
 
 		friend class AIInterface;
 		friend class Aura;
+
+		virtual void Init();
 
 		virtual void Update(uint32 time);
 		virtual void RemoveFromWorld(bool free_guid);
@@ -1184,9 +1220,19 @@ class SERVER_DECL Unit : public Object
 		//
 		/////////////////////////////////////////////////////////////////
 		void RemoveAllAreaAuraByOther();
-		bool IsSplineEnabled() const;
+
+		void AddUnitMovementFlag(uint32 f) { m_movementInfo.flags |= f; }
+		void RemoveUnitMovementFlag(uint32 f) { m_movementInfo.flags &= ~f; }
 		bool HasUnitMovementFlag(uint32 f) const { return (m_movementInfo.flags & f) == f; }
+		uint32 GetUnitMovementFlags() const { return m_movementInfo.flags; }
+		void SetUnitMovementFlags(uint32 f) { m_movementInfo.flags = f; }
+
+		void AddExtraUnitMovementFlag(uint16 f) { m_movementInfo.flags2 |= f; }
+		void RemoveExtraUnitMovementFlag(uint16 f) { m_movementInfo.flags2 &= ~f; }
 		uint16 HasExtraUnitMovementFlag(uint16 f) const { return m_movementInfo.flags2 & f; }
+		uint16 GetExtraUnitMovementFlags() const { return m_movementInfo.flags2; }
+		void SetExtraUnitMovementFlags(uint16 f) { m_movementInfo.flags2 = f; }
+		bool IsSplineEnabled() const;
 
 
 		void EventRemoveAura(uint32 SpellId) { RemoveAura(SpellId); }
@@ -1266,6 +1312,7 @@ class SERVER_DECL Unit : public Object
 		uint32 m_canMove;
 
 		float GetSpeed(UnitMoveType mtype) const;
+		
 		bool IsControlledByPlayer() const { return m_ControlledByPlayer; }
 
 		SummonHandler summonhandler;
@@ -1733,6 +1780,8 @@ class SERVER_DECL Unit : public Object
 		void SendPeriodicAuraLog(const WoWGuid & CasterGUID, const WoWGuid & casterGUID, uint32 SpellID, uint32 School, uint32 Amount, uint32 abs_dmg, uint32 resisted_damage, uint32 Flags, bool is_critical);
 		void SendPeriodicHealAuraLog(const WoWGuid & CasterGUID, const WoWGuid & TargetGUID, uint32 SpellID, uint32 healed, uint32 over_healed, bool is_critical);
 
+		void WriteMovementInfo(WorldPacket& data, Movement::ExtraMovementStatusElement* extras = NULL);
+
 		void EventModelChange();
 		ARCEMU_INLINE float GetModelHalfSize() { return m_modelhalfsize * GetScale(); }
 
@@ -1771,6 +1820,7 @@ class SERVER_DECL Unit : public Object
 
 		void SetTargetGUID(uint64 GUID) { SetUInt64Value(UNIT_FIELD_TARGET, GUID); }
 		uint64 GetTargetGUID() { return GetUInt64Value(UNIT_FIELD_TARGET); }
+		Unit* getVictim() const { return m_attacking; }
 
 		void SetChannelSpellTargetGUID(uint64 GUID) { SetUInt64Value(UNIT_FIELD_CHANNEL_OBJECT, GUID); }
 		void SetChannelSpellId(uint32 SpellId) { SetUInt32Value(UNIT_CHANNEL_SPELL, SpellId); }
@@ -1951,6 +2001,7 @@ class SERVER_DECL Unit : public Object
 		uint32 m_interruptedRegenTime; //PowerInterruptedegenTimer.
 		uint32 m_state;		 // flags for keeping track of some states
 		uint32 m_attackTimer;   // timer for attack
+		Unit* m_attacking;
 		uint32 m_attackTimer_1;
 		bool m_dualWield;
 
@@ -1986,6 +2037,7 @@ class SERVER_DECL Unit : public Object
 		UniqueAuraTargetMap m_singleTargetAura;
 
 		uint32 m_charmtemp;
+		uint32 m_movementCounter;
 
 		bool m_extraAttackCounter;
 
@@ -2020,8 +2072,10 @@ class SERVER_DECL Unit : public Object
 		bool m_noFallDamage;
 		float z_axisposition;
 		int32 m_safeFall;
+		int8	PowerFields[14];
 		
 		void SendEnvironmentalDamageLog( uint64 guid, uint8 type, uint32 damage );
+		
 };
 
 
