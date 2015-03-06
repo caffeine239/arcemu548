@@ -133,9 +133,7 @@ class SERVER_DECL MapMgr : public CellHandler <MapCell>, public EventableObject,
 
 		Creature* GetCreature(uint32 guid)
 		{
-			if(guid > m_CreatureHighGuid)
-				return NULL;
-			return CreatureStorage[ guid ];
+			return guid <= m_CreatureHighGuid ? CreatureStorage[guid] : NULL;
 		}
 
 

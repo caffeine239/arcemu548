@@ -452,34 +452,84 @@ void WorldSession::HandleItemNameQueryOpcode(WorldPacket & recv_data)
 void WorldSession::HandleInrangeQuestgiverQuery(WorldPacket & recv_data)
 {
 	CHECK_INWORLD_RETURN;
-
-	WorldPacket data(SMSG_QUESTGIVER_STATUS_MULTIPLE, 1000);
 	Object::InRangeSet::iterator itr;
-	Creature* pCreature;
 	uint32 count = 0;
-	data << count;
+	ByteBuffer byteData;
 
-	// 32 count
-	// <foreach count>
-	//    64 guid
-	//    8 status
+	WorldPacket data(SMSG_QUESTGIVER_STATUS_MULTIPLE, 3 + count * (1 + 8 + 4));
 
-	for(itr = _player->m_objectsInRange.begin(); itr != _player->m_objectsInRange.end(); ++itr)
+	size_t pos = data.bitwpos();
+	data.WriteBits(count, 21);      // placeholder
+
+
+	for (itr = _player->m_objectsInRange.begin(); itr != _player->m_objectsInRange.end(); ++itr)
 	{
-		if(!(*itr)->IsCreature())
+		if (!(*itr)->IsCreature())
 			continue;
 
-		pCreature = TO_CREATURE(*itr);
+		Creature* pCreature = TO_CREATURE(*itr);
+		GameObject* pGameObject = TO_GAMEOBJECT(*itr);
 
-		if(pCreature->isQuestGiver())
+		if (pCreature->isQuestGiver())
 		{
+			ObjectGuid guid = pCreature->GetGUID();
+
+			data.WriteBit(guid[4]);
+			data.WriteBit(guid[0]);
+			data.WriteBit(guid[3]);
+			data.WriteBit(guid[6]);
+			data.WriteBit(guid[5]);
+			data.WriteBit(guid[7]);
+			data.WriteBit(guid[1]);
+			data.WriteBit(guid[2]);
+
+			byteData.WriteByteSeq(guid[6]);
+			byteData.WriteByteSeq(guid[2]);
+			byteData.WriteByteSeq(guid[7]);
+			byteData.WriteByteSeq(guid[5]);
+			byteData.WriteByteSeq(guid[4]);
+			byteData << uint32(sQuestMgr.CalcStatus(pCreature, _player));
+			byteData.WriteByteSeq(guid[1]);
+			byteData.WriteByteSeq(guid[3]);
+			byteData.WriteByteSeq(guid[0]);
+
+			++count;
 			data << pCreature->GetGUID();
 			data << uint8(sQuestMgr.CalcStatus(pCreature, _player));
 			++count;
 		}
+
+		else if (pGameObject->isQuestGiver())
+		{
+			ObjectGuid guid = pGameObject->GetGUID();
+
+			data.WriteBit(guid[4]);
+			data.WriteBit(guid[0]);
+			data.WriteBit(guid[3]);
+			data.WriteBit(guid[6]);
+			data.WriteBit(guid[5]);
+			data.WriteBit(guid[7]);
+			data.WriteBit(guid[1]);
+			data.WriteBit(guid[2]);
+
+			byteData.WriteByteSeq(guid[6]);
+			byteData.WriteByteSeq(guid[2]);
+			byteData.WriteByteSeq(guid[7]);
+			byteData.WriteByteSeq(guid[5]);
+			byteData.WriteByteSeq(guid[4]);
+			byteData << uint32(sQuestMgr.CalcStatus(pGameObject, _player));
+			byteData.WriteByteSeq(guid[1]);
+			byteData.WriteByteSeq(guid[3]);
+			byteData.WriteByteSeq(guid[0]);
+
+			++count;
+		}
 	}
 
-	*(uint32*)(data.contents()) = count;
+	data.FlushBits();
+	data.PutBits(pos, count, 21);
+	data.append(byteData);
+
 	SendPacket(&data);
 }
 

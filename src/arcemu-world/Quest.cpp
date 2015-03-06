@@ -25,125 +25,143 @@
 
 WorldPacket* WorldSession::BuildQuestQueryResponse(Quest* qst)
 {
-	// 2048 bytes should be more than enough. The fields cost ~200 bytes.
-	// better to allocate more at startup than have to realloc the buffer later on.
-
 	WorldPacket* data = new WorldPacket(SMSG_QUEST_QUERY_RESPONSE, 248);
 	LocalizedQuest* lci = (language > 0) ? sLocalizationMgr.GetLocalizedQuest(qst->id, language) : NULL;
-	uint32 i;
 
-	*data << uint32(qst->id);						// Quest ID
-	*data << uint32(2);								// Unknown, always seems to be 2
-	*data << int32(qst->questlevel);				// Quest level
-	*data << uint32(qst->min_level);				// Quest required level
+	*data << uint32(qst->id);
+	data->WriteBit(1);                                   // has data
+	//data->WriteBits(questTurnTextWindow.size(), 10);
+	data->WriteBits(strlen(qst->title), 9);
+	//data->WriteBits(questCompletedText.size(), 11);
+	data->WriteBits(strlen(qst->details), 12);
+	//data->WriteBits(questTurnTargetName.size(), 8);
+	//data->WriteBits(qst->questGiverTargetName.size(), 8);
+	//data->WriteBits(questGiverTextWindow.size(), 10);
+	data->WriteBits(strlen(qst->endtext), 9);
+	//data->WriteBits(quest->m_questObjectives.size(), 19);
+	//data->WriteBits(questObjectives.size(), 12);
 
-	if(qst->quest_sort > 0)
-		*data << int32(-(int32)qst->quest_sort);	// Negative if pointing to a sort.
-	else
-		*data << uint32(qst->zone_id);				// Positive if pointing to a zone.
+	ByteBuffer objData;
+	/*for (QuestObjectiveSet::const_iterator citr = quest->m_questObjectives.begin(); citr != quest->m_questObjectives.end(); citr++)
+	{
+		QuestObjective const* questObjective = *citr;
 
-	*data << uint32(qst->type);						// Info ID / Type
-	*data << qst->suggestedplayers;					// suggested players
-	*data << uint32(qst->required_rep_faction);		// Faction ID
-	*data << uint32(qst->required_rep_value);		// Faction Amount
-	*data << uint32(0);								// Unknown (always 0)
-	*data << uint32(0);								// Unknown (always 0)
-	*data << uint32(qst->next_quest_id);			// Next Quest ID
-	*data << uint32(0);								// Column id +1 from QuestXp.dbc, entry is quest level
-	*data << uint32(sQuestMgr.GenerateRewardMoney(_player, qst));	// Copper reward
-	*data << uint32(qst->reward_money < 0 ? -qst->reward_money : 0);		// Required Money
-	*data << uint32(qst->reward_spell);                                 // Spell added to spellbook upon completion
-	*data << uint32(qst->effect_on_player);			// Spell casted on player upon completion
-	*data << uint32(qst->bonushonor);				// 2.3.0 - bonus honor
-	*data << float(0);								// 3.3.0 - some multiplier for honor
-	*data << uint32(qst->srcitem);					// Item given at the start of a quest (srcitem)
-	*data << uint32(qst->quest_flags);				// Quest Flags
-	*data << qst->rewardtitleid;					// 2.4.0 unk
-	*data << uint32(0);								// playerkillcount
-	*data << qst->rewardtalents;
-	*data << uint32(0);								// 3.3.0 Unknown
-	*data << uint32(0);								// 3.3.0 Unknown
+		std::string descriptionText = qst->objectives;
+		if (locale > 0)
+			if (QuestObjectiveLocale const* questObjectiveLocale = sObjectMgr->GetQuestObjectiveLocale(questObjective->Id))
+				ObjectMgr::GetLocaleString(questObjectiveLocale->Description, locale, descriptionText);
 
-	// (loop 4 times)
-	for(i = 0; i < 4; ++i)
+		data->WriteBits(descriptionText.size(), 8);
+		data->WriteBits(questObjective->VisualEffects.size(), 22);
+
+		objData << int32(questObjective->Amount);
+		objData << uint32(questObjective->Id);
+		objData.WriteString(descriptionText);
+		objData << uint32(questObjective->Flags);
+		objData << uint8(questObjective->Index);
+		objData << uint8(questObjective->Type);
+		objData << uint32(questObjective->ObjectId);
+
+		for (VisualEffectVec::const_iterator citrEffects = questObjective->VisualEffects.begin(); citrEffects != questObjective->VisualEffects.end(); citrEffects++)
+			objData << uint32(*citrEffects);
+	}*/
+
+	data->FlushBits();
+
+	bool hiddenReward = qst->HasFlag(QUEST_FLAGS_HIDDEN_REWARDS);
+
+	// values need rechecking and zero values need more research
+	data->append(objData);
+	*data << uint32(qst->required_item[0]);
+	*data << uint32(hiddenReward ? 0 : qst->reward_choiceitem[4]);
+	*data << uint32(hiddenReward ? 0 : qst->reward_choiceitem[3]);
+	*data << uint32(hiddenReward ? 0 : qst->reward_choiceitemcount[1]);
+	*data << uint32(hiddenReward ? 0 : qst->reward_choiceitem[2]);
+
+	for (uint32 i = 0; i < 4; i++)
 	{
 		*data << qst->reward_item[i];				// Forced Reward Item [i]
 		*data << qst->reward_itemcount[i];			// Forced Reward Item Count [i]
 	}
 
-	// (loop 6 times)
-	for(i = 0; i < 6; ++i)
+	*data << uint32(qst->rewardtalents);                               // bonus talents
+	*data << float(qst->point_y);
+	*data << uint32(0); // quest->GetSoundTurnIn());
+
+	for (int i = 0; i < 5; i++)
 	{
-		*data << qst->reward_choiceitem[i];			// Choice Reward Item [i]
-		*data << qst->reward_choiceitemcount[i];	// Choice Reward Item Count [i]
+		*data << uint32(qst->reward_repfaction[i]);                        // reward factions ids
 	}
 
-	// (loop 5 times) - these 3 loops are here to allow displaying rep rewards in client (not handled in core yet)
-	for(i = 0; i < 5; ++i)
-	{
-		*data << uint32(qst->reward_repfaction[i]);	// reward factions ids
-	}
-
-	for(i = 0; i < 5; ++i)
-	{
-		*data << uint32(0);							// column index in QuestFactionReward.dbc but use unknown
-	}
-
-	for(i = 0; i < 5; ++i)					// Unknown
-	{
-		*data << uint32(0);
-	}
-
-	*data << qst->point_mapid;						// Unknown
-	*data << qst->point_x;							// Unknown
-	*data << qst->point_y;							// Unknown
-	*data << qst->point_opt;						// Unknown
-
-	if(lci)
-	{
-		*data << lci->Title;
-		*data << lci->Objectives;
-		*data << lci->Details;
-		*data << lci->EndText;
-		*data << uint8(0);
-	}
-	else
-	{
-		*data << qst->title;						// Title / name of quest
-		*data << qst->objectives;					// Objectives / description
-		*data << qst->details;						// Details
-		*data << qst->endtext;						// Subdescription
-		*data << uint8(0);							// most 3.3.0 quests i seen have something like "Return to NPCNAME"
-	}
-
-	for(i = 0; i < 4; ++i)
-	{
-		*data << qst->required_mob[i];				// Kill mob entry ID [i]
-		*data << qst->required_mobcount[i];			// Kill mob count [i]
-		*data << uint32(0);							// Unknown
-		*data << uint32(0);							// 3.3.0 Unknown
-	}
-
-	for(i = 0; i < MAX_REQUIRED_QUEST_ITEM; ++i)
-	{
-		*data << qst->required_item[i];				// Collect item [i]
-		*data << qst->required_itemcount[i];		// Collect item count [i]
-	}
-
-	if(lci)
-	{
-		*data << lci->ObjectiveText[0];
-		*data << lci->ObjectiveText[1];
-		*data << lci->ObjectiveText[2];
-		*data << lci->ObjectiveText[3];
-	}
-	else
-	{
-		*data << qst->objectivetexts[0];				// Objective 1 - Used as text if mob not set
-		*data << qst->objectivetexts[1];				// Objective 2 - Used as text if mob not set
-		*data << qst->objectivetexts[2];				// Objective 3 - Used as text if mob not set
-		*data << qst->objectivetexts[3];				// Objective 4 - Used as text if mob not set
-	}
+	//*data << uint32(hiddenReward ? 0 : quest->GetRewMoney());                // reward money (below max lvl)
+	//*data << uint32(hiddenReward ? 0 : quest->RewardChoiceItemCount[4]);
+	//*data << uint32(hiddenReward ? 0 : quest->RewardChoiceItemCount[1]);
+	//*data << uint32(qst-> quest->GetFlags2());
+	data->WriteString(qst->endtext);
+	//*data << uint32(hiddenReward ? 0 : quest->RewardChoiceItemId[1]);
+	//*data << uint32(quest->GetRewMoneyMaxLevel());                           // used in XP calculation at client
+	//*data << uint32(hiddenReward ? 0 : quest->RewardItemId[0]);
+	//data->WriteString(questCompletedText);
+	//*data << uint32(hiddenReward ? 0 : quest->RewardChoiceItemId[3]);
+	//*data << uint32(quest->GetRewHonorAddition());                           // rewarded honor points
+	//data->WriteString(questGiverTextWindow);
+	//data->WriteString(questObjectives);
+	//*data << uint32(quest->GetRewardSkillPoints());                          // reward skill points
+	//*data << uint32(hiddenReward ? 0 : quest->RewardChoiceItemId[5]);
+	//*data << uint32(quest->GetSuggestedPlayers());                           // suggested players count
+	*data << uint32(qst->id);                                    // quest id
+	//*data << uint32(quest->RequiredSourceItemId[1]);
+	//*data << uint32(hiddenReward ? 0 : quest->RewardItemId[1]);
+	*data << int32(qst->min_level);                                    // min level
+	//*data << uint32(quest->GetRewardReputationMask());                       // rep mask (unsure on what it does)
+	//*data << uint32(quest->GetPointOpt());
+	*data << int32(qst->questlevel);                                  // may be -1, static data, in other cases must be used dynamic level: Player::GetQuestLevel (0 is not known, but assuming this is no longer valid for quest intended for client)
+	*data << uint32(2); // quest->GetQuestMethod());                                // Accepted values: 0, 1 or 2. 0 == IsAutoComplete() (skip objectives/details)
+	//*data << uint32(qst->srcitemcount[2]);
+	//*data << uint32(qst->->GetXPId());                                       // seems to always have the same value as the first XP ID field
+	data->WriteString(qst->details);
+	//*data << uint32(hiddenReward ? 0 : quest->RewardItemIdCount[0]);
+	//*data << uint32(hiddenReward ? 0 : quest->RewardChoiceItemCount[5]);
+	//*data << uint32(hiddenReward ? 0 : quest->RewardItemIdCount[2]);
+	*data << uint32(qst->effect_on_player);                               // casted spell
+	*data << uint32(0);                                                      // unknown
+	//data->WriteString(questTurnTargetName);
+	*data << uint32(0);                                                      // unknown
+	//*data << uint32(quest->RequiredSourceItemCount[1]);
+	//*data << uint32(quest->RequiredSourceItemId[2]);
+	//*data << uint32(quest->GetQuestTurnInPortrait());
+	data->WriteString(qst->title);
+	//*data << uint32(quest->GetType());                                       // quest type
+	*data << uint32(0); // quest->GetXPId());                                       // used for calculating rewarded experience
+	*data << uint32(0);                                                      // unknown
+	*data << uint32(0);                                                      // unknown
+	*data << uint32(qst->point_mapid);
+	//*data << uint32(quest->GetNextQuestInChain());                           // client will request this quest from NPC, if not 0
+	//*data << uint32(hiddenReward ? 0 : quest->RewardChoiceItemId[0]);
+	//data->WriteString(questGiverTargetName);
+	*data << uint32(0);                                                      // unknown
+	//*data << uint32(quest->RequiredSourceItemId[3]);
+	*data << float(qst->point_x);
+	//*data << uint32(hiddenReward ? 0 : quest->RewardChoiceItemId[2]);
+	*data << uint32(0);                                                      // unknown
+	//*data << uint32(hiddenReward ? 0 : quest->RewardItemIdCount[3]);
+	*data << uint32(0);// quest->GetSoundAccept());
+	//*data << uint32(hiddenReward ? 0 : quest->RewardItemId[2]);
+	*data << float(0); // quest->GetRewHonorMultiplier());
+	//*data << uint32(quest->GetCharTitleId());                                // CharTitleId, new 2.4.0, player gets this title (id from CharTitles)
+	//data->WriteString(questTurnTextWindow);
+	//*data << uint32(hiddenReward ? 0 : quest->RewardChoiceItemCount[3]);
+	//*data << uint32(quest->RequiredSourceItemCount[0]);
+	//*data << int32(quest->GetZoneOrSort());                                  // zone or sort to display in quest log
+	//*data << uint32(quest->GetRewardSkillId());                              // reward skill id
+	//*data << uint32(hiddenReward ? 0 : quest->RewardChoiceItemCount[0]);
+	//*data << uint32(quest->GetRewSpell());                                   // reward spell, this spell will display (icon) (casted if RewSpellCast == 0)
+	//*data << uint32(quest->GetQuestGiverPortrait());
+	*data << uint32(0);                                                      // unknown
+	//*data << uint32(quest->RequiredSourceItemCount[3]);
+	*data << uint32(qst->quest_flags & 0xFFFF);                             // quest flags
+	//*data << uint32(quest->GetRewardPackageItemId());
+	//*data << uint32(quest->GetSrcItemId()); 
 
 	return data;
 }

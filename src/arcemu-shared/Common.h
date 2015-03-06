@@ -485,7 +485,7 @@ inline bool IsGuidHaveEnPart(uint64 guid)
 
 #define GUID_ENPART_TEST(x) (IsGuidHaveEnPart(x) ? _GUID_ENPART_3(x) : _GUID_ENPART_2(x))
 #define GUID_LOPART_TEST(x) (IsGuidHaveEnPart(x) ? _GUID_LOPART_3(x) : _GUID_LOPART_2(x))
-//#define MAKE_NEW_GUID(l, e, h)   uint64(uint64(l) | (uint64(IsGuidHaveEnPart(h) ? e : 0) << 24) | (uint64(h) << 48))
+#define MAKE_NEW_GUID2(l, e, h)   uint64(uint64(l) | (uint64(IsGuidHaveEnPart(h) ? e : 0) << 24) | (uint64(h) << 48))
 
 uint64 MAKE_NEW_GUID(uint32 l, uint32 e, uint32 h)
 {

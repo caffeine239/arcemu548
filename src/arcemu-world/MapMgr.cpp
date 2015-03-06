@@ -1397,24 +1397,24 @@ void MapMgr::AddObject(Object* obj)
 
 Unit* MapMgr::GetUnit(const uint64 & guid)
 {
-	sLog.outError("%u : %u : %u : %u :  %u : %u : %u : %u : %u : %u", GUID_HIPAR_TESTT(guid), Arcemu::Util::GUID_HIPART(guid), GUID_LOPART_TEST(guid), Arcemu::Util::GUID_LOPART(guid), GET_LOWGUID_PART(guid), GET_TYPE_FROM_GUID(guid), guid, (uint64)guid), GET_TYPE_FROM_GUID(guid), GET_LOWGUID_PART(guid);
-	if(guid == 0)
-		return NULL;
-
-	switch(GET_TYPE_FROM_GUID(guid))
+	switch (GUID_HIPAR_TESTT(guid))
 	{
-		case HIGHGUID_TYPE_UNIT:
-		case HIGHGUID_TYPE_VEHICLE:
-			return GetCreature(GET_LOWGUID_PART(guid));
-			break;
+	case HIGHGUID_TYPE_CREATURE:
+		return GetCreature(GUID_LOPART_TEST(guid));
+		break;
 
-		case HIGHGUID_TYPE_PLAYER:
-			return GetPlayer(Arcemu::Util::GUID_LOPART(guid));
-			break;
+	case HIGHGUID_TYPE_PLAYER:
+		return GetPlayer((uint32)guid);
+		break;
 
-		case HIGHGUID_TYPE_PET:
-			return GetPet(GET_LOWGUID_PART(guid));
-			break;
+	case HIGHGUID_TYPE_PET:
+		return GetPet(GUID_LOPART_TEST(guid));
+		break;
+
+	//case HIGHGUID_TYPE_VEHICLE:
+		//return GetVehicle(GUID_LOPART_TEST(guid));
+		//break;
+	
 	}
 
 	return NULL;
@@ -1745,9 +1745,18 @@ uint64 MapMgr::GenerateCreatureGUID(uint32 entry)
 
 Creature* MapMgr::CreateCreature(uint32 entry)
 {
-	uint64 guid = GenerateCreatureGUID(entry);
+	uint32 low_guid = 0;
+	if (_reusable_guids_creature.size())
+	{
+		low_guid = _reusable_guids_creature.front();
+		_reusable_guids_creature.pop_front();
+	}
+	else low_guid = ++m_CreatureHighGuid;
 
-	return new Creature(guid);
+	Creature *cr = new Creature(MAKE_NEW_GUID2(low_guid, entry, HIGHGUID_TYPE_CREATURE));
+	cr->Init();
+	ASSERT(cr->GetTypeFromGUID() == HIGHGUID_TYPE_CREATURE);
+	return cr;
 }
 
 

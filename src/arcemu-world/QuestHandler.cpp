@@ -45,8 +45,6 @@ void WorldSession::HandleQuestgiverStatusQueryOpcode(WorldPacket & recv_data)
 	recv_data.ReadByteSeq(guid[6]);
 	recv_data.ReadByteSeq(guid[3]);
 
-	LOG_ERROR("WORLD: questgiver GUID %u", Arcemu::Util::GUID_LOPART(guid));
-
 	uint32 questStatus = 0;
 	uint32 defstatus = 0;
 
@@ -55,10 +53,10 @@ void WorldSession::HandleQuestgiverStatusQueryOpcode(WorldPacket & recv_data)
 		
 	Object* qst_giver = NULL;
 
-	uint32 guidtype = GET_TYPE_FROM_GUID(guid);
+	uint32 guidtype = GUID_HIPAR_TESTT(guid);
 	if(guidtype == HIGHGUID_TYPE_UNIT)
 	{
-		Creature* quest_giver = _player->GetMapMgr()->GetCreature(Arcemu::Util::GUID_LOPART(guid));
+		Creature* quest_giver = _player->GetMapMgr()->GetCreature(GUID_LOPART_TEST(guid));
 		if (quest_giver)
 		{
 			qst_giver = quest_giver;
@@ -345,11 +343,30 @@ void WorldSession::HandleQuestQueryOpcode(WorldPacket & recv_data)
 
 	LOG_DEBUG("WORLD: Received CMSG_QUEST_QUERY");
 
-	uint32 quest_id;
+	ObjectGuid guid;
+	uint32 questId;
 
-	recv_data >> quest_id;
+	recv_data >> questId;
 
-	Quest* qst = QuestStorage.LookupEntry(quest_id);
+	guid[0] = recv_data.ReadBit();
+	guid[5] = recv_data.ReadBit();
+	guid[2] = recv_data.ReadBit();
+	guid[7] = recv_data.ReadBit();
+	guid[6] = recv_data.ReadBit();
+	guid[4] = recv_data.ReadBit();
+	guid[1] = recv_data.ReadBit();
+	guid[3] = recv_data.ReadBit();
+
+	recv_data.ReadByteSeq(guid[4]);
+	recv_data.ReadByteSeq(guid[1]);
+	recv_data.ReadByteSeq(guid[7]);
+	recv_data.ReadByteSeq(guid[5]);
+	recv_data.ReadByteSeq(guid[2]);
+	recv_data.ReadByteSeq(guid[3]);
+	recv_data.ReadByteSeq(guid[6]);
+	recv_data.ReadByteSeq(guid[0]);
+
+	Quest* qst = QuestStorage.LookupEntry(questId);
 
 	if(!qst)
 	{

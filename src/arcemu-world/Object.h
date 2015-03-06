@@ -489,28 +489,29 @@ class SERVER_DECL Object : public EventableObject
 
 
 		//! Guid always comes first
-		const uint64 & GetGUID() const { return GetUInt64Value(OBJECT_FIELD_GUID); }
+		
+		
+		ARCEMU_INLINE const uint64& GetGUID() const { return *((uint64*)m_uint32Values); }
+		void SetGUID(uint64 GUID) { SetUInt64Value(OBJECT_FIELD_GUID, GUID); }
+		void SetLowGUID(uint32 val) { m_uint32Values[0] = val; }
+		void SetHighGUID(uint32 val) { m_uint32Values[1] = val; }
 
-		ARCEMU_INLINE const uint64& GetGUID2() const { return *((uint64*)m_uint32Values); }
-
-		void SetGUID(uint64 GUID) { SetUInt64Value(OBJECT_FIELD_GUID, GUID);  }
-		const uint32 GetLowGUID() const { return m_uint32Values[ LOWGUID ]; }
-		uint32 GetHighGUID() { return m_uint32Values[ HIGHGUID ]; }
-		void SetLowGUID(uint32 val) { m_uint32Values[ LOWGUID ] = val; }
-		void SetHighGUID(uint32 val) { m_uint32Values[ HIGHGUID ] = val; }
-		const ByteBuffer& GetPackGUID() const { return m_PackGUID; }
-		uint32 GetGUIDHigh() const { return Arcemu::Util::GUID_HIPART(GetUInt64Value(0)); }
-
-		const WoWGuid & GetNewGUID() const { return m_wowGuid; }
-		uint32 GetEntry() { return m_uint32Values[ OBJECT_FIELD_ENTRY ]; }
+		ARCEMU_INLINE const WoWGuid& GetNewGUID() const { return m_wowGuid; }
+		ARCEMU_INLINE uint32 GetEntry(){ return m_uint32Values[OBJECT_FIELD_ENTRY]; }
 		void SetEntry(uint32 value) { SetUInt32Value(OBJECT_FIELD_ENTRY, value); }
 
 		float GetScale() { return m_floatValues[ OBJECT_FIELD_SCALE_X ]; }
 		void SetScale(float scale) { SetFloatValue(OBJECT_FIELD_SCALE_X, scale); };
 
-		const uint32 GetTypeFromGUID() const { return (m_uint32Values[ HIGHGUID ] & HIGHGUID_TYPE_MASK); }
-		const uint32 GetUIdFromGUID() const { return (m_uint32Values[ LOWGUID ] & LOWGUID_ENTRY_MASK); }
-		
+		ARCEMU_INLINE uint32 GetEntryFromGUID() const  { return GUID_ENPART_TEST(GetGUID()); }
+		ARCEMU_INLINE uint32 GetTypeFromGUID() const { return GUID_HIPAR_TESTT(GetGUID()); }
+		ARCEMU_INLINE uint32 GetUIdFromGUID() const { return GUID_LOPART_TEST(GetGUID()); }
+		ARCEMU_INLINE uint32 GetHighGUID() const { return GUID_HIPAR_TESTT(GetGUID()); }
+		ARCEMU_INLINE uint32 GetLowGUID() const { return GUID_LOPART_TEST(GetGUID()); }
+
+
+
+
 		// type
 		const uint8 & GetTypeId() const { return m_objectTypeId; }
 		bool IsUnit()	{ return (m_objectTypeId == TYPEID_UNIT || m_objectTypeId == TYPEID_PLAYER); }
